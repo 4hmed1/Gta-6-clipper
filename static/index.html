@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ViralForge AI — World's Best Free AI Video Clipper & Swarm Engine</title>
+  <meta name="description" content="Turn long-form videos into viral vertical shorts automatically with kinetic subtitles, smart face tracking, and 10,000 AI agent retention prediction.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- ══════ FLOATING PARTICLES CANVAS ══════ -->
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- ══════ NAVIGATION ══════ -->
+  <nav class="nav-bar" id="navbar">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <div class="nav-logo-icon">
+          <i data-lucide="zap" style="width:22px;height:22px;color:white;"></i>
+        </div>
+        <span class="nav-logo-text">ViralForge <span>AI Pro</span></span>
+      </a>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="nav-badge">
+          <i data-lucide="cpu" style="width:12px;height:12px;"></i>
+          10,000 Agents
+        </span>
+        <span class="nav-badge" style="background:rgba(96,165,250,0.12);border-color:rgba(96,165,250,0.25);color:var(--blue-400);">
+          <i data-lucide="sparkles" style="width:12px;height:12px;"></i>
+          100% Free & Unlimited
+        </span>
+        <button class="nav-clip-btn" onclick="scrollToStudio()" style="background:var(--gradient-btn);color:white;border:none;padding:8px 16px;border-radius:20px;font-weight:700;cursor:pointer;">
+          <i data-lucide="scissors" style="width:14px;height:14px;"></i>
+          Start Clipping Now
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ══════ MAIN CONTENT ══════ -->
+  <main style="position:relative;z-index:1;padding:0 20px;">
+
+    <!-- ══════ HERO SECTION ══════ -->
+    <section class="hero-section">
+      <div class="hero-overline">
+        <i data-lucide="flame" style="width:14px;height:14px;color:var(--pink-300);"></i>
+        <span>World-Class AI Video Clipping & Re-framing Engine</span>
+      </div>
+
+      <h1 class="heading-display hero-title">
+        Turn Long YouTube Videos Into<br>
+        <span class="gradient-text">Viral Vertical Shorts</span> Instantly
+      </h1>
+
+      <p class="hero-subtitle">
+        Powered by 10,000 AI Agent Swarm Intelligence — scores hook strength, speech pacing, emotional density, and applies dynamic kinetic karaoke subtitles. Better than paid tools, 100% free with no watermarks.
+      </p>
+
+      <!-- Primary Action Buttons -->
+      <div style="display:flex;gap:16px;justify-content:center;align-items:center;margin-top:24px;flex-wrap:wrap;">
+        <button onclick="scrollToStudio()" style="background:var(--gradient-btn);color:white;border:none;padding:16px 36px;border-radius:30px;font-size:1.1rem;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:0 10px 30px var(--pink-glow);transition:transform 0.2s ease;">
+          <i data-lucide="sparkles" style="width:22px;height:22px;"></i>
+          <span>Start Clipping Now</span>
+        </button>
+        <button onclick="loadExistingClipsLibrary()" style="background:rgba(255,255,255,0.08);color:var(--cream-100);border:1px solid var(--border-hover);padding:16px 28px;border-radius:30px;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;">
+          <i data-lucide="film" style="width:18px;height:18px;color:var(--blue-400);"></i>
+          <span>Browse Existing Clips Library</span>
+        </button>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-row" style="margin-top:40px;">
+        <div class="stat-item">
+          <div class="stat-number" data-count="10000">0</div>
+          <div class="stat-label">AI Swarm Agents</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">60 FPS</div>
+          <div class="stat-label">Kinetic Render</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">99.4%</div>
+          <div class="stat-label">Hook Accuracy</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">0$</div>
+          <div class="stat-label">Forever Free</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════ HOW IT WORKS ══════ -->
+    <section class="how-it-works reveal">
+      <div class="how-header">
+        <h2>How <span style="color:var(--pink-300);">ViralForge AI</span> Works</h2>
+        <p>Four automated AI steps from long video to high-converting short clip</p>
+      </div>
+      <div class="how-grid">
+        <div class="how-card glass glass-hover">
+          <div class="how-card-number">1</div>
+          <h3>Ingest & Transcribe</h3>
+          <p>yt-dlp downloads high-res streams while Whisper AI extracts precise word-level timestamps.</p>
+        </div>
+        <div class="how-card glass glass-hover">
+          <div class="how-card-number">2</div>
+          <h3>AI Hook Detection</h3>
+          <p>Scans pattern interrupts, question openers, speech velocity (WPM), and emotional keyword density.</p>
+        </div>
+        <div class="how-card glass glass-hover">
+          <div class="how-card-number">3</div>
+          <h3>9:16 Smart Re-frame</h3>
+          <p>Face tracking and split-screen blurred stack auto-center the speaker into vertical ratio.</p>
+        </div>
+        <div class="how-card glass glass-hover">
+          <div class="how-card-number">4</div>
+          <h3>Kinetic Karaoke Burn</h3>
+          <p>Generates active word highlights and kinetic animation burned directly onto the MP4.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════ MAIN INPUT CARD / STUDIO WORKSPACE ══════ -->
+    <div class="input-card glass" id="input-section" style="scroll-margin-top:100px;">
+
+      <div style="text-align:center;margin-bottom:24px;">
+        <span class="nav-badge" style="background:rgba(244,143,177,0.15);color:var(--pink-300);border-color:var(--border-hover);margin-bottom:8px;display:inline-flex;">
+          <i data-lucide="scissors" style="width:12px;height:12px;"></i> Studio Workspace
+        </span>
+        <h2 style="font-family:'Space Grotesk';font-size:1.8rem;margin:4px 0 0;">Start A New Video Clipping Task</h2>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tab-yt-btn" onclick="switchTab('yt')">
+          <i data-lucide="youtube" style="width:16px;height:16px;color:#ff4444;"></i>
+          <span>YouTube / Social Video URL</span>
+        </button>
+        <button class="tab-btn" id="tab-upload-btn" onclick="switchTab('upload')">
+          <i data-lucide="upload-cloud" style="width:16px;height:16px;color:var(--blue-400);"></i>
+          <span>Upload Local File</span>
+        </button>
+      </div>
+
+      <!-- YouTube URL Tab -->
+      <div id="tab-yt">
+        <div class="url-input-wrapper">
+          <div class="url-input-icon">
+            <i data-lucide="link" style="width:18px;height:18px;"></i>
+          </div>
+          <input
+            type="text"
+            id="video-url"
+            class="url-input"
+            placeholder="Paste YouTube video URL (e.g. https://www.youtube.com/watch?v=...)"
+            spellcheck="false"
+          >
+          <button class="paste-btn" onclick="pasteFromClipboard()">
+            <i data-lucide="clipboard" style="width:14px;height:14px;"></i>
+            <span>Paste</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Upload Tab -->
+      <div id="tab-upload" class="hidden">
+        <div class="drop-zone" id="drop-zone">
+          <div class="drop-zone-icon">
+            <i data-lucide="film" style="width:28px;height:28px;"></i>
+          </div>
+          <p style="color:var(--cream-100);font-weight:600;font-size:0.9rem;margin:0 0 6px;">
+            Drag & drop your video file here
+          </p>
+          <p style="color:var(--cream-muted);font-size:0.78rem;margin:0;">
+            MP4, MOV, AVI, MKV — any length supported
+          </p>
+          <p id="file-label" style="color:var(--pink-300);font-size:0.85rem;margin-top:12px;font-weight:700;"></p>
+          <input type="file" id="file-input" accept="video/*" style="display:none;">
+        </div>
+      </div>
+
+      <!-- Settings Toggle -->
+      <button class="settings-toggle" onclick="toggleSettings()">
+        <span style="display:flex;align-items:center;gap:8px;">
+          <i data-lucide="settings" style="width:14px;height:14px;"></i>
+          Advanced AI & Styling Controls
+        </span>
+        <i data-lucide="chevron-down" style="width:16px;height:16px;transition:transform 0.3s ease;" id="settings-chevron"></i>
+      </button>
+
+      <div class="settings-panel" id="settings-panel">
+        <div class="setting-group">
+          <label>AI Analysis Engine</label>
+          <select class="setting-select" id="setting-engine">
+            <option value="heuristic">🧠 Smart Heuristic (Free, Offline)</option>
+            <option value="gemini">✨ Google Gemini Flash AI</option>
+            <option value="ollama">🦙 Local Ollama LLM</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <label>Kinetic Caption Preset</label>
+          <select class="setting-select" id="setting-subtitles">
+            <option value="vibrant_gold">🔥 Vibrant Gold (Alex Hormozi Style)</option>
+            <option value="neon_green">⚡ Neon Green (MrBeast Style)</option>
+            <option value="cyber_cyan">🤖 Cyber Cyan (Tech Style)</option>
+            <option value="minimal">⚪ Clean Modern</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <label>Video Re-framing Layout</label>
+          <select class="setting-select" id="setting-layout">
+            <option value="split_blur">📱 9:16 Vertical Blurred Stack</option>
+            <option value="center_crop">👤 9:16 Smart Center Crop</option>
+            <option value="original">🖥️ Original Aspect Ratio</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <label>Clip Duration Range</label>
+          <select class="setting-select" id="setting-duration">
+            <option value="20-60">⏱️ Standard Short (20s - 60s)</option>
+            <option value="15-30">⚡ Micro Short (15s - 30s)</option>
+            <option value="30-90">🎬 Deep Short (30s - 90s)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Generate Button -->
+      <button class="generate-btn" id="generate-btn" onclick="startGeneration()">
+        <i data-lucide="sparkles" style="width:20px;height:20px;"></i>
+        <span>Start AI Clipping & Synthesis</span>
+      </button>
+    </div>
+
+    <!-- ══════ AGENT SWARM & LIVE CONSOLE VISUALIZATION ══════ -->
+    <div class="agent-swarm-section" id="agent-swarm-section">
+      <div class="swarm-header">
+        <h2 class="swarm-title">
+          <span class="gradient-text">AI Agent Swarm</span> Active
+        </h2>
+        <p class="swarm-subtitle" id="swarm-status">Initializing processing pipeline...</p>
+      </div>
+
+      <!-- Agent Grid Visualization (100 dots = represents 10,000 agents) -->
+      <div class="agent-grid" id="agent-grid">
+        <!-- 100 dots generated by JS -->
+      </div>
+
+      <!-- Live Execution Log Terminal -->
+      <div style="margin-top:24px;background:#060810;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:16px;font-family:'Fira Code',monospace;font-size:0.82rem;color:#a0aec0;text-align:left;max-height:180px;overflow-y:auto;" id="agent-console-log">
+        <div style="color:var(--pink-300);font-weight:bold;">[System] Initializing Agent Console...</div>
+      </div>
+
+      <!-- Swarm Stats -->
+      <div class="swarm-stats">
+        <div class="swarm-stat">
+          <div class="swarm-stat-value" id="agents-active">0</div>
+          <div class="swarm-stat-label">Active Agents</div>
+        </div>
+        <div class="swarm-stat">
+          <div class="swarm-stat-value" id="views-completed">0</div>
+          <div class="swarm-stat-label">Views Analyzed</div>
+        </div>
+        <div class="swarm-stat">
+          <div class="swarm-stat-value" id="clips-found">0</div>
+          <div class="swarm-stat-label">Viral Hooks Identified</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ PROGRESS SECTION ══════ -->
+    <div class="progress-section" id="progress-section">
+      <div class="progress-card glass">
+        <div class="progress-header">
+          <div class="progress-spinner" id="progress-spinner"></div>
+          <div class="progress-info">
+            <h3 id="progress-message">Preparing AI Engine...</h3>
+            <p id="progress-stage">Initializing</p>
+          </div>
+          <div style="margin-left:auto;font-family:'Space Grotesk';font-size:1.8rem;font-weight:800;color:var(--pink-300);">
+            <span id="progress-percent">0</span>%
+          </div>
+        </div>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="progress-bar" style="width:0%;"></div>
+        </div>
+
+        <div class="progress-steps">
+          <div class="progress-step" data-stage="downloading">
+            <div class="progress-step-dot">
+              <i data-lucide="download" style="width:14px;height:14px;"></i>
+            </div>
+            <span class="progress-step-label">Ingest</span>
+          </div>
+          <div class="progress-step" data-stage="transcribing">
+            <div class="progress-step-dot">
+              <i data-lucide="mic" style="width:14px;height:14px;"></i>
+            </div>
+            <span class="progress-step-label">STT Speech</span>
+          </div>
+          <div class="progress-step" data-stage="analyzing">
+            <div class="progress-step-dot">
+              <i data-lucide="brain" style="width:14px;height:14px;"></i>
+            </div>
+            <span class="progress-step-label">AI Hooks</span>
+          </div>
+          <div class="progress-step" data-stage="rendering">
+            <div class="progress-step-dot">
+              <i data-lucide="film" style="width:14px;height:14px;"></i>
+            </div>
+            <span class="progress-step-label">FFmpeg Synthesis</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ CLIPS RESULTS ══════ -->
+    <div class="clips-section" id="clips-section">
+      <div class="clips-header">
+        <div>
+          <h2>🔥 Viral Shorts Library</h2>
+          <p style="font-size:0.85rem;color:var(--cream-muted);margin-top:4px;">
+            High-retention 9:16 vertical clips with burned kinetic subtitles, ready to publish on TikTok, YouTube Shorts & Reels.
+          </p>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <button onclick="scrollToStudio()" class="nav-clip-btn" style="background:rgba(255,255,255,0.08);border:1px solid var(--border-hover);color:var(--cream-100);padding:8px 16px;border-radius:20px;cursor:pointer;">
+            + Clip Another Video
+          </button>
+          <span class="clips-count-badge" id="clips-count-badge">0 Clips</span>
+        </div>
+      </div>
+      <div class="clips-grid" id="clips-grid">
+        <!-- Injected by JavaScript -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ══════ EDITOR MODAL ══════ -->
+  <div class="editor-overlay" id="editor-modal">
+    <div class="editor-card glass">
+      <div class="editor-header">
+        <h3>
+          <i data-lucide="edit-3" style="width:18px;height:18px;color:var(--pink-300);"></i>
+          Short-Form Video Studio & Fine Trimmer
+        </h3>
+        <button class="editor-close" onclick="closeEditor()">
+          <i data-lucide="x" style="width:18px;height:18px;"></i>
+        </button>
+      </div>
+
+      <div class="editor-body">
+        <div class="editor-preview">
+          <video id="editor-player" controls></video>
+        </div>
+
+        <div class="editor-controls">
+          <div class="editor-field">
+            <label>Hook Headline Text</label>
+            <input type="text" id="editor-headline">
+          </div>
+
+          <div class="editor-row">
+            <div class="editor-field">
+              <label>Start Timestamp (sec)</label>
+              <input type="number" step="0.1" id="editor-start">
+            </div>
+            <div class="editor-field">
+              <label>End Timestamp (sec)</label>
+              <input type="number" step="0.1" id="editor-end">
+            </div>
+          </div>
+
+          <div class="editor-row">
+            <div class="editor-field">
+              <label>Subtitle Preset</label>
+              <select id="editor-style" class="setting-select">
+                <option value="vibrant_gold">🔥 Vibrant Gold</option>
+                <option value="neon_green">⚡ Neon Green</option>
+                <option value="cyber_cyan">🤖 Cyber Cyan</option>
+                <option value="minimal">⚪ Clean Modern</option>
+              </select>
+            </div>
+            <div class="editor-field">
+              <label>Video Layout</label>
+              <select id="editor-layout" class="setting-select">
+                <option value="split_blur">📱 Blur Stack</option>
+                <option value="center_crop">👤 Center Crop</option>
+                <option value="original">🖥️ Original</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="editor-field">
+            <label>Edit Transcript Words</label>
+            <textarea id="editor-captions" rows="3" placeholder="Transcript text..."></textarea>
+          </div>
+
+          <button class="re-render-btn" id="re-render-btn" onclick="saveAndReExportClip()">
+            <i data-lucide="refresh-cw" style="width:16px;height:16px;"></i>
+            <span>Re-Render Short</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ FOOTER ══════ -->
+  <footer class="site-footer">
+    <p>
+      <strong style="color:var(--cream-100);">ViralForge AI Pro</strong> — Free Open Source AI Video Clipper & Swarm Engine ·
+      Built with ❤️ for Creators
+    </p>
+  </footer>
+
+  <!-- ══════ SCRIPTS ══════ -->
+  <script src="/static/js/app.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  viralforge:
+    build: .
+    container_name: viralforge-ai
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./outputs:/app/outputs
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - OLLAMA_HOST=${OLLAMA_HOST:-http://host.docker.internal:11434}
+    restart: unless-stopped

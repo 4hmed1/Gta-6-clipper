@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clipforge"
+version = "0.1.0"
+description = "Install-in-One-Command Clipping Studio: Turn long videos into viral vertical shorts locally."
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "ClipForge Team"}
+]
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.28.0",
+    "yt-dlp>=2024.3.10",
+    "python-multipart>=0.0.9",
+    "aiofiles>=23.2.1",
+    "requests>=2.31.0",
+    "pydantic>=2.6.0",
+    "jinja2>=3.1.3",
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "librosa>=0.10.0",
+    "scenedetect[opencv]>=0.6.0",
+    "opencv-python>=4.8.0",
+    "ffmpeg-python>=0.2.0",
+    "pyyaml>=6.0.1",
+]
+
+[project.optional-dependencies]
+stt = [
+    "faster-whisper>=1.0.0",
+]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "playwright>=1.42.0",
+    "ruff>=0.3.0",
+    "mypy>=1.9.0",
+]
+
+[project.scripts]
+clipforge = "clipforge.cli:main"
+
+[tool.setuptools]
+packages = ["clipforge"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["clipforge*"]
