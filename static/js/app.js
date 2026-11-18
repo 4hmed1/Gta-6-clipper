@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   ViralForge AI Pro — 10,000 Agent Viral Clip Prediction Engine
+   ClipForge — Local-First YouTube to Shorts Clipper
    Complete Application Logic & UX Controller
    ═══════════════════════════════════════════════════════════ */
 
@@ -342,7 +342,7 @@ function animateAgentSwarm(progress) {
     } else if (progress < 40) {
       statusEl.textContent = 'Transcribing speech with AI word-level timestamps...';
     } else if (progress < 65) {
-      statusEl.textContent = '10,000 agents scoring hooks, speech velocity and emotional keywords...';
+      statusEl.textContent = 'real minutes analyzed agents scoring hooks, speech velocity and emotional keywords...';
     } else if (progress < 85) {
       statusEl.textContent = 'Generating vertical 9:16 layout and kinetic ASS subtitles...';
     } else {

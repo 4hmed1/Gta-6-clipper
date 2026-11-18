@@ -4,7 +4,7 @@ import uuid
 import json
 import subprocess
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from app.config import DOWNLOADS_DIR, UPLOADS_DIR
 
 def clean_filename(title: str) -> str:
@@ -60,23 +60,35 @@ def _yt_progress(d: Dict[str, Any], progress_callback) -> None:
     downloaded = d.get("downloaded_bytes") or 0
     speed = d.get("speed") or 0
     eta = d.get("eta") or 0
+    
+    # Calculate more accurate stage based on what's being downloaded
+    info = d.get('info_dict', {})
+    is_audio = info.get('vcodec') == 'none'
+    prefix = "Downloading audio analysis stream..." if is_audio else "Downloading video sections..."
+
     if total:
-        pct = min(95.0, (downloaded / total) * 100)
-        msg = f"Downloading video stream... {pct:.1f}% ({downloaded/1e6:.1f}/{total/1e6:.1f} MB, {speed/1e6:.1f} MB/s, ETA {int(eta)}s)"
-        progress_callback(msg, 10 + (pct * 0.12))
+        pct = (downloaded / total) * 100
+        speed_mb = speed / (1024 * 1024) if speed else 0
+        msg = f"{prefix} {pct:.1f}% ({downloaded/1e6:.1f}/{total/1e6:.1f} MB, {speed_mb:.2f} MB/s, ETA {int(eta)}s)"
+        # Map 0-100% download to a sub-range of the overall pipeline progress
+        progress_callback(msg, 10 + (pct * 0.15))
     else:
-        progress_callback(f"Downloading video stream... {downloaded/1e6:.1f} MB", 15)
+        progress_callback(f"{prefix} {downloaded/1e6:.1f} MB", 15)
 
 
-def download_youtube_video(url: str, progress_callback=None) -> Dict[str, Any]:
+def download_youtube_video(url: str, progress_callback=None, audio_only: bool = False, sections: List[Dict[str, float]] = None) -> Dict[str, Any]:
     """
     Download a video from YouTube or any supported site via yt-dlp.
-    Falls back to yt-dlp CLI if library isn't directly imported.
+    Optimized for slow networks:
+    - Audio-only first for fast analysis
+    - Parallel fragment downloads (-N 4)
+    - Section downloads (--download-sections) for final clips
     """
     video_id = str(uuid.uuid4())[:8]
+    suffix = "wav" if audio_only else "mp4"
     output_template = str(DOWNLOADS_DIR / f"%(title)s_{video_id}.%(ext)s")
     
-    print(f"[Downloader] Initiating download for URL: {url}")
+    print(f"[Downloader] Ingesting {url} (audio_only={audio_only}, sections={len(sections) if sections else 0})")
     if progress_callback:
         progress_callback("Connecting to video source and fetching stream...", 10)
 
@@ -84,66 +96,68 @@ def download_youtube_video(url: str, progress_callback=None) -> Dict[str, Any]:
         import yt_dlp
 
         ydl_opts = {
-            # Cap at 1080p — 4K grabs 300MB+ files and stalls on slow links.
-            # Prefer mp4, fall back to any format, merge audio.
-            'format': 'best[height<=1080]/best',
             'extract_flat': False,
             'extractor_args': {'youtube': {'player_client': ['android', 'web', 'ios', 'tv_embedded', 'mweb']}},
             'outtmpl': output_template,
-            'merge_output_format': 'mp4',
             'noplaylist': True,
-            'quiet': False,
+            'quiet': True,
             'no_warnings': True,
             'progress_hooks': [lambda d: _yt_progress(d, progress_callback)],
+            # --- Performance Optimizations ---
+            'concurrent_fragment_downloads': 4,
+            'retries': 5,
+            'fragment_retries': 5,
+            'socket_timeout': 30,
+            'continuedl': True,
         }
 
+        if audio_only:
+            # Lowest bitrate audio for fast analysis (approx 64k-128k)
+            ydl_opts['format'] = 'ba[abr<=64]/ba[abr<=128]/worstaudio'
+            ydl_opts['postprocessors'] = [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'wav',
+                'preferredquality': '192',
+            }]
+        else:
+            # Smart section download or 720p/1080p
+            ydl_opts['format'] = 'best[height<=1080][ext=mp4]/best[height<=1080]/best'
+            ydl_opts['merge_output_format'] = 'mp4'
+            
+            if sections:
+                # Add pre-roll/post-roll margins for cleaner cuts (0.5s each)
+                ydl_opts['download_ranges'] = lambda info, dict_obj: [
+                    {'start_time': max(0, s['start'] - 0.5), 'end_time': s['end'] + 0.5}
+                    for s in sections
+                ]
+                ydl_opts['force_keyframes_at_cuts'] = True
+
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            if progress_callback:
-                progress_callback("Extracting video metadata...", 25)
             info = ydl.extract_info(url, download=True)
             filename = ydl.prepare_filename(info)
-            # Ensure mp4 extension if merged
-            base, _ = os.path.splitext(filename)
-            mp4_file = f"{base}.mp4"
-            final_file = mp4_file if os.path.exists(mp4_file) else filename
+            
+            # Fix filename after post-processing
+            if audio_only:
+                filename = str(Path(filename).with_suffix(".wav"))
+            else:
+                base, ext = os.path.splitext(filename)
+                if ext != ".mp4" and os.path.exists(f"{base}.mp4"):
+                    filename = f"{base}.mp4"
 
-            meta = get_video_metadata(final_file)
+            meta = get_video_metadata(filename)
             return {
                 "success": True,
                 "title": info.get("title", "Untitled Video"),
                 "duration": meta["duration"] or info.get("duration", 0),
-                "filepath": final_file,
+                "filepath": filename,
                 "thumbnail": info.get("thumbnail", ""),
                 "author": info.get("uploader", "Unknown"),
                 "width": meta["width"],
                 "height": meta["height"]
             }
 
-    except ImportError:
-        # Fallback to system yt-dlp CLI if module not installed
-        print("[Downloader] yt_dlp python module not found, attempting system command...")
-        final_mp4 = str(DOWNLOADS_DIR / f"video_{video_id}.mp4")
-        cmd = [
-            "yt-dlp",
-            "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
-            "--merge-output-format", "mp4",
-            "-o", final_mp4,
-            url
-        ]
-        subprocess.run(cmd, check=True)
-        meta = get_video_metadata(final_mp4)
-        return {
-            "success": True,
-            "title": f"Video_{video_id}",
-            "duration": meta["duration"],
-            "filepath": final_mp4,
-            "thumbnail": "",
-            "author": "Online Stream",
-            "width": meta["width"],
-            "height": meta["height"]
-        }
     except Exception as e:
-        print(f"[Downloader] Download error: {e}")
+        print(f"[Downloader] Error: {type(e).__name__}: {e}")
         return {
             "success": False,
             "error": str(e)

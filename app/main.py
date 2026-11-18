@@ -138,11 +138,20 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
 
         # ── Step 2: Low-bitrate Audio Analysis ──
         set_status("Downloading low-bitrate audio for analysis...", 15, "analyzing")
-        audio_path = asyncio.create_task(_download_audio_only(source_video))
-        try:
-            audio_path = asyncio.get_event_loop().run_until_complete(audio_path)
-        except Exception:
-            audio_path = ""
+        audio_path = ""
+        if req.url:
+            audio_task = asyncio.create_task(_download_audio_from_url(req.url))
+        elif source_video and Path(source_video).exists():
+            audio_task = asyncio.create_task(_download_audio_only(source_video))
+        else:
+            audio_task = None
+        
+        if audio_task:
+            try:
+                audio_path = asyncio.get_event_loop().run_until_complete(audio_task)
+            except Exception as e:
+                pipeline_logger.error(f"[{task_id}] Audio download exception: {e}")
+                audio_path = ""
         
         if audio_path and Path(audio_path).exists():
             set_status("Audio downloaded successfully", 20, "analyzing")
@@ -231,16 +240,16 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
         record_stage("download_sections", time.time(), f"sections={len(downloaded_sections)}")
 
         # ── Step 6: Render Vertical Clips ──
-        set_status(f"Rendering {len(downloaded_selections)} vertical shorts...", 85, "rendering")
+        set_status(f"Rendering {len(downloaded_sections)} vertical shorts...", 85, "rendering")
         rendered_clips = []
 
-        for idx, section in enumerate(downloaded_selections):
+        for idx, section in enumerate(downloaded_sections):
             cand = section["clip_info"]
             filepath = section["filepath"]
 
             set_status(
-                f"Rendering clip {idx+1}/{len(downloaded_selections)}: '{cand.get('headline', 'Clip')}'...",
-                int(85 + (idx / len(downloaded_selections)) * 13),
+                f"Rendering clip {idx+1}/{len(downloaded_sections)}: '{cand.get('headline', 'Clip')}'...",
+                int(85 + (idx / len(downloaded_sections)) * 13),
                 "rendering"
             )
             render_res = render_clip(

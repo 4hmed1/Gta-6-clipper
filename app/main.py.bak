@@ -1,0 +1,304 @@
+import os
+import uuid
+import threading
+import traceback
+import logging
+from typing import Dict, Any, Optional
+from pathlib import Path
+from fastapi import FastAPI, UploadFile, File, Form, BackgroundTasks, HTTPException
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+from app.config import (
+    BASE_DIR, OUTPUTS_DIR, CLIPS_DIR, DOWNLOADS_DIR, UPLOADS_DIR,
+    STATIC_DIR, DEFAULT_SUBTITLE_STYLE, DEFAULT_ASPECT_RATIO
+)
+from app.downloader import download_youtube_video, save_uploaded_file
+from app.transcriber import transcribe_audio
+from app.viral_detector import detect_viral_clips
+from app.video_engine import render_clip
+from app.clip_editor import adjust_and_reexport_clip
+from clipforge.resilience import ErrorClassifier, PipelineStage
+
+# ── Structured logging ──
+LOGS_DIR = BASE_DIR / "logs"
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+pipeline_logger = logging.getLogger("clipforge.pipeline")
+pipeline_logger.setLevel(logging.INFO)
+_fh = logging.FileHandler(LOGS_DIR / "pipeline.log")
+_fh.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+pipeline_logger.addHandler(_fh)
+
+app = FastAPI(
+    title="ViralForge AI - Open Source AI Video Clipper",
+    description="Turn long-form videos into viral vertical shorts with AI hook detection and kinetic subtitles.",
+    version="1.0.0"
+)
+
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount static files
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+# In-memory task state tracking for real-time progress
+tasks_state: Dict[str, Dict[str, Any]] = {}
+
+class ProcessRequest(BaseModel):
+    url: Optional[str] = None
+    filepath: Optional[str] = None
+    ai_method: str = "heuristic"  # "heuristic", "gemini", "ollama"
+    api_key: Optional[str] = ""
+    subtitle_style: str = "hormozi"
+    layout: str = "split_blur"
+    min_duration: float = 20.0
+    max_duration: float = 60.0
+    max_clips: int = 5
+
+class EditRequest(BaseModel):
+    source_video: str
+    start_time: float
+    end_time: float
+    headline: str
+    layout: str = "split_blur"
+    subtitle_style: str = "hormozi"
+    custom_text: Optional[str] = ""
+    words: Optional[list] = []
+
+def run_processing_pipeline(task_id: str, req: ProcessRequest):
+    """Background worker executing the complete pipeline with structured logging."""
+    import time
+    start_time = time.time()
+
+    def set_status(msg: str, progress: int, stage: str = "processing"):
+        tasks_state[task_id]["message"] = msg
+        tasks_state[task_id]["progress"] = progress
+        tasks_state[task_id]["stage"] = stage
+        pipeline_logger.info(f"[{task_id}] [{stage}] p={progress}% | {msg}")
+
+    def record_stage(stage_name: str, elapsed: float, details: str = ""):
+        elapsed = elapsed - start_time if elapsed > start_time else 0
+        pipeline_logger.info(
+            f"[{task_id}] STAGE_COMPLETE: {stage_name} in {elapsed:.2f}s | {details}"
+        )
+
+    try:
+        # ── Step 1: Video Ingestion ──────────────────────────────
+        video_info = None
+        t0 = time.time()
+        if req.url:
+            set_status("Connecting to video source and extracting metadata...", 10, "downloading")
+            res = download_youtube_video(req.url, lambda m, p: set_status(m, p, "downloading"))
+            if not res.get("success"):
+                tasks_state[task_id]["status"] = "failed"
+                tasks_state[task_id]["error"] = res.get("error", "Download failed")
+                pipeline_logger.error(f"[{task_id}] DOWNLOAD_FAILED: {res.get('error')}")
+                return
+            video_info = res
+            set_status(f"Video downloaded: {video_info.get('title','Video')} ({video_info.get('duration',0)}s)", 20, "downloading")
+        elif req.filepath and os.path.exists(req.filepath):
+            set_status("Loading local video file...", 20, "loading")
+            video_info = {
+                "filepath": req.filepath,
+                "title": Path(req.filepath).stem,
+                "duration": 0
+            }
+        else:
+            tasks_state[task_id]["status"] = "failed"
+            tasks_state[task_id]["error"] = "No valid URL or video file provided."
+            pipeline_logger.error(f"[{task_id}] NO_INPUT: No valid URL or video file")
+            return
+
+        source_video = video_info["filepath"]
+        tasks_state[task_id]["video_info"] = video_info
+        record_stage("download", time.time())
+
+        # ── Step 2: Speech Transcription ─────────────────────────
+        set_status("Transcribing speech with word-level timestamps...", 35, "transcribing")
+        trans_res = transcribe_audio(
+            source_video,
+            progress_callback=lambda m, p: set_status(m, p, "transcribing")
+        )
+        if not trans_res.get("success"):
+            tasks_state[task_id]["status"] = "failed"
+            tasks_state[task_id]["error"] = "Transcription failed."
+            pipeline_logger.error(f"[{task_id}] TRANSCRIBE_FAILED")
+            return
+
+        # Convert numpy types in words to plain Python floats
+        words = trans_res.get("words", [])
+        for w in words:
+            if isinstance(w.get("start"), (float,)):
+                w["start"] = float(w["start"])
+            if isinstance(w.get("end"), (float,)):
+                w["end"] = float(w["end"])
+        trans_res["words"] = words
+
+        tasks_state[task_id]["transcript"] = {
+            k: v for k, v in trans_res.items()
+            if k != "words"  # Don't store words in task state (too large for JSON)
+        }
+        record_stage("transcribe", time.time(), f"words={len(words)},segments={len(trans_res.get('segments',[]))}")
+
+        # ── Step 3: Clip Selection ───────────────────────────────
+        set_status("Analyzing hooks, speech pacing & retention scores...", 65, "analyzing")
+        clips_candidates = detect_viral_clips(
+            trans_res,
+            method=req.ai_method,
+            api_key=req.api_key or "",
+            progress_callback=lambda m, p: set_status(m, p, "analyzing")
+        )
+
+        if not clips_candidates:
+            tasks_state[task_id]["status"] = "failed"
+            tasks_state[task_id]["error"] = "No viral clips could be identified."
+            pipeline_logger.error(f"[{task_id}] NO_CLIPS_FOUND")
+            return
+
+        record_stage("select", time.time(), f"candidates={len(clips_candidates)}")
+
+        # ── Step 4: Render Vertical Clips ────────────────────────
+        set_status(f"Synthesizing {min(len(clips_candidates), req.max_clips)} vertical shorts...", 80, "rendering")
+        rendered_clips = []
+
+        for idx, cand in enumerate(clips_candidates[:req.max_clips]):
+            set_status(
+                f"Rendering clip {idx+1}/{min(len(clips_candidates), req.max_clips)}: '{cand.get('headline', 'Clip')}'...",
+                int(80 + (idx / min(len(clips_candidates), req.max_clips)) * 18),
+                "rendering"
+            )
+            render_res = render_clip(
+                source_video=source_video,
+                start_time=cand["start"],
+                end_time=cand["end"],
+                words=words,
+                headline=cand.get("headline", ""),
+                layout=req.layout,
+                subtitle_style=req.subtitle_style
+            )
+            if render_res.get("success"):
+                render_res["score"] = cand.get("score", 90)
+                render_res["reason"] = cand.get("reason", "Strong viral hook.")
+                render_res["source_video"] = source_video
+                render_res["clip_words"] = [
+                    w for w in words
+                    if w["end"] >= cand["start"] and w["start"] <= cand["end"]
+                ]
+                rendered_clips.append(render_res)
+                pipeline_logger.info(
+                    f"[{task_id}] CLIP_RENDERED: clip={render_res['filename']} duration={render_res.get('duration')}s"
+                )
+            else:
+                pipeline_logger.warning(
+                    f"[{task_id}] CLIP_RENDER_FAILED: {render_res.get('error')}"
+                )
+
+        record_stage("render", time.time(), f"clips={len(rendered_clips)}")
+
+        # ── Done ─────────────────────────────────────────────────
+        tasks_state[task_id]["status"] = "completed"
+        tasks_state[task_id]["progress"] = 100
+        tasks_state[task_id]["message"] = f"Successfully generated {len(rendered_clips)} viral shorts!"
+        tasks_state[task_id]["clips"] = rendered_clips
+        pipeline_logger.info(
+            f"[{task_id}] PIPELINE_COMPLETE: clips={len(rendered_clips)} total_time={time.time()-start_time:.1f}s"
+        )
+
+    except Exception as e:
+        tb = traceback.format_exc()
+        pipeline_logger.error(f"[{task_id}] PIPELINE_CRASH: {type(e).__name__}: {e}\n{tb}")
+        tasks_state[task_id]["status"] = "failed"
+        tasks_state[task_id]["error"] = f"{type(e).__name__}: {str(e)}"
+        tasks_state[task_id]["message"] = "Pipeline crashed — check logs/pipeline.log for details."
+
+@app.get("/")
+def serve_index():
+    """Serve modern dark-mode frontend studio."""
+    return FileResponse(STATIC_DIR / "index.html")
+
+@app.post("/api/process")
+def process_video_endpoint(req: ProcessRequest, background_tasks: BackgroundTasks):
+    """Start background video clipping pipeline."""
+    task_id = str(uuid.uuid4())[:8]
+    tasks_state[task_id] = {
+        "status": "processing",
+        "progress": 0,
+        "message": "Initializing pipeline...",
+        "clips": [],
+        "error": None
+    }
+    background_tasks.add_task(run_processing_pipeline, task_id, req)
+    return {"success": True, "task_id": task_id}
+
+@app.post("/api/upload")
+async def upload_file_endpoint(file: UploadFile = File(...)):
+    """Upload local video file directly into system."""
+    contents = await file.read()
+    result = save_uploaded_file(contents, file.filename)
+    return result
+
+@app.get("/api/status/{task_id}")
+def get_task_status(task_id: str):
+    """Poll pipeline processing status and generated clips."""
+    state = tasks_state.get(task_id)
+    if not state:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return state
+
+@app.post("/api/edit")
+def edit_clip_endpoint(req: EditRequest):
+    """Adjust timestamps, captions, or layout and re-render."""
+    res = adjust_and_reexport_clip(
+        source_video=req.source_video,
+        start_time=req.start_time,
+        end_time=req.end_time,
+        words=req.words or [],
+        headline=req.headline,
+        layout=req.layout,
+        subtitle_style=req.subtitle_style,
+        custom_text=req.custom_text or ""
+    )
+    return res
+
+@app.get("/api/clips/download/{filename}")
+def download_clip_endpoint(filename: str):
+    """Stream or download generated MP4 clip."""
+    file_path = CLIPS_DIR / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(file_path, media_type="video/mp4", filename=filename)
+
+@app.get("/api/clips/thumb/{filename}")
+def get_clip_thumbnail(filename: str):
+    """Serve video thumbnail image."""
+    file_path = CLIPS_DIR / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Thumbnail not found")
+    return FileResponse(file_path, media_type="image/jpeg")
+
+@app.get("/api/clips")
+def list_clips():
+    """List all previously generated clips."""
+    files = list(CLIPS_DIR.glob("*.mp4"))
+    clips = []
+    for f in sorted(files, key=os.path.getmtime, reverse=True):
+        thumb = CLIPS_DIR / f"thumb_{f.stem.replace('clip_', '').split('_')[0]}.jpg"
+        clips.append({
+            "filename": f.name,
+            "filepath": str(f),
+            "download_url": f"/api/clips/download/{f.name}",
+            "thumbnail": f"/api/clips/thumb/{thumb.name}" if thumb.exists() else ""
+        })
+    return {"clips": clips}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app.main:app", host="0.0.0.0", port=3000, reload=True)
