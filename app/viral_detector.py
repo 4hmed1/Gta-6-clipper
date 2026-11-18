@@ -120,19 +120,13 @@ def analyze_viral_moments_heuristic(
             if len(selected_clips) >= max_clips:
                 break
 
-    # If empty (video very short), take whole video as 1 clip
+    # CRITICAL FIX: Never return the entire video as a single clip.
+    # If no valid clips found, return empty list.
+    # This prevents the UI from showing "1 clip" that is actually the full video.
     if not selected_clips and segments:
-        duration = segments[-1]["end"] - segments[0]["start"]
-        selected_clips.append({
-            "start": round(segments[0]["start"], 2),
-            "end": round(segments[-1]["end"], 2),
-            "duration": round(duration, 1),
-            "score": 88,
-            "headline": segments[0]["text"][:40] + "...",
-            "text": " ".join([s["text"] for s in segments]),
-            "reason": "Complete context with high retention opener.",
-            "segments": segments
-        })
+        print(f"[ViralDetector] WARNING: No valid clips found from {len(segments)} segments. "
+              f"Video duration: {segments[-1]['end'] if segments else 0:.1f}s.")
+        return []
 
     return selected_clips
 

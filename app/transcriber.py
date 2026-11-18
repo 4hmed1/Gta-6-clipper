@@ -37,27 +37,27 @@ def transcribe_audio(video_path: str, model_size: str = DEFAULT_WHISPER_MODEL, p
         from faster_whisper import WhisperModel
         if progress_callback:
             progress_callback(f"Loading faster-whisper ({model_size}) AI model...", 40)
-        
-        # Use int8 quantization on CPU for super speed, float16 if cuda
+
+        # Use int8 quantization on CPU for speed
         device = "cpu"
         compute_type = "int8"
         model = WhisperModel(model_size, device=device, compute_type=compute_type)
-        
+
         if progress_callback:
             progress_callback("Transcribing speech and extracting word-level timestamps...", 55)
-            
+
         segments_gen, info = model.transcribe(audio_path, word_timestamps=True)
         
         full_text_list = []
         segments_data = []
         all_words = []
-        
+
         for segment in segments_gen:
             full_text_list.append(segment.text.strip())
             seg_obj = {
                 "id": segment.id,
-                "start": round(segment.start, 2),
-                "end": round(segment.end, 2),
+                "start": round(float(segment.start), 2),
+                "end": round(float(segment.end), 2),
                 "text": segment.text.strip(),
                 "words": []
             }
@@ -65,9 +65,9 @@ def transcribe_audio(video_path: str, model_size: str = DEFAULT_WHISPER_MODEL, p
                 for w in segment.words:
                     word_item = {
                         "word": w.word.strip(),
-                        "start": round(w.start, 2),
-                        "end": round(w.end, 2),
-                        "probability": round(w.probability, 2)
+                        "start": round(float(w.start), 2),
+                        "end": round(float(w.end), 2),
+                        "probability": round(float(w.probability), 2)
                     }
                     seg_obj["words"].append(word_item)
                     all_words.append(word_item)
@@ -104,17 +104,17 @@ def transcribe_audio(video_path: str, model_size: str = DEFAULT_WHISPER_MODEL, p
         for i, seg in enumerate(result.get("segments", [])):
             seg_obj = {
                 "id": i,
-                "start": round(seg["start"], 2),
-                "end": round(seg["end"], 2),
+                "start": round(float(seg["start"]), 2),
+                "end": round(float(seg["end"]), 2),
                 "text": seg["text"].strip(),
                 "words": []
             }
             for w in seg.get("words", []):
                 word_item = {
                     "word": w["word"].strip(),
-                    "start": round(w["start"], 2),
-                    "end": round(w["end"], 2),
-                    "probability": round(w.get("probability", 1.0), 2)
+                    "start": round(float(w["start"]), 2),
+                    "end": round(float(w["end"]), 2),
+                    "probability": round(float(w.get("probability", 1.0)), 2)
                 }
                 seg_obj["words"].append(word_item)
                 all_words.append(word_item)
