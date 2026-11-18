@@ -46,8 +46,10 @@ dev = [
 clipforge = "clipforge.cli:main"
 
 [tool.setuptools]
-packages = ["clipforge"]
+packages = ["clipforge", "app"]
+include-package-data = true
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["clipforge*"]
+[tool.setuptools.package-data]
+clipforge = ["*.yaml", "*.json"]
+app = ["*.yaml", "*.json"]
+"*" = ["static/**/*", "templates/**/*", "config/**/*"]
