@@ -24,15 +24,17 @@ from pathlib import Path
 def create_test_video() -> tuple:
     """Create a synthetic test video and transcript for profiling."""
     video_path = '/tmp/test_talking_head.mp4'
-    # Generate 10 min of synthetic video using ffmpeg
+    # Generate 10 min of synthetic 1080p video WITH audio using ffmpeg
+    # (a sine tone gives the DSP pipeline something to analyze)
     subprocess.run(
         ["ffmpeg", "-y",
-         "-f", "lavfi", "-i", "color=c=yellow:d=600",
-         "-f", "lavfi", "-i", "color=c=blue:d=600",
-         "-filter_complex", "[0][1]overlay=x=10:y=10",
+         "-f", "lavfi", "-i", "color=c=yellow:s=1920x1080:d=600:r=30",
+         "-f", "lavfi", "-i", "sine=frequency=440:duration=600",
          "-c:v", "libx264", "-preset", "veryfast", "-crf", "28",
+         "-c:a", "aac", "-b:a", "64k",
          "-t", "600", video_path],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        timeout=300
     )
     
     # Create transcript with word timings for a 10-minute video
