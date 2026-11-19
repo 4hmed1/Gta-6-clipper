@@ -1,27 +1,31 @@
 @echo off
 echo ==========================================================
-echo    ViralForge AI - Open-Source Video Clipping Tool
+echo    GTA 6 Clipper - Free Local Vertical Short Maker
 echo ==========================================================
 
-where ffmpeg >nul 2>nul
+REM Check if ffmpeg is installed
+where ffmpeg >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [ERROR] FFmpeg is not installed or not in PATH!
-    echo Please install FFmpeg: winget install Gyan.FFmpeg
-    pause
-    exit /b
+    echo ❌ FFmpeg is not installed! Please install ffmpeg first.
+    echo    Windows: winget install Gyan.FFmpeg
+    exit /b 1
 )
 
-if not exist venv (
-    echo [INFO] Creating Python virtual environment...
+REM Create virtual environment if it doesn't exist
+if not exist "venv" (
+    echo 📦 Creating Python virtual environment...
     python -m venv venv
 )
 
-echo [INFO] Activating virtual environment...
+echo 🔄 Activating virtual environment...
 call venv\Scripts\activate
 
-echo [INFO] Installing dependencies...
+echo 📥 Installing GTA 6 Clipper ^& dependencies...
 pip install -r requirements.txt
+pip install -e .
 
-echo [INFO] Starting ViralForge AI Studio on http://localhost:8000...
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-pause
+REM Install optional STT engine
+pip install -e ".[stt]" 2>nul || echo ⚠️  Optional offline STT (faster-whisper) not installed. Run: pip install -e ".[stt]"
+
+echo ✨ Starting GTA 6 Clipper Studio on http://localhost:3000...
+python -m uvicorn app.main:app --host 0.0.0.0 --port 3000 --reload

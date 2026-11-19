@@ -1,5 +1,5 @@
 /**
- * ClipForge App
+ * GTA 6 Clipper App
  * UI interactivity and backend communication for the Create screen
  * and the "Your videos" list.
  */
@@ -77,7 +77,7 @@
   // ══════ SETTINGS PERSISTENCE ═════
   function loadSettings() {
     try {
-      const raw = localStorage.getItem('clipforge_settings');
+      const raw = localStorage.getItem('gta6_clipper_settings');
       return raw ? { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } : { ...DEFAULT_SETTINGS };
     } catch {
       return { ...DEFAULT_SETTINGS };
@@ -85,7 +85,7 @@
   }
 
   function saveSettings() {
-    localStorage.setItem('clipforge_settings', JSON.stringify(state.settings));
+    localStorage.setItem('gta6_clipper_settings', JSON.stringify(state.settings));
   }
 
   // ══════ TIME PARSING ═════
@@ -169,16 +169,16 @@
   function setFindClipsButton(stateName, label) {
     const btn = els.findClipsBtn;
     btn.disabled = stateName !== 'idle';
-    btn.innerHTML = '';
-    if (stateName === 'working') {
-      btn.innerHTML = '<span class="spinner" aria-hidden="true"></span><span>Working...</span>';
-      btn.setAttribute('aria-busy', 'true');
-    } else if (stateName === 'error') {
-      btn.innerHTML = `<span>${label || 'Try again'}</span>`;
+    btn.querySelector('.button-text').textContent = label || 'Find my clips';
+    const spinner = btn.querySelector('.spinner');
+    if (spinner) {
+      spinner.style.display = stateName === 'working' ? 'inline-block' : 'none';
+    }
+    if (stateName === 'error') {
+      btn.querySelector('.button-text').textContent = label || 'Try again';
       btn.setAttribute('aria-busy', 'false');
     } else {
-      btn.innerHTML = '<span>Find my clips</span>';
-      btn.setAttribute('aria-busy', 'false');
+      btn.setAttribute('aria-busy', stateName === 'working' ? 'true' : 'false');
     }
   }
 
@@ -274,7 +274,8 @@
     const s = state.settings;
     const clipCount = s.clipCount === 'auto' ? 0 : Number(s.clipCount);
     const payload = {
-      source,
+      url: source.type === 'url' ? source.url : null,
+      filepath: source.type === 'file' ? source.value : null,
       clip_count: clipCount,
       length_min: s.clipLengthMin,
       length_max: s.clipLengthMax,
@@ -682,14 +683,14 @@
   function notifyCompletion(task, card) {
     showToast('Your clips are ready.', 'success');
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('ClipForge', { body: `${task.message || 'Clips ready'}` });
+      new Notification('GTA 6 Clipper', { body: `${task.message || 'Clips ready'}` });
     }
-    document.title = 'ClipForge — Clips ready';
+    document.title = 'GTA 6 Clipper — Clips ready';
   }
 
   function startJobWithQuality(quality) {
     showToast('Re-running with lower quality settings…');
-    localStorage.setItem('clipforge_quality_override', quality);
+    localStorage.setItem('gta6_clipper_quality_override', quality);
     startJob();
   }
 
@@ -958,20 +959,15 @@
       }
     });
 
-    // Request notification permission lazily
-    if ('Notification' in window && Notification.permission === 'default') {
-      // Don't nag; request on first successful job start
-    }
-
     // Update tab title with progress
     setInterval(() => {
       const working = els.videoCards.querySelector('.status-pill.working');
       if (working) {
         const card = working.closest('.video-card');
         const pct = card?.querySelector('[data-role="percent"]')?.textContent || '…';
-        document.title = `Clipping ${pct} — ClipForge`;
+        document.title = `Clipping ${pct} — GTA 6 Clipper`;
       } else if (!document.title.includes('ready')) {
-        document.title = 'ClipForge — Turn Long Videos into Ready Shorts';
+        document.title = 'GTA 6 Clipper — Turn Long Videos into Ready Shorts';
       }
     }, 3000);
   }

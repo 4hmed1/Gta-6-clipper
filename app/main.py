@@ -44,6 +44,73 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 # In-memory task state tracking for real-time progress
 tasks_state: Dict[str, Dict[str, Any]] = {}
 
+# ── Error Classifier ──
+
+def _classify_ytdlp_error(err_msg: str) -> Dict[str, str]:
+    """Classify yt-dlp/FFmpeg errors into user-friendly categories."""
+    err_lower = err_msg.lower() if err_msg else ""
+    
+    if "sign in to confirm" in err_lower or "not a bot" in err_lower:
+        return {
+            "user_msg": "YouTube thinks you're a bot. Use cookies or try a different network.",
+            "tech_detail": err_msg,
+            "fix": "Use --cookies-from-browser chrome, or export cookies to cookies.txt and use --cookies cookies.txt. Alternatively, upload the video file locally."
+        }
+    elif "private" in err_lower or "unavailable" in err_lower:
+        return {
+            "user_msg": "This video is private, removed, or unavailable.",
+            "tech_detail": err_msg,
+            "fix": "Check if the video is still available on YouTube. If it's your video, make sure it's public or unlisted."
+        }
+    elif "geo" in err_lower or "blocked" in err_lower:
+        return {
+            "user_msg": "This video is not available in your region.",
+            "tech_detail": err_msg,
+            "fix": "Use a VPN or proxy, or upload the video file locally."
+        }
+    elif "403" in err_msg or "404" in err_msg:
+        return {
+            "user_msg": "YouTube returned an error (403/404). The video may be private or removed.",
+            "tech_detail": err_msg,
+            "fix": "Try a different video or upload the file locally."
+        }
+    elif "timed out" in err_lower or "timeout" in err_lower:
+        return {
+            "user_msg": "YouTube did not respond in time. Check your internet connection.",
+            "tech_detail": err_msg,
+            "fix": "Retry, or upload the video file locally."
+        }
+    elif "no such file" in err_lower or "not found" in err_lower:
+        return {
+            "user_msg": "The video URL is invalid or the video was removed.",
+            "tech_detail": err_msg,
+            "fix": "Check the URL and try again."
+        }
+    else:
+        return {
+            "user_msg": "Download failed.",
+            "tech_detail": err_msg,
+            "fix": "Retry with a different network, use cookies, or upload the video file locally."
+        }
+
+
+def _check_and_clear_orphan_tasks():
+    """On server start, find orphaned RUNNING/WORKING tasks and mark them INTERRUPTED."""
+    import os
+    import signal
+    now = time.time()
+    for task_id, state in list(tasks_state.items()):
+        status = state.get("status", "")
+        heartbeat = state.get("heartbeat", 0)
+        # If task is running/working and heartbeat is old (> 10s) or never set
+        if status in ("running", "working", "processing") and (now - heartbeat > 10 if heartbeat else True):
+            pipeline_logger.warning(f"[{task_id}] ORPHAN_TASK: status={status}, heartbeat_age={now - heartbeat if heartbeat else 'never'}")
+            state["status"] = "interrupted"
+            state["error"] = "Server restarted while job was running."
+            state["message"] = "Job interrupted. Resume or delete."
+            state["can_resume"] = True
+            state["can_delete"] = True
+
 
 class ProcessRequest(BaseModel):
     url: Optional[str] = None
@@ -265,7 +332,19 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
         tasks_state[task_id]["message"] = msg
         tasks_state[task_id]["progress"] = progress
         tasks_state[task_id]["stage"] = stage
+        tasks_state[task_id]["heartbeat"] = time.time()
         pipeline_logger.info(f"[{task_id}] [{stage}] p={progress}% | {msg}")
+
+    def fail_with(message: str, raw: str = ""):
+        """Mark job failed with a classified, plain-language error."""
+        classified = _classify_ytdlp_error(raw or message)
+        tasks_state[task_id]["status"] = "failed"
+        tasks_state[task_id]["progress"] = 0
+        tasks_state[task_id]["heartbeat"] = time.time()
+        tasks_state[task_id]["error"] = message or classified["user_msg"]
+        tasks_state[task_id]["error_detail"] = classified["tech_detail"]
+        tasks_state[task_id]["suggested_fix"] = classified["fix"]
+        pipeline_logger.error(f"[{task_id}] JOB_FAILED: {message}")
 
     def record_stage(stage_name: str, details: str = ""):
         elapsed = time.time() - start_time
@@ -297,9 +376,7 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
             set_status("Fetching video metadata and captions...", 5, "ingesting")
             meta_res = _run_async(_fetch_metadata_and_captions(req.url))
             if not meta_res.get("success"):
-                tasks_state[task_id]["status"] = "failed"
-                tasks_state[task_id]["error"] = meta_res.get("error", "Metadata fetch failed")
-                pipeline_logger.error(f"[{task_id}] META_FAILED")
+                fail_with("YouTube did not answer; retry, try cookies, or upload the file.", meta_res.get("error", "Metadata fetch failed"))
                 return
             video_meta = meta_res
             set_status(f"Metadata: {video_meta.get('title','Video')} ({video_meta.get('duration',0)}s)", 10, "ingesting")
@@ -312,9 +389,7 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
                 "available_captions": [],
             }
         else:
-            tasks_state[task_id]["status"] = "failed"
-            tasks_state[task_id]["error"] = "No valid URL or video file provided."
-            pipeline_logger.error(f"[{task_id}] NO_INPUT")
+            fail_with("No valid URL or video file provided.")
             return
 
         source_video = video_meta.get("filepath", "")
@@ -419,9 +494,7 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
                 video_for_render = dl_res["filepath"]
                 set_status(f"Video downloaded ({dl_res.get('file_size_mb', 0)} MB)", 80, "downloading")
             else:
-                tasks_state[task_id]["status"] = "failed"
-                tasks_state[task_id]["error"] = f"Failed to download video: {dl_res.get('error', 'unknown error')}"
-                pipeline_logger.error(f"[{task_id}] DOWNLOAD_FAILED: {dl_res.get('error')}")
+                fail_with("Download failed.", dl_res.get("error", "unknown error"))
                 return
         elif not (video_for_render and Path(video_for_render).exists()):
             tasks_state[task_id]["status"] = "failed"
@@ -495,12 +568,15 @@ def process_video_endpoint(req: ProcessRequest, background_tasks: BackgroundTask
     """Start background video clipping pipeline."""
     task_id = str(uuid.uuid4())[:8]
     tasks_state[task_id] = {
+        "task_id": task_id,
         "status": "processing",
         "progress": 0,
         "message": "Initializing pipeline...",
         "clips": [],
         "error": None,
+        "heartbeat": time.time(),
     }
+    _check_and_clear_orphan_tasks()
     background_tasks.add_task(run_processing_pipeline, task_id, req)
     return {"success": True, "task_id": task_id}
 
@@ -519,7 +595,14 @@ def get_task_status(task_id: str):
     state = tasks_state.get(task_id)
     if not state:
         raise HTTPException(status_code=404, detail="Task not found")
-    return state
+    # Include heartbeat age for stuck detection
+    now = time.time()
+    heartbeat_age = now - state.get("heartbeat", now)
+    return {
+        **state,
+        "heartbeat_age": round(heartbeat_age, 1),
+        "is_stuck": heartbeat_age > 60 and state.get("status") in ("running", "working", "processing"),
+    }
 
 
 @app.post("/api/edit")
@@ -574,6 +657,34 @@ def list_clips():
 
 
 # ── NEW: Create-screen endpoints ──
+
+# ── Startup: Recover orphan tasks & start janitor ──
+
+@app.on_event("startup")
+async def startup_event():
+    """On startup, recover orphan tasks and start the janitor."""
+    import asyncio
+    _check_and_clear_orphan_tasks()
+    # Start background janitor (runs every 10s)
+    asyncio.create_task(_janitor_loop())
+
+
+async def _janitor_loop():
+    """Background loop that checks for stuck tasks every 10 seconds."""
+    while True:
+        await asyncio.sleep(10)
+        _check_and_clear_orphan_tasks()
+        # Log stuck tasks
+        now = time.time()
+        for task_id, state in list(tasks_state.items()):
+            if state.get("status") in ("running", "working", "processing"):
+                heartbeat_age = now - state.get("heartbeat", now)
+                if heartbeat_age > 60:
+                    pipeline_logger.warning(f"[{task_id}] STUCK: heartbeat_age={heartbeat_age:.0f}s, stage={state.get('stage')}")
+                    # Mark as stuck in state
+                    state["is_stuck"] = True
+                    state["stuck_since"] = now - heartbeat_age
+
 
 @app.get("/api/validate")
 def validate_endpoint(url: str = ""):

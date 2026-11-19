@@ -1,115 +1,230 @@
 <div align="center">
 
-# 🚀 ViralForge AI
-### Open-Source AI Video Clipping & Re-framing Engine
-**Transform long-form videos into engaging 9:16 vertical shorts automatically.**
+# 🎬 GTA 6 Clipper
+### Free, Local-First Vertical Short Maker
+
+**Turn any YouTube video or local file into ready-to-post 1080×1920 Shorts in minutes — fully offline, no AI, no account, no watermark.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Docker Ready](https://img.shields.io/badge/docker-ready-2496ed.svg)](https://www.docker.com/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![100% Local](https://img.shields.io/badge/local--first-100%25-green.svg)](https://github.com/max/viralforge-ai)
 
 [**Quickstart**](#-quickstart) •
 [**Features**](#-features) •
-[**Web Studio**](#-in-browser-video-studio) •
-[**Docker**](#-docker-deployment) •
+[**How It Works**](#-how-it-works) •
+[**Developer Setup**](#-developer-setup) •
 [**Architecture**](#-architecture)
 
 </div>
 
 ---
 
+> ⚠️ **Disclaimer**: GTA 6 Clipper is an independent, unofficial tool. It is not affiliated with or endorsed by Rockstar Games, Take-Two Interactive, or any other company. All game names and trademarks are property of their respective owners. Users must have the rights to the videos they process and follow platform terms of service.
+
+---
+
 ## ⚡ Highlights
 
-ViralForge AI is a self-hosted, open-source video processor that automates short-form video creation:
-- **Speech & Hook Detection**: Locates high-retention segments using sentiment, audio velocity, and language models.
-- **Dynamic 9:16 Re-framing**: Converts 16:9 widescreen videos into vertical video with blurred background padding or center focus.
-- **Kinetic Karaoke Subtitles**: Burns animated word-by-word highlighted captions using FFmpeg.
-- **In-Browser Video Studio**: Visual timeline trimmer, caption text editor, and instant exporter.
-- **100% Self-Hosted & Free**: No subscriptions, no usage caps, and no watermarks.
+- **100% free & unlimited** — no subscriptions, no usage caps, no watermarks
+- **Explainable clip scoring** — every clip shows a score and the reasons (hooks, speech pacing, energy)
+- **Runs on weak PCs** — designed for 4th-gen Intel i5, 8 GB RAM, no GPU
+- **Self-healing pipeline** — automatically retries with fallbacks when YouTube blocks downloads
+- **Deterministic** — same input always produces the same output, no random AI
+- **No cloud, no upload, no telemetry** — everything runs on your machine
 
 ---
 
 ## 🎯 Features
 
-- 📥 **Flexible Ingestion**: Paste any video link (YouTube, social video) or upload local MP4/MOV files.
-- 🎙️ **Speech-to-Text with Word Timestamps**: Fast transcription using Whisper / faster-whisper.
-- 📊 **Virality Scoring (0-100)**: Evaluates hook strength, speech pacing, and retention curve.
-- ✨ **Animated Subtitle Presets**:
-  - `Vibrant Gold`: Energetic yellow active word highlighting.
-  - `Neon Green`: High-contrast bold active word emphasis.
-  - `Cyber Cyan`: Modern electric cyan accent.
-  - `Clean Modern`: Subtle, minimalist caption style.
-- 🎛️ **Interactive In-Browser Editor**:
-  - Fine-tune start and end trim timestamps.
-  - Correct or rewrite subtitles directly.
-  - Toggle between 9:16 Blurred Stack, 9:16 Crop, or Original Aspect Ratio.
-  - Re-render exports in seconds.
+- 📥 **Paste or Upload** — YouTube URLs or local MP4/MOV files
+- 🎙️ **Word-Level Timestamps** — from YouTube captions or optional offline Whisper (faster-whisper)
+- 📊 **Hook & Retention Scoring** — heuristic analysis of speech pacing, keywords, and energy
+- ✨ **Kinetic Captions** — 8+ animated subtitle styles burned directly into the video
+- 🎬 **Smart Re-framing** — auto face-tracking, blur-fit, or center-crop for 9:16
+- 🖥️ **In-Browser Studio** — visual progress, clip cards with scores, download-all button
+- 🛡️ **Player Client Fallback** — tries multiple download methods when YouTube blocks
 
 ---
 
 ## 🚀 Quickstart
 
 ### Prerequisites
+
 Make sure **FFmpeg** is installed:
+
 - **Ubuntu/Debian**: `sudo apt update && sudo apt install -y ffmpeg`
 - **macOS**: `brew install ffmpeg`
 - **Windows**: `winget install Gyan.FFmpeg`
 
-### Installation & Run
+### One-Command Install (macOS / Linux)
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/your-username/viralforge-ai.git
+git clone https://github.com/max/viralforge-ai.git
 cd viralforge-ai
-
-# 2. Run the startup script
-# Linux / macOS:
-chmod +x run.sh
 ./run.sh
+```
 
-# Windows:
+The app opens automatically at **http://localhost:3000**.
+
+### One-Command Install (Windows)
+
+```powershell
+git clone https://github.com/max/viralforge-ai.git
+cd viralforge-ai
 run.bat
 ```
 
-Alternatively, run manually with Python:
+### Manual Install
 
 ```bash
 python3 -m venv venv
-source venv/bin/activate       # On Windows: venv\Scripts\activate
+source venv/bin/activate     # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+pip install -e .
+clipforge                    # or: python -m clipforge.cli
 ```
 
-Open your browser to: **`http://localhost:8000`**
+### CLI Commands
+
+```bash
+clipforge              # Start the web studio (auto-opens browser)
+clipforge doctor       # Check FFmpeg, yt-dlp, encoders, disk space
+clipforge --port 8080  # Use a different port
+clipforge --no-browser # Don't open the browser automatically
+```
 
 ---
 
-## 🐳 Docker Deployment
+## 🧠 How It Works
 
-Run isolated with Docker Compose:
+```
+  ┌──────────┐
+  │  YouTube  │  or  Local File
+  │   URL     │
+  └────┬─────┘
+       │
+  ┌────▼────────────────┐
+  │  1. Metadata Fetch   │  yt-dlp --dump-json (title, duration, caption tracks)
+  └────┬────────────────┘
+       │
+  ┌────▼────────────────┐
+  │  2. Audio Download   │  Low-bitrate WAV for analysis (~2 MB for 3-min video)
+  └────┬────────────────┘
+       │
+  ┌────▼────────────────┐
+  │  3. Transcription    │  Word-level timestamps (YouTube captions or faster-whisper)
+  └────┬────────────────┘
+       │
+  ┌────▼────────────────┐
+  │  4. Clip Selection   │  Sliding windows over sentence boundaries, scored by hooks,
+  │                      │  speech density, energy. Deterministic. No AI.
+  └────┬────────────────┘
+       │
+  ┌────▼────────────────┐
+  │  5. Video Download   │  Full video at low quality (480p), player client fallback
+  └────┬────────────────┘
+       │
+  ┌────▼────────────────┐
+  │  6. Render Clips     │  FFmpeg: 1080×1920, kinetic captions, blur reframing, loudnorm
+  └────┬────────────────┘
+       │
+  ┌────▼────────────────┐
+  │  Web Studio Results  │  Ranked clip cards, preview, download-all, re-render
+  └─────────────────────┘
+```
+
+---
+
+## 💻 Developer Setup
 
 ```bash
-docker compose up --build
+# Clone and enter
+git clone https://github.com/max/viralforge-ai.git
+cd viralforge-ai
+
+# Create venv and install
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+pip install -e ".[dev,stt]"
+
+# Run
+pip install -e .
+clipforge --no-browser
 ```
-Access the application at `http://localhost:8000`.
+
+### Project Structure
+
+```
+├── app/                # FastAPI backend
+│   ├── main.py         # API routes + pipeline orchestrator
+│   ├── downloader.py   # yt-dlp wrapper
+│   ├── transcriber.py  # Caption & whisper transcription
+│   ├── viral_detector.py # Heuristic clip scoring
+│   ├── video_engine.py   # FFmpeg render (1080×1920)
+│   └── clip_editor.py    # Re-export with adjusted settings
+├── clipforge/          # CLI entry point
+│   └── cli.py          # clipforge/gta6-clipper command
+├── static/             # Bundled web frontend
+│   ├── index.html      # Studio UI
+│   ├── js/app.js       # Frontend logic
+│   └── css/style.css   # Tailwind-like dark theme
+├── outputs/clips/      # Generated short videos
+├── downloads/          # Cached source files
+└── config/             # Scoring weights (YAML)
+```
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `app/main.py` | FastAPI routes + full pipeline worker |
+| `app/brand.py` | Single source-of-truth for app name & disclaimer |
+| `app/downloader.py` | yt-dlp integration with player client ladder |
+| `app/transcriber.py` | YouTube captions + faster-whisper fallback |
+| `app/viral_detector.py` | Deterministic scoring: hooks, speech density, energy |
+| `app/video_engine.py` | FFmpeg filter graph: captions, reframing, loudnorm |
+| `clipforge/cli.py` | `clipforge` and `gta6-clipper` CLI commands |
 
 ---
 
 ## 📐 Architecture
 
-```mermaid
-flowchart LR
-    A["Video Input\n(URL / Local File)"] --> B["Downloader & Ingestion\n(yt-dlp / FFmpeg)"]
-    B --> C["Audio Extraction & Speech AI\n(Word Timestamps)"]
-    C --> D["Hook & Retention Analyzer\n(Score 0-100)"]
-    D --> E["Kinetic Subtitle Engine\n(ASS Generator)"]
-    D --> F["9:16 Re-framing Engine\n(FFmpeg Filters)"]
-    E & F --> G["Exported Short Video (.mp4)"]
-    G --> H["Web Studio\n(Trim, Edit, Download)"]
 ```
+┌─────────────────────────────────────────────────────────────┐
+│  Web Studio (React/Vanilla JS)                               │
+│  ┌─────────────┐  ┌─────────────┐  ┌──────────────────────┐ │
+│  │  Create Tab  │  │ Library Tab │  │ Settings Tab         │ │
+│  │  URL / File  │  │ Video Cards │  │ Theme, output, etc.  │ │
+│  │  Settings    │  │ Clip Grid   │  │                      │ │
+│  └──────┬───────┘  └──────┬──────┘  └──────────────────────┘ │
+│         │                 │                                   │
+│         ▼                 │                                   │
+│  ┌─────────────────────┐  │                                   │
+│  │  FastAPI Backend     │◄┘                                   │
+│  │  ┌─────────────────┐ │                                    │
+│  │  │ Pipeline Worker │ │  Background task, progress via WS  │
+│  │  │ Ingest → Audio  │ │                                    │
+│  │  │ → Transcribe    │ │                                    │
+│  │  │ → Select        │ │                                    │
+│  │  │ → Download      │ │                                    │
+│  │  │ → Render        │ │                                    │
+│  │  └─────────────────┘ │                                    │
+│  └─────────────────────┘                                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔒 Privacy
+
+- **Zero telemetry** — nothing leaves your machine except the YouTube API request for metadata
+- **Zero upload** — videos are downloaded to your disk and processed locally
+- **No accounts** — no sign-up, no login, no tracking
+- **Optional offline STT** — faster-whisper runs entirely on your GPU/CPU
 
 ---
 
 ## 📄 License
 
-Distributed under the **MIT License**.
+Distributed under the **MIT License**. See `LICENSE` for details.

@@ -2,7 +2,7 @@
 set -e
 
 echo "=================================================="
-echo "         ClipForge Installer (macOS/Linux)        "
+echo "     GTA 6 Clipper Installer (macOS/Linux)        "
 echo "=================================================="
 
 # 1. Check Python 3.11+
@@ -15,39 +15,44 @@ PYTHON_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.v
 echo "[✓] Found Python $PYTHON_VERSION"
 
 # 2. Setup virtual environment
-INSTALL_DIR="$HOME/.clipforge"
-echo "📦 Installing ClipForge to $INSTALL_DIR..."
+INSTALL_DIR="$HOME/.gta6-clipper"
+echo "📦 Installing GTA 6 Clipper to $INSTALL_DIR..."
 mkdir -p "$INSTALL_DIR"
 python3 -m venv "$INSTALL_DIR/venv"
 
-# 3. Upgrade pip and install ClipForge
-echo "⬇️ Downloading and installing ClipForge & dependencies..."
+# 3. Upgrade pip and install GTA 6 Clipper
+echo "⬇️  Downloading and installing GTA 6 Clipper & dependencies..."
 "$INSTALL_DIR/venv/bin/python" -m pip install --upgrade pip
-"$INSTALL_DIR/venv/bin/pip" install git+https://github.com/max/clipforge.git || {
+"$INSTALL_DIR/venv/bin/pip" install git+https://github.com/max/viralforge-ai.git || {
     # Fallback to local install if offline/development
     "$INSTALL_DIR/venv/bin/pip" install .
 }
 
-# 4. Create symlink / wrapper for clipforge command
+# 4. Create symlink / wrapper for gta6-clipper command
 BIN_DIR="/usr/local/bin"
 if [ ! -w "$BIN_DIR" ]; then
     BIN_DIR="$HOME/.local/bin"
     mkdir -p "$BIN_DIR"
 fi
 
+cat << EOF > "$BIN_DIR/gta6-clipper"
+#!/usr/bin/env sh
+exec "$INSTALL_DIR/venv/bin/python" -m clipforge.cli "\$@"
+EOF
+chmod +x "$BIN_DIR/gta6-clipper"
+
+# Also create clipforge alias
 cat << EOF > "$BIN_DIR/clipforge"
 #!/usr/bin/env sh
 exec "$INSTALL_DIR/venv/bin/python" -m clipforge.cli "\$@"
 EOF
-
 chmod +x "$BIN_DIR/clipforge"
-echo "[✓] Created 'clipforge' command at $BIN_DIR/clipforge"
 
-# 5. Run clipforge doctor
+# 5. Doctor
 echo "🩺 Running system health check..."
-"$BIN_DIR/clipforge" doctor
+"$INSTALL_DIR/venv/bin/python" -m clipforge.cli doctor
 
 echo "=================================================="
-echo "🎉 ClipForge installed successfully!"
-echo "Run: clipforge"
+echo "🎉 GTA 6 Clipper installed successfully!"
+echo "   Run: gta6-clipper  (or: clipforge)"
 echo "=================================================="

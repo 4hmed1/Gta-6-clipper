@@ -2,7 +2,7 @@
 set -e
 
 echo "=========================================================="
-echo "   🚀 ViralForge AI - Open-Source Video Clipping Tool   "
+echo "   🎬 GTA 6 Clipper - Free Local Vertical Short Maker   "
 echo "=========================================================="
 
 # Check if ffmpeg is installed
@@ -22,8 +22,12 @@ fi
 echo "🔄 Activating virtual environment..."
 source venv/bin/activate
 
-echo "📥 Installing required Python dependencies..."
+echo "📥 Installing GTA 6 Clipper & dependencies..."
 pip install -r requirements.txt
+pip install -e .
 
-echo "✨ Starting ViralForge AI Studio on http://localhost:3000..."
+# Install optional STT engine
+pip install -e ".[stt]" 2>/dev/null || echo "⚠️  Optional offline STT (faster-whisper) not installed. Run: pip install -e '.[stt]'"
+
+echo "✨ Starting GTA 6 Clipper Studio on http://localhost:3000..."
 python3 -m uvicorn app.main:app --host 0.0.0.0 --port 3000 --reload
