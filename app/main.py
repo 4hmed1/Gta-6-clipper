@@ -56,6 +56,18 @@ class ProcessRequest(BaseModel):
     max_duration: float = 60.0
     max_clips: int = 5
     measured_speed_mbps: float = 1.0
+    # New fields from UI Create screen
+    clip_count: Optional[int] = None
+    length_min: Optional[float] = None
+    length_max: Optional[float] = None
+    aspect: Optional[str] = "9:16"
+    caption_style: Optional[str] = "pop-bold"
+    framing: Optional[str] = "auto"
+    hook_text: Optional[bool] = False
+    tighten_pauses: Optional[bool] = True
+    focus_text: Optional[str] = ""
+    range_start: Optional[float] = None
+    range_end: Optional[float] = None
 
 
 class EditRequest(BaseModel):
@@ -260,6 +272,26 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
         pipeline_logger.info(f"[{task_id}] STAGE_COMPLETE: {stage_name} in {elapsed:.2f}s | {details}")
 
     try:
+        # ── Step 0: Validate user-provided range server-side ──
+        if req.range_start is not None or req.range_end is not None:
+            r_start = req.range_start if req.range_start is not None else 0.0
+            r_end = req.range_end if req.range_end is not None else None
+            if r_start < 0 or (r_end is not None and r_end <= 0):
+                tasks_state[task_id]["status"] = "failed"
+                tasks_state[task_id]["error"] = "Invalid time range: times must be positive (use mm:ss or h:mm:ss)."
+                pipeline_logger.error(f"[{task_id}] BAD_RANGE: start={r_start} end={r_end}")
+                return
+            if r_end is not None and r_end <= r_start:
+                tasks_state[task_id]["status"] = "failed"
+                tasks_state[task_id]["error"] = "Invalid time range: 'To' must be later than 'From'."
+                pipeline_logger.error(f"[{task_id}] BAD_RANGE: start={r_start} >= end={r_end}")
+                return
+        if req.length_min is not None and req.length_max is not None and req.length_max < req.length_min:
+            tasks_state[task_id]["status"] = "failed"
+            tasks_state[task_id]["error"] = "Invalid clip length: max is shorter than min."
+            pipeline_logger.error(f"[{task_id}] BAD_LENGTH: min={req.length_min} max={req.length_max}")
+            return
+
         # ── Step 1: Metadata (tiny, no download) ──
         if req.url:
             set_status("Fetching video metadata and captions...", 5, "ingesting")
@@ -340,11 +372,19 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
         record_stage("transcribe", f"words={len(words)},is_mock={trans_res.get('is_mock', False)}")
 
         # ── Step 4: Clip selection ──
+        # Use new UI fields for clip count and length
+        clip_count = req.clip_count if req.clip_count and req.clip_count > 0 else req.max_clips
+        length_min = req.length_min if req.length_min is not None else req.min_duration
+        length_max = req.length_max if req.length_max is not None else req.max_duration
+
         set_status("Analyzing hooks, speech pacing & retention scores...", 55, "analyzing")
         clips_candidates = detect_viral_clips(
             trans_res,
             method=req.ai_method,
             api_key=req.api_key or "",
+            min_duration=length_min,
+            max_duration=length_max,
+            max_clips=clip_count,
             progress_callback=lambda m, p: set_status(m, p, "analyzing"),
         )
 
@@ -408,7 +448,7 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
                 words=words,
                 headline=cand.get("headline", ""),
                 layout=req.layout,
-                subtitle_style=req.subtitle_style,
+                subtitle_style=req.caption_style or req.subtitle_style,
             )
             if render_res.get("success"):
                 render_res["score"] = cand.get("score", 90)
@@ -531,6 +571,62 @@ def list_clips():
             "thumbnail": f"/api/clips/thumb/{thumb_path.name}" if thumb_path.exists() else "",
         })
     return {"clips": clips}
+
+
+# ── NEW: Create-screen endpoints ──
+
+@app.get("/api/validate")
+def validate_endpoint(url: str = ""):
+    """Validate a YouTube URL and return title/duration when available."""
+    if not url:
+        raise HTTPException(status_code=400, detail="url is required")
+    import re
+    yt_re = re.compile(
+        r"^(https?:\/\/)?(www\.|m\.)?(youtube\.com\/(watch\?v=|shorts\/|embed\/)|youtu\.be\/)[\w-]{6,}",
+        re.IGNORECASE,
+    )
+    if not yt_re.match(url):
+        return {"success": False, "error": "That does not look like a YouTube link."}
+    try:
+        cmd = [
+            _ytdlp_bin(), "--no-playlist", "--skip-download", "--dump-json", url,
+        ]
+        proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
+        if proc.returncode == 0:
+            import json as _json
+            data = _json.loads(proc.stdout.decode("utf-8", errors="replace"))
+            return {
+                "success": True,
+                "title": data.get("title", url),
+                "duration": data.get("duration", 0),
+                "thumbnail": data.get("thumbnail", ""),
+            }
+    except Exception:
+        pass
+    return {"success": True, "title": url, "duration": 0, "thumbnail": ""}
+
+
+@app.get("/api/tasks")
+def list_tasks_endpoint():
+    """List all persisted tasks for the Library tab."""
+    return {"tasks": list(tasks_state.values())}
+
+
+@app.post("/api/tasks/cancel")
+def cancel_task_endpoint(task_id: str):
+    """Cancel a running task."""
+    state = tasks_state.get(task_id)
+    if not state:
+        raise HTTPException(status_code=404, detail="Task not found")
+    state["status"] = "cancelled"
+    state["message"] = "Cancelled by user."
+    return {"success": True}
+
+
+@app.get("/api/videos/folder")
+def videos_folder_endpoint(task_id: str = ""):
+    """Return the output folder path for a task."""
+    return {"path": str(OUTPUTS_DIR)}
 
 
 if __name__ == "__main__":

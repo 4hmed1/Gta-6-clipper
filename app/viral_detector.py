@@ -264,7 +264,10 @@ def detect_viral_clips(
     transcript_result: Dict[str, Any],
     method: str = "heuristic",
     api_key: str = "",
-    progress_callback = None
+    progress_callback = None,
+    min_duration: float = 20.0,
+    max_duration: float = 60.0,
+    max_clips: int = 5,
 ) -> List[Dict[str, Any]]:
     """Unified entrypoint for viral moment detection."""
     if progress_callback:
@@ -309,4 +312,9 @@ def detect_viral_clips(
     elif method == "ollama":
         return analyze_viral_moments_ollama(full_text, segments)
     else:
-        return analyze_viral_moments_heuristic(segments)
+        return analyze_viral_moments_heuristic(
+            segments,
+            min_duration=min_duration,
+            max_duration=max_duration,
+            max_clips=max_clips,
+        )
