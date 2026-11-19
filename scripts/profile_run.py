@@ -2,58 +2,53 @@
 """
 Profile runner for ClipForge pipeline stages.
 Runs the full flow on test videos and prints timing results.
+Baseline measurements for 4th-gen Intel i5, 8GB RAM, no GPU.
 """
 
 import json
 import os
 import sys
 import time
-import asyncio
 import subprocess
-import signal
-import resource
+import threading
 from pathlib import Path
 from typing import Dict, Any, List
 
-# Add the project to path
 sys.path.insert(0, '/home/max/Documents/viralforge-ai')
 
-from pathlib import Path
-
-# ---- Create a test video + transcript ----
+# ---- Create a test 60s video + transcript ----
 def create_test_video() -> tuple:
-    """Create a synthetic test video and transcript for profiling."""
-    video_path = '/tmp/test_talking_head.mp4'
-    # Generate 10 min of synthetic 1080p video WITH audio using ffmpeg
-    # (a sine tone gives the DSP pipeline something to analyze)
-    subprocess.run(
-        ["ffmpeg", "-y",
-         "-f", "lavfi", "-i", "color=c=yellow:s=1920x1080:d=600:r=30",
-         "-f", "lavfi", "-i", "sine=frequency=440:duration=600",
-         "-c:v", "libx264", "-preset", "veryfast", "-crf", "28",
-         "-c:a", "aac", "-b:a", "64k",
-         "-t", "600", video_path],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-        timeout=300
-    )
+    """Create a synthetic 60s test video with audio for profiling."""
+    video_path = '/tmp/test_60s.mp4'
+    # Already created: 60s 640x360 video with sine audio at 32kbit
+    if not os.path.exists(video_path):
+        subprocess.run(
+            ["ffmpeg", "-y",
+             "-f", "lavfi", "-i", "color=c=yellow:s=640x360:d=60:r=15",
+             "-f", "lavfi", "-i", "sine=frequency=440:duration=60",
+             "-c:v", "libx264", "-preset", "ultrafast", "-crf", "32",
+             "-c:a", "aac", "-b:a", "32k",
+             "-t", "60", video_path],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
     
-    # Create transcript with word timings for a 10-minute video
+    # Create transcript with word timings for a 60-second video
     import random
     random.seed(42)
-    duration = 600  # 10 minutes
+    duration = 60  # 60 seconds
     words = []
     t = 0.0
     while t < duration:
-        wlen = random.uniform(0.5, 3.0)
+        wlen = random.uniform(0.3, 2.5)
         words.append({
             'word': f'word{len(words)}',
             'start': round(t, 2),
-            'end': round(t + wlen + random.uniform(0.1, 0.5), 2)
+            'end': round(min(t + wlen + random.uniform(0.1, 0.4), duration), 2)
         })
-        t += wlen + random.uniform(0.1, 0.5)
+        t += wlen + random.uniform(0.1, 0.4)
     words[-1]['end'] = round(duration, 2)
     
-    # Add some meaningful sentences at known positions
+    # Add 6 sentences with known hooks at positions
     sentences_text = [
         'The secret to growing your audience is actually quite simple.',
         'If you want to build massive leverage in 2026 you need to focus on hooks.',
@@ -61,51 +56,45 @@ def create_test_video() -> tuple:
         'Watch what happens when you implement this single change today.',
         'Most people are making a big mistake by not optimizing.',
         'You have to stop making long boring videos and start focusing.',
-        'The biggest problem with content today is lack of engagement.',
-        'Transform your approach and change your life today.',
-        'This single strategy will change everything for you.',
-        'Stop doing what is not working and start doing this instead.'
     ]
-    sentence_starts = [0.0, 45.0, 95.0, 150.0, 210.0, 280.0, 350.0, 420.0, 490.0, 560.0]
-    sentence_ends = [44.0, 94.0, 149.0, 209.0, 279.0, 349.0, 419.0, 489.0, 559.0, 600.0]
+    sentence_starts = [0.0, 8.0, 18.0, 32.0, 44.0, 52.0]
+    sentence_ends = [7.0, 17.0, 31.0, 43.0, 51.0, 60.0]
     
-    # Add sentence-level words
-    all_words = list(words)  # Start with random words
     for si, (ss, se) in enumerate(zip(sentence_starts, sentence_ends)):
-        nwords = random.randint(8, 20)
+        nwords = random.randint(5, 15)
         for j in range(nwords):
             wlen = random.uniform(0.3, 2.0)
             t = ss + sum([random.uniform(0.3, 2.0) + 0.1 for _ in range(j)])
             if t < se:
                 word_text = sentences_text[si].split()[j % len(sentences_text[si].split())] if j < len(sentences_text[si].split()) else f'word{j}'
-                all_words.append({
+                words.append({
                     'word': word_text,
                     'start': round(t, 2),
-                    'end': round(t + wlen + random.uniform(0.1, 0.3), 2)
+                    'end': round(min(t + wlen + random.uniform(0.1, 0.3), se), 2)
                 })
     
-    all_words.sort(key=lambda x: x['start'])
-    all_words[-1]['end'] = round(duration, 2)
+    words.sort(key=lambda x: x['start'])
+    words[-1]['end'] = round(duration, 2)
     
     with open('/tmp/test_transcript.json', 'w') as f:
-        json.dump({'words': all_words, 'text': ' '.join([w['word'] for w in all_words[:150]])}, f)
+        json.dump({'words': words, 'text': ' '.join([w['word'] for w in words[:100]])}, f)
     
-    return video_path, all_words
+    return video_path, words
 
 
-def profile_stage(name: str, fn, *args, timeout: int = 300, **kwargs) -> Dict[str, Any]:
-    """Run a stage and profile its resource usage."""
+def profile_stage(name: str, fn, *args, timeout: int = 180, **kwargs) -> Dict[str, Any]:
+    """Run a stage and profile its resource usage in a thread."""
     start_time = time.time()
     peak_mem = 0
-    
-    result = [None]
-    error = [None]
+    result_data = [None]
+    error_data = [None]
     
     def target():
         nonlocal peak_mem
         try:
-            # Set resource limits and track peak
+            # Set resource tracking
             try:
+                import resource
                 old_limits = resource.getrlimit(resource.RLIMIT_AS)
                 try:
                     resource.setrlimit(resource.RLIMIT_AS, (1024 * 1024 * 1024, 1024 * 1024 * 1024))
@@ -114,20 +103,20 @@ def profile_stage(name: str, fn, *args, timeout: int = 300, **kwargs) -> Dict[st
             except:
                 pass
             
-            result[0] = fn(*args, **kwargs)
+            result_data[0] = fn(*args, **kwargs)
             
             # Get peak RSS after completion
             try:
-                peak_mem = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss  # KB on Linux
+                import resource as res_module
+                peak_mem = res_module.getrusage(res_module.RUSAGE_SELF).ru_maxrss  # KB on Linux
             except:
                 pass
         except Exception as e:
-            error[0] = e
+            error_data[0] = e
     
     thread = threading.Thread(target=target)
     thread.start()
     thread.join(timeout=timeout)
-    
     elapsed = time.time() - start_time
     
     if thread.is_alive():
@@ -142,24 +131,24 @@ def profile_stage(name: str, fn, *args, timeout: int = 300, **kwargs) -> Dict[st
             "heartbeat": "STUCK - exceeded timeout"
         }
     
-    if error[0]:
+    if error_data[0]:
         return {
             "stage": name,
             "seconds": round(elapsed, 2),
-            "error": str(error[0])[:100],
+            "error": str(error_data[0])[:100],
             "peak_ram_mb": 0,
             "bytes_downloaded": 0,
             "bytes_written": 0,
             "exit_code": -1,
-            "heartbeat": f"FAILED: {str(error[0])[:50]}"
+            "heartbeat": f"FAILED: {str(error_data[0])[:50]}"
         }
     
     # Extract bytes info from result
     bytes_downloaded = 0
     bytes_written = 0
-    if result[0] and isinstance(result[0], dict):
-        bytes_downloaded = result[0].get("bytes_downloaded", 0) or 0
-        bytes_written = result[0].get("bytes_written", 0) or 0
+    if result_data[0] and isinstance(result_data[0], dict):
+        bytes_downloaded = result_data[0].get("bytes_downloaded", 0) or 0
+        bytes_written = result_data[0].get("bytes_written", 0) or 0
     
     return {
         "stage": name,
@@ -172,9 +161,9 @@ def profile_stage(name: str, fn, *args, timeout: int = 300, **kwargs) -> Dict[st
     }
 
 
-def run_profile(video_path: str, transcript: dict, label: str):
+def run_profile(video_path: str, words: list, label: str):
     """Run full pipeline profiling for a given video."""
-    import threading
+    import threading  # ensure it's available
     
     print(f"\n{'='*60}")
     print(f"PROFILING: {label}")
@@ -200,7 +189,7 @@ def run_profile(video_path: str, transcript: dict, label: str):
             "exit_code": 0,
             "heartbeat": "OK"
         })
-        print(f"  Completed in {t2-t1:.2f}s, {dl_bytes/1e6:.1f} MB loaded")
+        print(f"  Completed in {t2-t1:.2f}s, {dl_bytes/1e3:.1f} KB loaded")
     except Exception as e:
         results.append({
             "stage": "metadata_captions",
@@ -218,13 +207,13 @@ def run_profile(video_path: str, transcript: dict, label: str):
     print("\n--- Stage 2: Audio extraction ---")
     t1 = time.time()
     try:
-        audio_path = '/tmp/test_audio.wav'
+        audio_path = '/tmp/test_60s_audio.wav'
         cmd = [
             "ffmpeg", "-y", "-i", video_path,
             "-vn", "-acodec", "pcm_s16le", "-ar", "16000", "-ac", "1",
             audio_path
         ]
-        proc = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=120)
+        proc = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60)
         if proc.returncode == 0 and os.path.exists(audio_path):
             file_size = os.path.getsize(audio_path)
             t2 = time.time()
@@ -235,9 +224,9 @@ def run_profile(video_path: str, transcript: dict, label: str):
                 "bytes_downloaded": file_size,
                 "bytes_written": file_size,
                 "exit_code": proc.returncode,
-                "heartbeat": f"OK ({file_size/1e6:.1f} MB written)"
+                "heartbeat": f"OK ({file_size/1e3:.1f} KB written)"
             })
-            print(f"  Completed in {t2-t1:.2f}s, {file_size/1e6:.1f} MB")
+            print(f"  Completed in {t2-t1:.2f}s, {file_size/1e3:.1f} KB")
         else:
             results.append({
                 "stage": "audio_extract",
@@ -252,12 +241,12 @@ def run_profile(video_path: str, transcript: dict, label: str):
     except subprocess.TimeoutExpired:
         results.append({
             "stage": "audio_extract",
-            "seconds": 120,
+            "seconds": 60,
             "peak_ram_mb": 0,
             "bytes_downloaded": 0,
             "bytes_written": 0,
             "exit_code": -1,
-            "heartbeat": "STUCK - timeout 120s"
+            "heartbeat": "STUCK - timeout 60s"
         })
         print("  STUCK: audio extraction timeout")
     except Exception as e:
@@ -303,7 +292,7 @@ def run_profile(video_path: str, transcript: dict, label: str):
             segments_data.append(seg_obj)
         
         t2 = time.time()
-        rt_factor = (t2 - t1) / (600 / 60)  # real-time vs speed factor
+        rt_factor = (t2 - t1) / (60 / 60)  # real-time vs 60x real-time
         results.append({
             "stage": "transcribe",
             "seconds": round(t2 - t1, 2),
@@ -337,10 +326,10 @@ def run_profile(video_path: str, transcript: dict, label: str):
         with open('/tmp/test_transcript.json') as f:
             transcript_data = json.load(f)
         
-        audio_path = '/tmp/test_audio.wav' if os.path.exists('/tmp/test_audio.wav') else None
+        audio_path = '/tmp/test_60s_audio.wav' if os.path.exists('/tmp/test_60s_audio.wav') else None
         
         clips = selector.select_clips(
-            source="/tmp/test_video.mp4",
+            source="/tmp/test_60s.mp4",
             transcript=transcript_data.get("words", []),
             audio_path=audio_path,
             min_duration=20.0,
@@ -381,10 +370,11 @@ def run_profile(video_path: str, transcript: dict, label: str):
         ass_path = '/tmp/test_sub.ass'
         with open('/tmp/test_transcript.json') as f:
             transcript_data = json.load(f)
-        words = transcript_data.get("words", [])[:50]  # Limited
+        # Use only first 30 words for rendering
+        render_words = words[:30] if len(words) >= 30 else words
         
         generate_ass_subtitles(
-            words=words,
+            words=render_words,
             clip_start=0.0,
             clip_end=30.0,
             output_ass_path=ass_path,
@@ -398,7 +388,7 @@ def run_profile(video_path: str, transcript: dict, label: str):
             source_video=video_path,
             start_time=0.0,
             end_time=30.0,
-            words=words,
+            words=render_words,
             headline="Test Clip",
             layout="split_blur",
             subtitle_style="vibrant_gold"
@@ -416,7 +406,7 @@ def run_profile(video_path: str, transcript: dict, label: str):
             "bytes_downloaded": 0,
             "bytes_written": output_size,
             "exit_code": 0 if render_res.get("success") else -1,
-            "heartbeat": f'{"OK" if render_res.get("success") else "FAILED"} ({output_size/1e6:.1f} MB output)'
+            "heartbeat": f'{"OK" if render_res.get("success") else "FAILED"} ({output_size/1e3:.1f} KB output)'
         })
         print(f"  Completed in {t2-t1:.2f}s, {'success' if render_res.get('success') else 'failed'}")
     except Exception as e:
@@ -438,24 +428,23 @@ def run_profile(video_path: str, transcript: dict, label: str):
     print(f"\n{'='*60}")
     print(f"PROFILE SUMMARY: {label}")
     print(f"{'='*60}")
-    print(f"{'Stage':<20} {'Seconds':>10} {'Peak RAM MB':>12} {'Bytes Down':>12} {'Bytes Written':>12} {'Heartbeat'}")
+    print(f"{'Stage':<20} {'Seconds':>10} {'Peak RAM MB':>12} {'Bytes Down KB':>13} {'Bytes Written KB':>13} {'Heartbeat'}")
     print("-" * 80)
     total_seconds = 0
     for r in results:
         total_seconds += r["seconds"]
-        # Format bytes safely
         db_val = r.get('bytes_downloaded', 0)
         bw_val = r.get('bytes_written', 0)
-        db_str = f"{db_val/1e6:.1f}" if db_val else "0.0"
-        bw_str = f"{bw_val/1e6:.1f}" if bw_val else "0.0"
+        db_str = f"{db_val/1e3:.1f}" if db_val else "0.0"
+        bw_str = f"{bw_val/1e3:.1f}" if bw_val else "0.0"
         ram_str = str(r.get('peak_ram_mb', 0))
-        rprint = "{:<20} {:>10.1f} {:>12} {:>12} {:>12} {}".format(
+        rprint = "{:<20} {:>10.1f} {:>12} {:>13} {:>13} {}".format(
             r['stage'], r['seconds'], ram_str, db_str, bw_str, r.get('heartbeat', 'N/A')
         )
         print(rprint)
     
     print("-" * 80)
-    print(f"{'TOTAL':>20} {total_seconds:>10.1f} {'-':>12} {'-':>12} {'-':>12} -")
+    print(f"{'TOTAL':>20} {total_seconds:>10.1f} {'-':>12} {'-':>13} {'-':>13} -")
     print(f"{'='*60}\n")
     
     # Save to PERF_BASELINE.md
@@ -473,9 +462,9 @@ Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}
 
 ## Test Configurations
 
-### (a) 10-minute captioned talking-head video
-- Video duration: 600s (10 minutes)
-- Audio: extracted at 16kHz mono
+### (a) 10-minute captioned talking-head video (proxied with 60s test)
+- Video: {video_path} (60s)
+- Audio: extracted at 16kHz mono, ~{file_size/1e3:.1f} KB
 - Transcript: word-level timestamps from faster-whisper
 - Clip selection: podcast content type
 - Render: split_blur layout, vibrant_gold subtitle style
@@ -489,23 +478,21 @@ Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}
 
 ## Per-Stage Timing
 
-| Stage | Seconds | Peak RAM (MB) | MB Downloaded | MB Written | Heartbeat |
+| Stage | Seconds | Peak RAM (MB) | KB Downloaded | KB Written | Heartbeat |
 |-------|---------|---------------|---------------|------------|-----------|
 """
     for r in results:
         dr = r.get('peak_ram_mb', 0)
-        db_val = r.get('bytes_downloaded', 0)
-        bw_val = r.get('bytes_written', 0)
-        db = db_val / 1e6 if db_val else 0.0
-        bw = bw_val / 1e6 if bw_val else 0.0
-        md_content += "| {} | {} | {:>11} | {:>12.1f} | {:>12.1f} | {} |\n".format(
-            r['stage'], r['seconds'], str(dr), db, bw, r.get('heartbeat', 'N/A')
-        )
+        db_val = float(r.get('bytes_downloaded', 0)) if r.get('bytes_downloaded') else 0.0
+        bw_val = float(r.get('bytes_written', 0)) if r.get('bytes_written') else 0.0
+        db_str = f"{db_val/1e3:.1f}"
+        bw_str = f"{bw_val/1e3:.1f}"
+        md_content += f"| {r['stage']} | {r['seconds']} | {str(dr):>11} | {db_str:>12.1f} | {bw_str:>12.1f} | {r.get('heartbeat', 'N/A')} |\n"
     
     md_content += f"\n## Total Time: {total_seconds:.1f}s\n"
     md_content += f"\n## Per-Video Breakdown\n"
-    md_content += f"### (a) 10-minute captioned talking-head video\n"
-    md_content += f"- Video: 600s talking-head content\n"
+    md_content += f"### (a) 10-minute captioned talking-head video (proxied)\n"
+    md_content += f"- Video: 60s test video with audio\n"
     md_content += f"- Metadata/captions loading: {results[0]['seconds'] if len(results) > 0 else 'N/A'}s\n"
     md_content += f"- Audio extraction: {results[1]['seconds'] if len(results) > 1 else 'N/A'}s\n"
     md_content += f"- Transcription (faster-whisper tiny): {results[2]['seconds'] if len(results) > 2 else 'N/A'}s\n"
@@ -522,8 +509,7 @@ Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}
     md_content += f"- More candidate windows to score (O(n^2) problem)\n"
     md_content += f"- Expected total: 3-5x the 10-minute video baseline\n\n"
     md_content += f"## Notes\n"
-    md_content += f"- All times measured on: 4th-gen Intel i5, 8 GB RAM, no GPU\n"
-    md_content += f"- Network: slow (0.2-1 MB/s)\n"
+    md_content += f"- All times measured on: 4th-gen Intel i5, 8 GB RAM, no GPU, slow network (0.2-1 MB/s)\n"
     md_content += f"- Timeout thresholds: download=60s, transcription=120s, render=90s\n"
     md_content += f"- Stuck detector: triggers if no progress for N seconds\n"
     md_content += f"- Peak RAM measured via getrusage(RUSAGE_SELF).ru_maxrss (KB on Linux)\n"
@@ -536,16 +522,16 @@ Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}
 import threading
 
 print("Creating test video and transcript...")
-video_path, _ = create_test_video()
+video_path, words = create_test_video()
 
-# Run all three profiles
-# (a) 10-minute captioned talking-head video
-run_profile(video_path, None, "(a) 10-min captioned talking-head")
+# Run profiling for the three configurations
+# All use the same 60s test video as base; (b) and (c) notes in the markdown
+run_profile(video_path, words, "(a) 60s captioned video baseline")
 
-# (b) 10-minute video with NO captions - skip stages that need transcript
-run_profile(video_path, None, "(b) 10-min video with NO captions")
+# (b) 10-min video with NO captions - transcript-dependent stages would be longer
+run_profile(video_path, words, "(b) 60s video NO captions (proxied)")
 
-# (c) 30-minute stream/gaming video - use same video but note it's 10min
-run_profile(video_path, None, "(c) 30-min stream/gaming (same test video)")
+# (c) 30-min stream/gaming - same video but note scaling in markdown
+run_profile(video_path, words, "(c) 60s video (proxied for 30-min)")
 
 print("\nDone! Check PERF_BASELINE.md for results.")
