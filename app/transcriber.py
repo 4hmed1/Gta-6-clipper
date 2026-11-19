@@ -67,7 +67,6 @@ def transcribe_audio(video_path: str, model_size: str = DEFAULT_WHISPER_MODEL, p
                 min_silence_duration_ms=500,
                 speech_pad_ms=200,
             ),
-            cpu_threads=2,             # Leave headroom for UI responsiveness
             beam_size=1,               # Fastest beam search (no quality loss for tiny model)
             best_of=1,                 # Single candidate (beam_size=1 implies this)
             condition_on_previous_text=False,  # Faster, less accurate but OK for clip selection

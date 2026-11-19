@@ -1,6 +1,6 @@
 # PERF_BASELINE.md - Pipeline Profiling Baseline
 
-Generated: 2026-11-19 07:47:48
+Generated: 2026-11-19 13:51:08
 
 ## Test Configurations
 
@@ -23,22 +23,22 @@ Generated: 2026-11-19 07:47:48
 | Stage | Seconds | Peak RAM (MB) | KB Downloaded | KB Written | Heartbeat |
 |-------|---------|---------------|---------------|------------|-----------|
 | metadata_captions | 0.0 |           0 |          4.1 |          0.0 | OK |
-| audio_extract | 1.49 |           0 |       1920.1 |       1920.1 | OK (1920.1 KB written) |
-| transcribe | 27.66 |           0 |          0.0 |          0.0 | OK (27.7s, RT factor: 27.66x) |
-| selection | 0.2 |           0 |          0.0 |          0.0 | OK (0 clips selected) |
-| render | 184.49 |           0 |          0.0 |        717.0 | OK (717.0 KB output) |
+| audio_extract | 0.22 |           0 |       1920.1 |       1920.1 | OK (1920.1 KB written) |
+| transcribe | 3.42 |           0 |          0.0 |          0.0 | OK (3.4s, RT factor: 3.42x) |
+| selection | 0.0 |           0 |          0.0 |          0.0 | OK (0 clips selected) |
+| render | 14.13 |           0 |          0.0 |       1081.3 | OK (1081.3 KB output) |
 
-## Total Time: 213.8s
+## Total Time: 17.8s
 
 ## Per-Video Breakdown
 ### (a) 10-minute captioned talking-head video (proxied)
 - Video: 60s test video with audio
 - Metadata/captions loading: 0.0s
-- Audio extraction: 1.49s
-- Transcription (faster-whisper tiny): 27.66s
-- Clip selection: 0.2s
-- Render: 184.49s
-- Total: 213.8s
+- Audio extraction: 0.22s
+- Transcription (faster-whisper tiny): 3.42s
+- Clip selection: 0.0s
+- Render: 14.13s
+- Total: 17.8s
 
 ### (b) 10-minute video with NO captions
 - Transcription would use Whisper fallback on selected windows only

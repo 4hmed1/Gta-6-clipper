@@ -44,6 +44,7 @@ dev = [
 
 [project.scripts]
 clipforge = "clipforge.cli:main"
+gta6-clipper = "clipforge.cli:main"
 
 [tool.setuptools]
 packages = ["clipforge", "app"]

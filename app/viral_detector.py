@@ -121,11 +121,52 @@ def analyze_viral_moments_heuristic(
                 break
 
     # CRITICAL FIX: Never return the entire video as a single clip.
-    # If no valid clips found, return empty list.
-    # This prevents the UI from showing "1 clip" that is actually the full video.
+    # If no valid clips found, try relaxed constraints or return empty list.
     if not selected_clips and segments:
         print(f"[ViralDetector] WARNING: No valid clips found from {len(segments)} segments. "
               f"Video duration: {segments[-1]['end'] if segments else 0:.1f}s.")
+
+        # Fallback: try with relaxed min_duration
+        if min_duration > 15:
+            print(f"[ViralDetector] Retrying with min_duration=15...")
+            return analyze_viral_moments_heuristic(segments, min_duration=15.0, max_duration=max_duration, max_clips=max_clips)
+
+        # Last resort: generate clips from sentence boundaries
+        if segments:
+            fallback_clips = []
+            total_duration = segments[-1]["end"] - segments[0]["start"]
+            target_count = min(max_clips, max(1, int(total_duration / 30)))
+            seg_per_clip = max(1, len(segments) // target_count)
+
+            for i in range(0, len(segments), seg_per_clip):
+                chunk = segments[i:i + seg_per_clip]
+                if len(fallback_clips) >= max_clips:
+                    break
+                clip_start = chunk[0]["start"]
+                clip_end = chunk[-1]["end"]
+                clip_dur = clip_end - clip_start
+                if clip_dur < 10:
+                    continue
+                clip_text = " ".join(s["text"] for s in chunk)
+                first_sentence = chunk[0]["text"]
+                headline = " ".join(first_sentence.split()[:8])
+                if not headline.endswith((".", "!", "?")):
+                    headline += "..."
+
+                fallback_clips.append({
+                    "start": round(clip_start, 2),
+                    "end": round(clip_end, 2),
+                    "duration": round(clip_dur, 1),
+                    "score": 60,
+                    "headline": headline,
+                    "text": clip_text,
+                    "reason": "Fallback clip from sentence boundaries.",
+                    "segments": chunk,
+                })
+            if fallback_clips:
+                print(f"[ViralDetector] Generated {len(fallback_clips)} fallback clips.")
+                return fallback_clips
+
         return []
 
     return selected_clips
@@ -220,8 +261,8 @@ Transcript:
     return analyze_viral_moments_heuristic(segments)
 
 def detect_viral_clips(
-    transcript_result: Dict[str, Any], 
-    method: str = "heuristic", 
+    transcript_result: Dict[str, Any],
+    method: str = "heuristic",
     api_key: str = "",
     progress_callback = None
 ) -> List[Dict[str, Any]]:
@@ -231,6 +272,37 @@ def detect_viral_clips(
 
     segments = transcript_result.get("segments", [])
     full_text = transcript_result.get("text", "")
+
+    # Fallback: build segments from words if segments list is empty
+    if not segments:
+        words = transcript_result.get("words", [])
+        if words:
+            # Group words into sentences by punctuation or pauses
+            segments = []
+            current_words = []
+            current_start = words[0]["start"] if words else 0.0
+            for w in words:
+                if not current_words:
+                    current_start = w["start"]
+                current_words.append(w)
+                # Break on sentence-ending punctuation or long pause
+                if w.get("word", "").strip().endswith((".", "!", "?")) or (
+                    len(current_words) > 1 and w["end"] - current_words[-2]["end"] > 1.5
+                ):
+                    segments.append({
+                        "start": current_start,
+                        "end": current_words[-1]["end"],
+                        "text": " ".join(ww["word"] for ww in current_words),
+                        "words": current_words,
+                    })
+                    current_words = []
+            if current_words:
+                segments.append({
+                    "start": current_start,
+                    "end": current_words[-1]["end"],
+                    "text": " ".join(ww["word"] for ww in current_words),
+                    "words": current_words,
+                })
     
     if method == "gemini" or (api_key or GEMINI_API_KEY):
         return analyze_viral_moments_gemini(full_text, segments, api_key or GEMINI_API_KEY)

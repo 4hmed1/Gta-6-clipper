@@ -800,3 +800,59 @@ TypeError: argument should be a str or an os.PathLike object where __fspath__ re
 2026-11-19 07:15:06,925 [WARNING] [71d57313] Caption fetch failed: No caption files found — falling back to offline STT
 2026-11-19 07:15:06,927 [INFO] [71d57313] [transcribing] p=25% | Transcribing with offline speech model...
 2026-11-19 07:15:06,929 [ERROR] [71d57313] NO_TRANSCRIPT_SOURCE
+2026-11-19 13:43:27,606 [ERROR] [f0548cf1] PIPELINE_CRASH: NameError: name 'start_stage' is not defined
+Traceback (most recent call last):
+  File "/home/max/Documents/viralforge-ai/app/main.py", line 248, in run_processing_pipeline
+    stage_ckpt = start_stage("metadata", **profiler_stages["metadata"])
+                 ^^^^^^^^^^^
+NameError: name 'start_stage' is not defined. Did you mean: 'start_time'?
+
+2026-11-19 13:45:32,271 [ERROR] [87d489c0] PIPELINE_CRASH: NameError: name 'start_stage' is not defined
+Traceback (most recent call last):
+  File "/home/max/Documents/viralforge-ai/app/main.py", line 248, in run_processing_pipeline
+    "title": Path(req.filepath).stem,
+         ^^^^^^^^^^^
+NameError: name 'start_stage' is not defined. Did you mean: 'start_time'?
+
+2026-11-19 13:46:08,839 [ERROR] [4521f9d5] PIPELINE_CRASH: NameError: name 'start_stage' is not defined
+Traceback (most recent call last):
+  File "/home/max/Documents/viralforge-ai/app/main.py", line 248, in run_processing_pipeline
+    "title": Path(req.filepath).stem,
+         ^^^^^^^^^^^
+NameError: name 'start_stage' is not defined. Did you mean: 'start_time'?
+
+2026-11-19 13:46:20,743 [ERROR] [5f78db79] PIPELINE_CRASH: NameError: name 'start_stage' is not defined
+Traceback (most recent call last):
+  File "/home/max/Documents/viralforge-ai/app/main.py", line 248, in run_processing_pipeline
+    "title": Path(req.filepath).stem,
+         ^^^^^^^^^^^
+NameError: name 'start_stage' is not defined. Did you mean: 'start_time'?
+
+2026-11-19 13:46:35,322 [ERROR] [cc364d6f] PIPELINE_CRASH: NameError: name 'start_stage' is not defined
+Traceback (most recent call last):
+  File "/home/max/Documents/viralforge-ai/app/main.py", line 248, in run_processing_pipeline
+    "title": Path(req.filepath).stem,
+         ^^^^^^^^^^^
+NameError: name 'start_stage' is not defined. Did you mean: 'start_time'?
+
+2026-11-19 13:47:54,116 [ERROR] [4897f07c] PIPELINE_CRASH: NameError: name 'start_stage' is not defined
+Traceback (most recent call last):
+  File "/home/max/Documents/viralforge-ai/app/main.py", line 248, in run_processing_pipeline
+    "title": Path(req.filepath).stem,
+         ^^^^^^^^^^^
+NameError: name 'start_stage' is not defined. Did you mean: 'start_time'?
+
+2026-11-19 13:51:24,387 [ERROR] [49e9ac76] PIPELINE_CRASH: NameError: name 'start_stage' is not defined
+Traceback (most recent call last):
+  File "/home/max/Documents/viralforge-ai/app/main.py", line 248, in run_processing_pipeline
+    "title": Path(req.filepath).stem,
+         ^^^^^^^^^^^
+NameError: name 'start_stage' is not defined. Did you mean: 'start_time'?
+
+2026-11-19 13:51:47,817 [ERROR] [b5327e36] PIPELINE_CRASH: NameError: name 'start_stage' is not defined
+Traceback (most recent call last):
+  File "/home/max/Documents/viralforge-ai/app/main.py", line 248, in run_processing_pipeline
+    "title": Path(req.filepath).stem,
+         ^^^^^^^^^^^
+NameError: name 'start_stage' is not defined. Did you mean: 'start_time'?
+

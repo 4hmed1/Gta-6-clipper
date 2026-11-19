@@ -8,7 +8,7 @@ import time
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 from fastapi import FastAPI, UploadFile, File, Form, BackgroundTasks, HTTPException
-from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -80,7 +80,7 @@ pipeline_logger.addHandler(_fh)
 
 
 def _ytdlp_bin() -> str:
-    """Locate the yt-dlp executable, falling back to the current venv's bin dir."""
+    """Locate the yt-dlp executable in the active Python environment."""
     import shutil
     import sys
     found = shutil.which("yt-dlp")
@@ -105,9 +105,8 @@ async def _fetch_metadata_and_captions(url: str) -> Dict[str, Any]:
     """Fetch metadata + caption tracks without downloading the video."""
     import json
     try:
-        cmd = [
-            _ytdlp_bin(), "--no-playlist", "--skip-download", "--dump-json", url,
-        ]
+        yt = _ytdlp_bin()
+        cmd = [yt, "--no-playlist", "--skip-download", "--dump-json", url]
         proc = await asyncio.create_subprocess_exec(
             *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
@@ -135,14 +134,13 @@ async def _download_audio_from_url(url: str) -> str:
     """Download low-bitrate audio (~64 kbps) from a URL for analysis only."""
     if not url:
         return ""
-    yt_bin = _ytdlp_bin()
+    yt = _ytdlp_bin()
     audio_path = str(DOWNLOADS_DIR / f"audio_{uuid.uuid4().hex[:8]}.wav")
-    # Use a simple format: best audio, then ffmpeg converts to wav
     cmd = [
-        yt_bin,
+        yt,
         "-o", audio_path,
         "--format", "bestaudio/best",
-        "--quiet", "--no-warnings", "--noplaylist",
+        "--quiet", "--no-warnings", "--no-playlist",
         "--retries", "3", "--fragment-retries", "3",
         "--socket-timeout", "30",
         "--extract-audio",
@@ -154,10 +152,10 @@ async def _download_audio_from_url(url: str) -> str:
         proc = await asyncio.create_subprocess_exec(
             *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
-        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=180)
+        await asyncio.wait_for(proc.communicate(), timeout=180)
         if proc.returncode == 0 and Path(audio_path).exists():
             return audio_path
-        err = stderr.decode("utf-8", errors="replace")[:500] if stderr else "Unknown error"
+        err = proc.stderr.decode("utf-8", errors="replace")[:500] if proc.stderr else "Unknown error"
         pipeline_logger.error(f"Audio download failed: {err}")
         try:
             Path(audio_path).unlink(missing_ok=True)
@@ -179,13 +177,13 @@ async def _download_sections(
     ranges = [f"{s['start']}:{s['end']}" for s in sections if s.get("end", 0) > s.get("start", 0)]
     if not ranges:
         return {"success": False, "error": "No valid sections specified"}
-    yt_bin = _ytdlp_bin()
+    yt = _ytdlp_bin()
     cmd = [
-        yt_bin,
+        yt,
         "-o", output_path,
         "--format", f"best[height<={target_height}]/best",
         "--download-ranges", ",".join(ranges),
-        "--quiet", "--no-warnings", "--noplaylist",
+        "--quiet", "--no-warnings", "--no-playlist",
         "--retries", "3", "--fragment-retries", "3",
         "--socket-timeout", "30",
         url,
@@ -208,10 +206,12 @@ async def _download_sections(
 def _run_async(coro):
     """Run an async coroutine from a sync background-task thread."""
     try:
-        loop = asyncio.new_event_loop()
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = None
+    if loop and not loop.is_closed():
         return loop.run_until_complete(coro)
-    finally:
-        loop.close()
+    return asyncio.run(coro)
 
 
 # ── Pipeline worker ──
@@ -228,25 +228,10 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
 
     def record_stage(stage_name: str, details: str = ""):
         elapsed = time.time() - start_time
-        pipeline_logger.info(
-            f"[{task_id}] STAGE_COMPLETE: {stage_name} in {elapsed:.2f}s | {details}"
-        )
-
-    # ── NEW: Profiler integration ──
-    profiler_stages = {
-        "metadata": {"total_expected": 0},
-        "audio_download": {"total_expected": 0},
-        "transcribe": {"total_expected": 0},
-        "selection": {"total_expected": 0},
-        "download_sections": {"total_expected": 0},
-        "render": {"total_expected": 0},
-    }
-    stage_checkpoints = {}
+        pipeline_logger.info(f"[{task_id}] STAGE_COMPLETE: {stage_name} in {elapsed:.2f}s | {details}")
 
     try:
         # ── Step 1: Metadata (tiny, no download) ──
-        stage_ckpt = start_stage("metadata", **profiler_stages["metadata"])
-        stage_checkpoints["metadata"] = stage_ckpt
         if req.url:
             set_status("Fetching video metadata and captions...", 5, "ingesting")
             meta_res = _run_async(_fetch_metadata_and_captions(req.url))
@@ -276,8 +261,6 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
         record_stage("ingest", f"title={video_meta.get('title')}")
 
         # ── Step 2: Audio-only download (fast, ~2 MB for a 3-min video) ──
-        stage_ckpt = start_stage("audio_download", **profiler_stages["audio_download"])
-        stage_checkpoints["audio_download"] = stage_ckpt
         set_status("Downloading low-bitrate audio for analysis...", 12, "analyzing")
         audio_path = ""
         if req.url:
@@ -295,49 +278,23 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
                 audio_path = ""
 
         if audio_path and Path(audio_path).exists():
-            # Update progress bytes for download stage
             set_status("Audio downloaded successfully", 20, "analyzing")
-            try:
-                file_size = Path(audio_path).stat().st_size
-                update_progress("audio_download", 95, "Audio ready", bytes_downloaded=file_size, bytes_total=file_size)
-            except:
-                pass
         else:
             pipeline_logger.warning(f"[{task_id}] Audio download failed – proceeding with captions only")
 
         # ── Step 3: Transcribe with word timing ──
-        stage_ckpt = start_stage("transcribe", **profiler_stages["transcribe"])
-        stage_checkpoints["transcribe"] = stage_ckpt
-        # Primary source: YouTube captions (word timing, free, fast).
-        # Fallback: offline faster-whisper on the downloaded low-bitrate audio.
-        trans_res = None
-        if req.url:
-            set_status("Reading YouTube captions...", 22, "transcribing")
-            from app.youtube_captions import fetch_youtube_captions
-            cap_res = fetch_youtube_captions(
-                req.url,
-                progress_callback=lambda m, p: set_status(m, 22 + int(p / 10), "transcribing"),
-            )
-            if cap_res.get("success") and cap_res.get("words"):
-                trans_res = cap_res
-                set_status(f"Captions loaded: {len(cap_res['words'])} words", 30, "transcribing")
-            else:
-                pipeline_logger.warning(f"[{task_id}] Caption fetch failed: {cap_res.get('error')} — falling back to offline STT")
-
-        if trans_res is None:
-            # Fallback: offline STT on downloaded audio (or local file)
-            set_status("Transcribing with offline speech model...", 25, "transcribing")
-            trans_input = audio_path if (audio_path and Path(audio_path).exists()) else (source_video if source_video else req.filepath)
-            if not trans_input or not os.path.exists(trans_input):
-                tasks_state[task_id]["status"] = "failed"
-                tasks_state[task_id]["error"] = "Could not read YouTube captions and no audio is available for offline transcription. Try again or upload the video locally."
-                pipeline_logger.error(f"[{task_id}] NO_TRANSCRIPT_SOURCE")
-                return
-            trans_res = transcribe_audio(
-                trans_input,
-                progress_callback=lambda m, p: update_progress("transcribe", 25 + int(p / 4), "transcribing", bytes_downloaded=0, bytes_total=0),
-            )
-        if not trans_res.get("success") or not trans_res.get("words"):
+        set_status("Extracting word-level timestamps...", 25, "transcribing")
+        trans_input = audio_path if (audio_path and Path(audio_path).exists()) else (source_video if source_video else req.filepath)
+        if not trans_input or not os.path.exists(trans_input):
+            tasks_state[task_id]["status"] = "failed"
+            tasks_state[task_id]["error"] = "Audio download failed and no local file available for transcription."
+            pipeline_logger.error(f"[{task_id}] NO_AUDIO_FOR_TRANSCRIBE")
+            return
+        trans_res = transcribe_audio(
+            trans_input,
+            progress_callback=lambda m, p: set_status(m, p, "transcribing"),
+        )
+        if not trans_res.get("success"):
             tasks_state[task_id]["status"] = "failed"
             tasks_state[task_id]["error"] = "Transcription failed."
             pipeline_logger.error(f"[{task_id}] TRANSCRIBE_FAILED")
@@ -354,8 +311,6 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
         record_stage("transcribe", f"words={len(words)},is_mock={trans_res.get('is_mock', False)}")
 
         # ── Step 4: Clip selection ──
-        stage_ckpt = start_stage("selection", **profiler_stages["selection"])
-        stage_checkpoints["selection"] = stage_ckpt
         set_status("Analyzing hooks, speech pacing & retention scores...", 55, "analyzing")
         clips_candidates = detect_viral_clips(
             trans_res,
@@ -363,9 +318,6 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
             api_key=req.api_key or "",
             progress_callback=lambda m, p: set_status(m, p, "analyzing"),
         )
-        end_stage("selection", stage_ckpt, success=bool(clips_candidates),
-                  error="No clips found" if not clips_candidates else "",
-                  cpu_percent=None, peak_ram_mb=None)
 
         if not clips_candidates:
             if trans_res.get("is_mock") and not trans_res.get("words"):
@@ -381,8 +333,6 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
         record_stage("select", f"candidates={len(clips_candidates)}")
 
         # ── Step 5: Download ONLY chosen sections ──
-        stage_ckpt = start_stage("download_sections", **profiler_stages["download_sections"])
-        stage_checkpoints["download_sections"] = stage_ckpt
         set_status(f"Downloading {min(len(clips_candidates), req.max_clips)} selected sections...", 70, "downloading")
         selected = clips_candidates[: req.max_clips]
         downloaded_sections: List[Dict[str, Any]] = []
@@ -406,14 +356,6 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
             tasks_state[task_id]["error"] = "Failed to download any selected video sections."
             pipeline_logger.error(f"[{task_id}] SECTION_DOWNLOAD_FAILED")
             return
-
-        # Get bytes written from the downloaded sections
-        total_bytes_written = 0
-        for ds in downloaded_sections:
-            fp = Path(ds.get("filepath", ""))
-            if fp.exists():
-                total_bytes_written += fp.stat().st_size
-        update_progress("download_sections", 90, f"{len(downloaded_sections)} sections ready", bytes_downloaded=total_bytes_written, bytes_total=total_bytes_written)
 
         record_stage("download_sections", f"sections={len(downloaded_sections)}")
 
@@ -446,16 +388,6 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
                     w for w in words
                     if w["end"] >= cand["start"] and w["start"] <= cand["end"]
                 ]
-                # End render stage profiling
-                try:
-                    peak_ram = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
-                except:
-                    peak_ram = 0
-                end_stage("render", stage_checkpoints.get("render", ""),
-                          success=render_res.get("success"),
-                          error=render_res.get("error", "")[:200],
-                          bytes_written=int(Path(render_res.get("filepath", "")).stat().st_size) if render_res.get("success") and Path(render_res.get("filepath", "")).exists() else 0,
-                          cpu_percent=None, peak_ram_mb=peak_ram)
                 rendered_clips.append(render_res)
             else:
                 pipeline_logger.error(f"[{task_id}] Render failed for clip {idx}: {render_res.get('error')}")
@@ -484,8 +416,8 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
 
 @app.get("/")
 def serve_index():
-    """Serve the bundled frontend."""
-    return HTMLResponse(content=(STATIC_DIR / "index.html").read_text(encoding="utf-8"), media_type="text/html")
+    """Serve the bundled frontend studio."""
+    return FileResponse(STATIC_DIR / "index.html")
 
 
 @app.post("/api/process")
@@ -505,7 +437,7 @@ def process_video_endpoint(req: ProcessRequest, background_tasks: BackgroundTask
 
 @app.post("/api/upload")
 async def upload_file_endpoint(file: UploadFile = File(...)):
-    """Upload a local video file directly."""
+    """Upload a local video file directly into system."""
     contents = await file.read()
     result = save_uploaded_file(contents, file.filename)
     return result
@@ -566,7 +498,7 @@ def list_clips():
             "filename": f.name,
             "filepath": str(f),
             "download_url": f"/api/clips/download/{f.name}",
-            "thumbnail": f"/api/clips/thumb/{thumb_path.name}" if thumb_path.exists() else "",
+            "thumbnail": f"/api/clips/thumb/{thumb.name}" if thumb_path.exists() else "",
         })
     return {"clips": clips}
 
