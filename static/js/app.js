@@ -942,6 +942,11 @@
     els.videoUrl.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') startJob();
     });
+
+    // Wire tab clicks
+    els.tabs.forEach((tab) => {
+      tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+    });
     els.pasteBtn.addEventListener('click', async () => {
       try {
         const text = await navigator.clipboard.readText();
