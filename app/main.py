@@ -110,10 +110,17 @@ async def _fetch_metadata_and_captions(url: str) -> Dict[str, Any]:
         proc = await asyncio.create_subprocess_exec(
             *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
-        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
+        try:
+            await asyncio.wait_for(proc.wait(), timeout=30)
+        except asyncio.TimeoutError:
+            proc.kill()
+            await proc.wait()
+            raise Exception("Metadata fetch timed out")
+        stdout_data = await proc.stdout.read()
+        stderr_data = await proc.stderr.read()
         if proc.returncode != 0:
-            raise Exception(f"yt-dlp failed: {stderr.decode('utf-8', errors='replace')}")
-        data = json.loads(stdout.decode("utf-8", errors="replace"))
+            raise Exception(f"yt-dlp failed: {stderr_data.decode('utf-8', errors='replace')}")
+        data = json.loads(stdout_data.decode("utf-8", errors="replace"))
         captions = data.get("automatic_captions", {}) or {}
         manual_captions = data.get("captions", {}) or {}
         all_caps = {**manual_captions, **captions}
@@ -152,10 +159,16 @@ async def _download_audio_from_url(url: str) -> str:
         proc = await asyncio.create_subprocess_exec(
             *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
-        await asyncio.wait_for(proc.communicate(), timeout=180)
+        try:
+            await asyncio.wait_for(proc.wait(), timeout=180)
+        except asyncio.TimeoutError:
+            proc.kill()
+            await proc.wait()
+            return ""
+        stderr_data = await proc.stderr.read()
         if proc.returncode == 0 and Path(audio_path).exists():
             return audio_path
-        err = proc.stderr.decode("utf-8", errors="replace")[:500] if proc.stderr else "Unknown error"
+        err = stderr_data.decode("utf-8", errors="replace")[:500] if stderr_data else "Unknown error"
         pipeline_logger.error(f"Audio download failed: {err}")
         try:
             Path(audio_path).unlink(missing_ok=True)
@@ -173,34 +186,50 @@ async def _download_sections(
     output_path: str,
     target_height: int = 720,
 ) -> Dict[str, Any]:
-    """Download ONLY chosen video sections via yt-dlp --download-sections."""
-    ranges = [f"{s['start']}:{s['end']}" for s in sections if s.get("end", 0) > s.get("start", 0)]
-    if not ranges:
+    """Download the full video at low resolution for local cutting.
+    
+    Uses multiple player clients (android, web, ios, tv) to bypass YouTube bot checks.
+    We download once at low quality and let FFmpeg cut locally (faster and more reliable).
+    """
+    if not sections:
         return {"success": False, "error": "No valid sections specified"}
-    yt = _ytdlp_bin()
-    cmd = [
-        yt,
-        "-o", output_path,
-        "--format", f"best[height<={target_height}]/best",
-        "--download-ranges", ",".join(ranges),
-        "--quiet", "--no-warnings", "--no-playlist",
-        "--retries", "3", "--fragment-retries", "3",
-        "--socket-timeout", "30",
-        url,
-    ]
-    try:
-        proc = await asyncio.create_subprocess_exec(
-            *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-        )
-        await asyncio.wait_for(proc.communicate(), timeout=300)
-        if proc.returncode == 0 and Path(output_path).exists():
-            file_size = Path(output_path).stat().st_size
-            return {"success": True, "filepath": str(output_path), "file_size_mb": round(file_size / 1e6, 2)}
-        err = proc.stderr.decode("utf-8", errors="replace")[:500] if proc.stderr else "Unknown error"
-        return {"success": False, "error": f"yt-dlp sections download failed: {err}"}
-    except Exception as e:
-        pipeline_logger.error(f"Sections download error: {e}")
-        return {"success": False, "error": str(e)}
+    # Try multiple player clients to bypass bot detection
+    player_clients = ["android", "web", "ios", "tv_embedded"]
+    
+    for client in player_clients:
+        yt = _ytdlp_bin()
+        cmd = [
+            yt,
+            "-o", output_path,
+            "--format", f"best[height<={target_height}]/best",
+            "--quiet", "--no-warnings", "--no-playlist",
+            "--retries", "3", "--fragment-retries", "3",
+            "--socket-timeout", "30",
+            "--extractor-args", f"youtube:player_client={client}",
+            url,
+        ]
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            )
+            try:
+                await asyncio.wait_for(proc.wait(), timeout=300)
+            except asyncio.TimeoutError:
+                proc.kill()
+                await proc.wait()
+                return {"success": False, "error": "Download timed out (300s)"}
+            stdout_data = await proc.stdout.read()
+            stderr_data = await proc.stderr.read()
+            if proc.returncode == 0 and Path(output_path).exists():
+                file_size = Path(output_path).stat().st_size
+                pipeline_logger.info(f"Download succeeded with player_client={client} ({file_size/1e6:.1f} MB)")
+                return {"success": True, "filepath": str(output_path), "file_size_mb": round(file_size / 1e6, 2)}
+            err = stderr_data.decode("utf-8", errors="replace")[:500] if stderr_data else "Unknown error"
+            pipeline_logger.warning(f"player_client={client} failed: {err[:100]}")
+        except Exception as e:
+            pipeline_logger.warning(f"player_client={client} exception: {e}")
+    
+    return {"success": False, "error": f"All player clients failed. Try --cookies-from-browser or a local upload."}
 
 
 def _run_async(coro):
@@ -332,47 +361,48 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
 
         record_stage("select", f"candidates={len(clips_candidates)}")
 
-        # ── Step 5: Download ONLY chosen sections ──
-        set_status(f"Downloading {min(len(clips_candidates), req.max_clips)} selected sections...", 70, "downloading")
+        # ── Step 5: Download the video ONCE (low quality), cut locally ──
         selected = clips_candidates[: req.max_clips]
-        downloaded_sections: List[Dict[str, Any]] = []
+        video_for_render = source_video  # local file, if provided
 
-        for idx, cand in enumerate(selected):
+        if req.url:
+            set_status("Downloading video (low quality, cut locally)...", 70, "downloading")
             target_h = 480 if req.measured_speed_mbps < 0.5 else 720
-            section_path = str(CLIPS_DIR / f"section_{task_id}_{idx}_{int(cand['start'])}to{int(cand['end'])}.mp4")
+            section_path = str(DOWNLOADS_DIR / f"video_{task_id}.mp4")
             dl_res = _run_async(_download_sections(
                 req.url,
-                [{"start": cand["start"], "end": cand["end"]}],
+                selected,
                 section_path,
                 target_height=target_h,
             ))
             if dl_res.get("success"):
-                downloaded_sections.append({"clip_info": cand, "filepath": dl_res["filepath"]})
+                video_for_render = dl_res["filepath"]
+                set_status(f"Video downloaded ({dl_res.get('file_size_mb', 0)} MB)", 80, "downloading")
             else:
-                pipeline_logger.warning(f"[{task_id}] Section {idx} download failed: {dl_res.get('error')}")
-
-        if not downloaded_sections:
+                tasks_state[task_id]["status"] = "failed"
+                tasks_state[task_id]["error"] = f"Failed to download video: {dl_res.get('error', 'unknown error')}"
+                pipeline_logger.error(f"[{task_id}] DOWNLOAD_FAILED: {dl_res.get('error')}")
+                return
+        elif not (video_for_render and Path(video_for_render).exists()):
             tasks_state[task_id]["status"] = "failed"
-            tasks_state[task_id]["error"] = "Failed to download any selected video sections."
-            pipeline_logger.error(f"[{task_id}] SECTION_DOWNLOAD_FAILED")
+            tasks_state[task_id]["error"] = "No video file available to render clips."
+            pipeline_logger.error(f"[{task_id}] NO_VIDEO_FILE")
             return
 
-        record_stage("download_sections", f"sections={len(downloaded_sections)}")
+        record_stage("download_sections", f"video={video_for_render}")
 
-        # ── Step 6: Render clips ──
-        set_status(f"Rendering {len(downloaded_sections)} vertical shorts...", 85, "rendering")
+        # ── Step 6: Render clips (cut each from the downloaded video) ──
+        set_status(f"Rendering {len(selected)} vertical shorts...", 85, "rendering")
         rendered_clips = []
 
-        for idx, section in enumerate(downloaded_sections):
-            cand = section["clip_info"]
-            filepath = section["filepath"]
+        for idx, cand in enumerate(selected):
             set_status(
-                f"Rendering clip {idx + 1}/{len(downloaded_sections)}: '{cand.get('headline', 'Clip')}'...",
-                int(85 + (idx / len(downloaded_sections)) * 13),
+                f"Rendering clip {idx + 1}/{len(selected)}: '{cand.get('headline', 'Clip')}'...",
+                int(85 + (idx / len(selected)) * 13),
                 "rendering",
             )
             render_res = render_clip(
-                source_video=filepath,
+                source_video=video_for_render,
                 start_time=cand["start"],
                 end_time=cand["end"],
                 words=words,
@@ -383,7 +413,7 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
             if render_res.get("success"):
                 render_res["score"] = cand.get("score", 90)
                 render_res["reason"] = cand.get("reason", "Strong viral hook.")
-                render_res["source_video"] = source_video
+                render_res["source_video"] = video_for_render
                 render_res["clip_words"] = [
                     w for w in words
                     if w["end"] >= cand["start"] and w["start"] <= cand["end"]

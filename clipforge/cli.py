@@ -20,8 +20,12 @@ except Exception:
 
 
 def _venv_bin() -> Path:
-    """Directory that contains the current Python interpreter (venv/bin)."""
-    return Path(sys.executable).resolve().parent
+    """Directory that contains the current Python interpreter (venv/bin).
+
+    Note: do NOT resolve symlinks — venv python is a link to the system
+    interpreter and resolving would point us outside the venv.
+    """
+    return Path(sys.executable).parent
 
 
 def check_python_version():
