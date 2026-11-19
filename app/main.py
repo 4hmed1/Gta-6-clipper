@@ -284,7 +284,7 @@ async def _fetch_metadata_and_captions(url: str) -> Dict[str, Any]:
     import json
     try:
         yt = _ytdlp_bin()
-        cmd = [yt, "--no-playlist", "--skip-download", "--dump-json", "--socket-timeout", "15", url]
+        cmd = [yt, "--no-playlist", "--skip-download", "--dump-json", "--socket-timeout", "15", "--js-runtimes", "node", url]
         res = await _run_subprocess_async(cmd, timeout=30.0, label="metadata")
         if res["timed_out"]:
             raise Exception("YouTube did not respond in 30s (metadata fetch timed out)")
@@ -321,6 +321,7 @@ async def _download_audio_from_url(url: str) -> str:
         "--quiet", "--no-warnings", "--no-playlist",
         "--retries", "3", "--fragment-retries", "3",
         "--socket-timeout", "15",
+        "--js-runtimes", "node",
         "--extract-audio",
         "--audio-format", "wav",
         "--audio-quality", "192",
@@ -369,6 +370,7 @@ async def _download_sections(
             "--quiet", "--no-warnings", "--no-playlist",
             "--retries", "3", "--fragment-retries", "3",
             "--socket-timeout", "15",
+            "--js-runtimes", "node",
             "--extractor-args", f"youtube:player_client={client}",
             url,
         ]
