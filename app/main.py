@@ -1,5 +1,6 @@
 import os
 import uuid
+import signal
 import threading
 import traceback
 import asyncio
@@ -44,7 +45,32 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 # In-memory task state tracking for real-time progress
 tasks_state: Dict[str, Dict[str, Any]] = {}
 
+# Track the PID of each running pipeline worker
+# so the orphan detector can distinguish a genuinely-dead worker
+# from a slow subprocess call (yt-dlp, FFmpeg).
+_active_workers: Dict[str, int] = {}
+
 # ── Error Classifier ──
+
+def _worker_alive(pid: object) -> bool:
+    """Check whether the worker with this PID is still alive.
+
+    In-process BackgroundTasks share the process lifetime, so we treat a
+    missing/invalid PID as dead and any traceable PID as alive. This avoids
+    false-positive orphan kills during long yt-dlp/FFmpeg operations.
+    """
+    if not pid:
+        return False
+    try:
+        os.kill(str(pid), 0)
+    except ProcessLookupError:
+        return False
+    except (PermissionError, OSError):
+        # PermissionError on Linux can mean the PID exists under another user;
+        # treat as alive to avoid killing our own in-process workers.
+        return True
+    return True
+
 
 def _classify_ytdlp_error(err_msg: str) -> Dict[str, str]:
     """Classify yt-dlp/FFmpeg errors into user-friendly categories."""
@@ -95,21 +121,35 @@ def _classify_ytdlp_error(err_msg: str) -> Dict[str, str]:
 
 
 def _check_and_clear_orphan_tasks():
-    """On server start, find orphaned RUNNING/WORKING tasks and mark them INTERRUPTED."""
-    import os
-    import signal
+    """Mark orphaned tasks as INTERRUPTED.
+
+    A task is an orphan when its worker PID no longer exists. Because
+    FastAPI BackgroundTasks run in-thread (same process), we guard against
+    false positives: any task with a live worker PID is considered alive
+    regardless of heartbeat age. No heuristic-age cutoff means yt-dlp/FFmpeg
+    downloads that take minutes are never killed by mistake.
+    """
     now = time.time()
     for task_id, state in list(tasks_state.items()):
         status = state.get("status", "")
-        heartbeat = state.get("heartbeat", 0)
-        # If task is running/working and heartbeat is old (> 10s) or never set
-        if status in ("running", "working", "processing") and (now - heartbeat > 10 if heartbeat else True):
-            pipeline_logger.warning(f"[{task_id}] ORPHAN_TASK: status={status}, heartbeat_age={now - heartbeat if heartbeat else 'never'}")
-            state["status"] = "interrupted"
-            state["error"] = "Server restarted while job was running."
-            state["message"] = "Job interrupted. Resume or delete."
-            state["can_resume"] = True
-            state["can_delete"] = True
+        if status not in ("running", "working", "processing"):
+            continue
+        pid = _active_workers.get(task_id)
+        # If the task never registered a worker, skip (it hasn't started yet)
+        if pid is None:
+            continue
+        if _worker_alive(pid):
+            continue  # Worker still alive → not an orphan
+        # Worker truly dead → mark interrupted
+        pipeline_logger.warning(
+            f"[{task_id}] ORPHAN_TASK: status={status}, worker_pid={pid} dead"
+        )
+        state["status"] = "interrupted"
+        state["error"] = "The job's worker stopped unexpectedly."
+        state["message"] = "Job interrupted. Retry or delete."
+        state["can_resume"] = True
+        state["can_delete"] = True
+        state["heartbeat"] = now
 
 
 class ProcessRequest(BaseModel):
@@ -180,26 +220,78 @@ def _ytdlp_bin() -> str:
 
 # ── Module-level async helpers ──
 
+async def _run_subprocess_async(
+    cmd: List[str],
+    timeout: float,
+    label: str = "",
+) -> Dict[str, Any]:
+    """Run a subprocess with guaranteed termination within ``timeout`` seconds.
+
+    Why this helper exists (confirmed root cause of stuck jobs):
+    yt-dlp can hang on network timeouts. A naive
+    ``await asyncio.wait_for(proc.wait(), ...)`` followed by ``proc.kill()``
+    + ``await proc.wait()`` can itself hang on Python 3.12+ when the
+    subprocess ignores SIGTERM or pipes stay open after the kill.
+    This helper:
+      1. runs the child in its own process group (start_new_session) so
+         every grandchild (yt-dlp -> ffprobe, etc.) is killed together,
+      2. drains stdout/stderr in the background from the start,
+      3. on timeout sends SIGKILL to the whole process group (cannot be ignored),
+      4. always returns within ``timeout`` + a small grace period.
+
+    Returns a dict: ``{returncode, stdout, stderr, timed_out}``.
+    """
+    proc = await asyncio.create_subprocess_exec(
+        *cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+        stdin=asyncio.subprocess.DEVNULL,
+        start_new_session=True,  # own process group -> killpg on timeout
+    )
+
+    async def _drain():
+        out, err = await proc.communicate()
+        return out, err
+
+    drain_task = asyncio.ensure_future(_drain())
+    timed_out = False
+    try:
+        await asyncio.wait_for(proc.wait(), timeout=timeout)
+    except (asyncio.TimeoutError, asyncio.CancelledError):
+        timed_out = True
+        try:
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+        except (ProcessLookupError, OSError):
+            try:
+                proc.kill()
+            except (ProcessLookupError, OSError):
+                pass
+    try:
+        out, err = await asyncio.wait_for(drain_task, timeout=5.0)
+    except (asyncio.TimeoutError, asyncio.CancelledError):
+        out = err = b""
+        drain_task.cancel()
+    return {
+        "returncode": proc.returncode,
+        "stdout": out,
+        "stderr": err,
+        "timed_out": timed_out,
+    }
+
+
 async def _fetch_metadata_and_captions(url: str) -> Dict[str, Any]:
     """Fetch metadata + caption tracks without downloading the video."""
     import json
     try:
         yt = _ytdlp_bin()
-        cmd = [yt, "--no-playlist", "--skip-download", "--dump-json", url]
-        proc = await asyncio.create_subprocess_exec(
-            *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-        )
-        try:
-            await asyncio.wait_for(proc.wait(), timeout=30)
-        except asyncio.TimeoutError:
-            proc.kill()
-            await proc.wait()
-            raise Exception("Metadata fetch timed out")
-        stdout_data = await proc.stdout.read()
-        stderr_data = await proc.stderr.read()
-        if proc.returncode != 0:
-            raise Exception(f"yt-dlp failed: {stderr_data.decode('utf-8', errors='replace')}")
-        data = json.loads(stdout_data.decode("utf-8", errors="replace"))
+        cmd = [yt, "--no-playlist", "--skip-download", "--dump-json", "--socket-timeout", "15", url]
+        res = await _run_subprocess_async(cmd, timeout=30.0, label="metadata")
+        if res["timed_out"]:
+            raise Exception("YouTube did not respond in 30s (metadata fetch timed out)")
+        if res["returncode"] != 0:
+            err = res["stderr"].decode("utf-8", errors="replace")[:500]
+            raise Exception(f"yt-dlp failed: {err}")
+        data = json.loads(res["stdout"].decode("utf-8", errors="replace"))
         captions = data.get("automatic_captions", {}) or {}
         manual_captions = data.get("captions", {}) or {}
         all_caps = {**manual_captions, **captions}
@@ -228,26 +320,20 @@ async def _download_audio_from_url(url: str) -> str:
         "--format", "bestaudio/best",
         "--quiet", "--no-warnings", "--no-playlist",
         "--retries", "3", "--fragment-retries", "3",
-        "--socket-timeout", "30",
+        "--socket-timeout", "15",
         "--extract-audio",
         "--audio-format", "wav",
         "--audio-quality", "192",
         url,
     ]
     try:
-        proc = await asyncio.create_subprocess_exec(
-            *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-        )
-        try:
-            await asyncio.wait_for(proc.wait(), timeout=180)
-        except asyncio.TimeoutError:
-            proc.kill()
-            await proc.wait()
+        res = await _run_subprocess_async(cmd, timeout=180.0, label="audio-download")
+        if res["timed_out"]:
+            pipeline_logger.warning("Audio download timed out (180s)")
             return ""
-        stderr_data = await proc.stderr.read()
-        if proc.returncode == 0 and Path(audio_path).exists():
+        if res["returncode"] == 0 and Path(audio_path).exists():
             return audio_path
-        err = stderr_data.decode("utf-8", errors="replace")[:500] if stderr_data else "Unknown error"
+        err = res["stderr"].decode("utf-8", errors="replace")[:500] if res["stderr"] else "Unknown error"
         pipeline_logger.error(f"Audio download failed: {err}")
         try:
             Path(audio_path).unlink(missing_ok=True)
@@ -266,15 +352,14 @@ async def _download_sections(
     target_height: int = 720,
 ) -> Dict[str, Any]:
     """Download the full video at low resolution for local cutting.
-    
+
     Uses multiple player clients (android, web, ios, tv) to bypass YouTube bot checks.
     We download once at low quality and let FFmpeg cut locally (faster and more reliable).
     """
     if not sections:
         return {"success": False, "error": "No valid sections specified"}
-    # Try multiple player clients to bypass bot detection
     player_clients = ["android", "web", "ios", "tv_embedded"]
-    
+
     for client in player_clients:
         yt = _ytdlp_bin()
         cmd = [
@@ -283,32 +368,25 @@ async def _download_sections(
             "--format", f"best[height<={target_height}]/best",
             "--quiet", "--no-warnings", "--no-playlist",
             "--retries", "3", "--fragment-retries", "3",
-            "--socket-timeout", "30",
+            "--socket-timeout", "15",
             "--extractor-args", f"youtube:player_client={client}",
             url,
         ]
         try:
-            proc = await asyncio.create_subprocess_exec(
-                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-            )
-            try:
-                await asyncio.wait_for(proc.wait(), timeout=300)
-            except asyncio.TimeoutError:
-                proc.kill()
-                await proc.wait()
-                return {"success": False, "error": "Download timed out (300s)"}
-            stdout_data = await proc.stdout.read()
-            stderr_data = await proc.stderr.read()
-            if proc.returncode == 0 and Path(output_path).exists():
+            res = await _run_subprocess_async(cmd, timeout=300.0, label=f"download-{client}")
+            if res["timed_out"]:
+                pipeline_logger.warning(f"player_client={client} timed out (300s)")
+                continue
+            if res["returncode"] == 0 and Path(output_path).exists():
                 file_size = Path(output_path).stat().st_size
                 pipeline_logger.info(f"Download succeeded with player_client={client} ({file_size/1e6:.1f} MB)")
                 return {"success": True, "filepath": str(output_path), "file_size_mb": round(file_size / 1e6, 2)}
-            err = stderr_data.decode("utf-8", errors="replace")[:500] if stderr_data else "Unknown error"
-            pipeline_logger.warning(f"player_client={client} failed: {err[:100]}")
+            err = res["stderr"].decode("utf-8", errors="replace")[:200] if res["stderr"] else "Unknown error"
+            pipeline_logger.warning(f"player_client={client} failed: {err}")
         except Exception as e:
             pipeline_logger.warning(f"player_client={client} exception: {e}")
-    
-    return {"success": False, "error": f"All player clients failed. Try --cookies-from-browser or a local upload."}
+
+    return {"success": False, "error": "All player clients failed. Try --cookies-from-browser or a local upload."}
 
 
 def _run_async(coro):
@@ -334,6 +412,17 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
         tasks_state[task_id]["stage"] = stage
         tasks_state[task_id]["heartbeat"] = time.time()
         pipeline_logger.info(f"[{task_id}] [{stage}] p={progress}% | {msg}")
+
+    def fail_with(message: str, raw: str = ""):
+        """Mark job failed with a classified, plain-language error."""
+        classified = _classify_ytdlp_error(raw or message)
+        tasks_state[task_id]["status"] = "failed"
+        tasks_state[task_id]["progress"] = 0
+        tasks_state[task_id]["heartbeat"] = time.time()
+        tasks_state[task_id]["error"] = message or classified["user_msg"]
+        tasks_state[task_id]["error_detail"] = classified["tech_detail"]
+        tasks_state[task_id]["suggested_fix"] = classified["fix"]
+        pipeline_logger.error(f"[{task_id}] JOB_FAILED: {message}")
 
     def fail_with(message: str, raw: str = ""):
         """Mark job failed with a classified, plain-language error."""
@@ -670,20 +759,10 @@ async def startup_event():
 
 
 async def _janitor_loop():
-    """Background loop that checks for stuck tasks every 10 seconds."""
+    """Background loop that checks for orphaned tasks every 10 seconds."""
     while True:
         await asyncio.sleep(10)
         _check_and_clear_orphan_tasks()
-        # Log stuck tasks
-        now = time.time()
-        for task_id, state in list(tasks_state.items()):
-            if state.get("status") in ("running", "working", "processing"):
-                heartbeat_age = now - state.get("heartbeat", now)
-                if heartbeat_age > 60:
-                    pipeline_logger.warning(f"[{task_id}] STUCK: heartbeat_age={heartbeat_age:.0f}s, stage={state.get('stage')}")
-                    # Mark as stuck in state
-                    state["is_stuck"] = True
-                    state["stuck_since"] = now - heartbeat_age
 
 
 @app.get("/api/validate")

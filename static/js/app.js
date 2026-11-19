@@ -544,7 +544,12 @@
       } catch {
         return; // server unreachable — keep polling
       }
-      const task = (data.tasks || data)[taskId];
+      // /api/tasks returns {tasks: [ {task_id, status, ...} ]}.
+      // Find this job's entry by task_id (works for list or dict shape).
+      const taskList = Array.isArray(data.tasks)
+        ? data.tasks
+        : Object.values(data.tasks || data || {});
+      const task = taskList.find((t) => (t.task_id || t.id) === taskId);
       if (!task) return;
 
       const card = els.videoCards.querySelector(`[data-task-id="${taskId}"]`);
