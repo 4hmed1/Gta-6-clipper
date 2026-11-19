@@ -38,9 +38,9 @@ def fetch_youtube_captions(url: str, progress_callback=None) -> Dict[str, Any]:
         import yt_dlp
         
         opts = {
-            "write_subs": True,
-            "write-auto-subs": True,
-            "sub_format": "json3",
+            "writesubtitles": True,
+            "writeautomaticsub": True,
+            "subtitlesformat": "json3",
             "outtmpl": str(DOWNLOADS_DIR / f"temp_{video_id}"),
             "quiet": True,
             "no_warnings": True,
@@ -82,43 +82,46 @@ def fetch_youtube_captions(url: str, progress_callback=None) -> Dict[str, Any]:
         
         # json3 format: array of segments, each with words
         for i, segment in enumerate(caption_data.get("events", [])):
-            if not isinstance(segment, dict) or "words" not in segment:
+            if not isinstance(segment, dict) or "segs" not in segment:
                 continue
                 
-            seg_start = segment.get("start", 0)
-            seg_end = segment.get("end", 0)
-            seg_text = segment.get("text", "").strip()
+            # json3 uses tStartMs and dDurationMs (milliseconds)
+            seg_start = segment.get("tStartMs", 0) / 1000.0
+            seg_end = seg_start + (segment.get("dDurationMs", 0) / 1000.0)
+            seg_text = "".join(s.get("utf8", "") for s in segment.get("segs", [])).strip()
             
             if not seg_text:
                 continue
                 
             # Add segment
+            # Split each segment into words (space-separated)
+            word_items = seg_text.split()
+            if not word_items:
+                continue
+            # Distribute segment duration across words
+            seg_dur = seg_end - seg_start
+            w_dur = seg_dur / len(word_items) if len(word_items) > 1 else seg_dur
+            
+            seg_words = []
+            for wi, wtext in enumerate(word_items):
+                w_start = round(seg_start + wi * w_dur, 2)
+                w_end = round(w_start + w_dur, 2)
+                word_obj = {
+                    "word": wtext,
+                    "start": w_start,
+                    "end": w_end,
+                    "probability": 1.0
+                }
+                seg_words.append(word_obj)
+                all_words.append(word_obj)
+            
             seg_obj = {
                 "id": i,
                 "start": round(seg_start, 2),
                 "end": round(seg_end, 2),
                 "text": seg_text,
-                "words": []
+                "words": seg_words
             }
-            
-            # Add words with timing
-            for word in segment.get("words", []):
-                if not isinstance(word, dict):
-                    continue
-                    
-                word_text = word.get("word", "").strip()
-                if not word_text:
-                    continue
-                    
-                word_obj = {
-                    "word": word_text,
-                    "start": round(word.get("start", seg_start), 2),
-                    "end": round(word.get("end", seg_end), 2),
-                    "probability": 1.0  # YouTube captions are assumed to be accurate
-                }
-                
-                seg_obj["words"].append(word_obj)
-                all_words.append(word_obj)
             
             segments_data.append(seg_obj)
             full_text.append(seg_text)

@@ -5,14 +5,21 @@ from typing import Dict, Any, List
 from app.config import DEFAULT_WHISPER_MODEL
 
 def extract_audio(video_path: str) -> str:
-    """Extract 16kHz mono audio from video using ffmpeg."""
-    audio_path = str(Path(video_path).with_suffix(".wav"))
+    """Extract 16kHz mono audio from video using ffmpeg. Returns a wav path."""
+    if not video_path or not os.path.exists(video_path):
+        raise FileNotFoundError(f"Cannot transcribe: input path missing: {video_path!r}")
+    p = Path(video_path)
+    # Already a wav — use it directly
+    if p.suffix.lower() == ".wav":
+        return str(p)
+    audio_path = str(p.with_suffix(".wav"))
     if os.path.exists(audio_path):
         return audio_path
         
     cmd = [
         "ffmpeg",
         "-y",
+        "-nostdin",
         "-i", video_path,
         "-vn",
         "-acodec", "pcm_s16le",
@@ -20,7 +27,13 @@ def extract_audio(video_path: str) -> str:
         "-ac", "1",
         audio_path
     ]
-    subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+    subprocess.run(
+        cmd,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=True,
+        timeout=300,  # 5-minute timeout for audio extraction
+    )
     return audio_path
 
 def transcribe_audio(video_path: str, model_size: str = DEFAULT_WHISPER_MODEL, progress_callback=None) -> Dict[str, Any]:
@@ -46,7 +59,20 @@ def transcribe_audio(video_path: str, model_size: str = DEFAULT_WHISPER_MODEL, p
         if progress_callback:
             progress_callback("Transcribing speech and extracting word-level timestamps...", 55)
 
-        segments_gen, info = model.transcribe(audio_path, word_timestamps=True)
+        segments_gen, info = model.transcribe(
+            audio_path,
+            word_timestamps=True,
+            vad_filter=True,           # Skip silence for faster processing
+            vad_parameters=dict(
+                min_silence_duration_ms=500,
+                speech_pad_ms=200,
+            ),
+            cpu_threads=2,             # Leave headroom for UI responsiveness
+            beam_size=1,               # Fastest beam search (no quality loss for tiny model)
+            best_of=1,                 # Single candidate (beam_size=1 implies this)
+            condition_on_previous_text=False,  # Faster, less accurate but OK for clip selection
+            temperature=0.0,           # Greedy decoding (deterministic, fastest)
+        )
         
         full_text_list = []
         segments_data = []

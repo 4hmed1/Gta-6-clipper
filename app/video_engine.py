@@ -73,9 +73,11 @@ def render_clip(
     
     if layout == "split_blur":
         # 9:16 Vertical Short with Blurred Background & Centered Crisp Foreground
+        # OPTIMIZATION: Blur at 270x480 (low res) then upscale - much faster than blurring 1080x1920
         filter_complex = (
             f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
-            f"boxblur=24:6,eq=brightness=-0.18[bg];"
+            f"scale=270:480,boxblur=24:6,eq=brightness=-0.18,"
+            f"scale=1080:1920[bg];"
             f"[0:v]scale=1080:-2[fg];"
             f"[bg][fg]overlay=(W-w)/2:(H-h)/2[base]"
         )
@@ -106,7 +108,8 @@ def render_clip(
     cmd = [
         "ffmpeg",
         "-y",
-        "-ss", str(start_time),
+        "-nostdin",
+        "-ss", str(start_time),   # Seek BEFORE input for faster seeking
         "-i", source_video,
         "-t", str(duration)
     ]
@@ -119,10 +122,11 @@ def render_clip(
 
     cmd += [
         "-c:v", "libx264",
-        "-preset", "veryfast",
-        "-crf", "22",
+        "-preset", "ultrafast",  # Faster than veryfast; quality still good for social
+        "-crf", "28",           # Higher CRF = smaller file, faster encode
+        "-pix_fmt", "yuv420p",  # Ensure compatibility
         "-c:a", "aac",
-        "-b:a", "160k",
+        "-b:a", "128k",
         "-movflags", "+faststart",
         output_path
     ]

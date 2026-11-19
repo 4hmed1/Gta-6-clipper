@@ -639,3 +639,164 @@
 2026-11-18 21:23:25,414 [WARNING] [7330b974] Audio download failed – proceeding with captions only
 2026-11-18 21:23:25,414 [INFO] [7330b974] [transcribing] p=25% | Extracting word‑level timestamps...
 2026-11-18 21:23:25,421 [ERROR] [7330b974] NO_AUDIO_FOR_TRANSCRIBE
+2026-11-19 06:40:47,892 [INFO] [224102c4] [ingesting] p=5% | Fetching video metadata and captions...
+2026-11-19 06:40:47,942 [ERROR] [224102c4] PIPELINE_CRASH: UnboundLocalError: cannot access local variable '_fetch_metadata_and_captions' where it is not associated with a value
+Traceback (most recent call last):
+  File "/home/max/Documents/viralforge-ai/app/main.py", line 102, in run_processing_pipeline
+    meta_res = asyncio.create_task(_fetch_metadata_and_captions(req.url))
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable '_fetch_metadata_and_captions' where it is not associated with a value
+
+2026-11-19 06:41:00,384 [INFO] [61aa6edb] [ingesting] p=5% | Fetching video metadata and captions...
+2026-11-19 06:41:00,385 [ERROR] [61aa6edb] PIPELINE_CRASH: UnboundLocalError: cannot access local variable '_fetch_metadata_and_captions' where it is not associated with a value
+Traceback (most recent call last):
+  File "/home/max/Documents/viralforge-ai/app/main.py", line 102, in run_processing_pipeline
+    meta_res = asyncio.create_task(_fetch_metadata_and_captions(req.url))
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable '_fetch_metadata_and_captions' where it is not associated with a value
+
+2026-11-19 06:41:35,872 [INFO] [74e0a0f1] [ingesting] p=5% | Fetching video metadata and captions...
+2026-11-19 06:41:35,874 [ERROR] [74e0a0f1] PIPELINE_CRASH: UnboundLocalError: cannot access local variable '_fetch_metadata_and_captions' where it is not associated with a value
+Traceback (most recent call last):
+  File "/home/max/Documents/viralforge-ai/app/main.py", line 102, in run_processing_pipeline
+    meta_res = asyncio.create_task(_fetch_metadata_and_captions(req.url))
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable '_fetch_metadata_and_captions' where it is not associated with a value
+
+2026-11-19 06:43:35,053 [INFO] [bde2e5bd] [ingesting] p=5% | Fetching video metadata and captions...
+2026-11-19 06:43:35,130 [ERROR] [bde2e5bd] PIPELINE_CRASH: UnboundLocalError: cannot access local variable '_fetch_metadata_and_captions' where it is not associated with a value
+Traceback (most recent call last):
+  File "/home/max/Documents/viralforge-ai/app/main.py", line 102, in run_processing_pipeline
+    if not url:
+    
+UnboundLocalError: cannot access local variable '_fetch_metadata_and_captions' where it is not associated with a value
+
+2026-11-19 06:45:19,696 [INFO] [d4738834] [ingesting] p=5% | Fetching video metadata and captions...
+2026-11-19 06:45:33,800 [INFO] [d4738834] [ingesting] p=10% | Metadata: Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) (213s)
+2026-11-19 06:45:33,800 [INFO] [d4738834] STAGE_COMPLETE: metadata in 14.10s | title=Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)
+2026-11-19 06:45:33,800 [INFO] [d4738834] [analyzing] p=15% | Downloading low‑bitrate audio for analysis...
+2026-11-19 06:45:33,800 [WARNING] [d4738834] Audio download failed – proceeding with captions only
+2026-11-19 06:45:33,800 [INFO] [d4738834] [transcribing] p=25% | Extracting word‑level timestamps...
+2026-11-19 06:45:33,801 [INFO] [d4738834] [transcribing] p=30% | Extracting audio stream from video...
+2026-11-19 06:45:33,835 [ERROR] [d4738834] PIPELINE_CRASH: TypeError: argument should be a str or an os.PathLike object where __fspath__ returns a str, not 'NoneType'
+Traceback (most recent call last):
+  File "/home/max/Documents/viralforge-ai/app/main.py", line 162, in run_processing_pipeline
+    trans_res = transcribe_audio(
+        audio_path if audio_path and Path(audio_path).exists() else (source_video if source_video and Path(source_video).exists() else None),
+        progress_callback=lambda m, p: set_status(m, p, "transcribing"),
+    )
+  File "/home/max/Documents/viralforge-ai/app/transcriber.py", line 33, in transcribe_audio
+    audio_path = extract_audio(video_path)
+  File "/home/max/Documents/viralforge-ai/app/transcriber.py", line 9, in extract_audio
+    audio_path = str(Path(video_path).with_suffix(".wav"))
+                     ~~~~^^^^^^^^^^^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 149, in __init__
+    raise TypeError(
+    ...<2 lines>...
+        f"not {type(path).__name__!r}")
+TypeError: argument should be a str or an os.PathLike object where __fspath__ returns a str, not 'NoneType'
+
+2026-11-19 06:46:29,580 [INFO] [31f94391] [ingesting] p=5% | Fetching video metadata and captions...
+2026-11-19 06:46:29,581 [ERROR] [31f94391] PIPELINE_CRASH: AttributeError: 'coroutine' object has no attribute 'get'
+Traceback (most recent call last):
+  File "/home/max/Documents/viralforge-ai/app/main.py", line 377, in run_processing_pipeline
+    if not meta_res.get("success"):
+           ^^^^^^^^^^^^
+AttributeError: 'coroutine' object has no attribute 'get'
+
+2026-11-19 06:46:45,096 [INFO] [37ad86b2] [ingesting] p=5% | Fetching video metadata and captions...
+2026-11-19 06:46:45,097 [ERROR] [37ad86b2] PIPELINE_CRASH: AttributeError: 'coroutine' object has no attribute 'get'
+Traceback (most recent call last):
+  File "/home/max/Documents/viralforge-ai/app/main.py", line 377, in run_processing_pipeline
+    if not meta_res.get("success"):
+           ^^^^^^^^^^^^
+AttributeError: 'coroutine' object has no attribute 'get'
+
+2026-11-19 06:49:10,895 [INFO] [84131bf1] [ingesting] p=5% | Fetching video metadata and captions...
+2026-11-19 06:49:10,922 [ERROR] Metadata fetch error: [Errno 2] No such file or directory: 'yt-dlp'
+2026-11-19 06:49:10,927 [ERROR] [84131bf1] META_FAILED
+2026-11-19 06:50:50,030 [INFO] [fecf0706] [ingesting] p=5% | Fetching video metadata and captions...
+2026-11-19 06:50:50,034 [ERROR] Metadata fetch error: [Errno 2] No such file or directory: 'yt-dlp'
+2026-11-19 06:50:50,035 [ERROR] [fecf0706] META_FAILED
+2026-11-19 06:53:52,667 [INFO] [05849fb7] [ingesting] p=5% | Fetching video metadata and captions...
+2026-11-19 06:53:52,693 [ERROR] Metadata fetch error: [Errno 2] No such file or directory: 'yt-dlp'
+2026-11-19 06:53:52,723 [ERROR] [05849fb7] META_FAILED
+2026-11-19 06:58:49,165 [INFO] [95462d32] [ingesting] p=5% | Fetching video metadata and captions...
+2026-11-19 06:59:05,313 [INFO] [95462d32] [ingesting] p=10% | Metadata: 3 Minutes Of INSPIRATION | Motivational Speech (187s)
+2026-11-19 06:59:05,321 [INFO] [95462d32] STAGE_COMPLETE: ingest in 16.16s | title=3 Minutes Of INSPIRATION | Motivational Speech
+2026-11-19 06:59:05,322 [INFO] [95462d32] [analyzing] p=12% | Downloading low-bitrate audio for analysis...
+2026-11-19 06:59:08,609 [WARNING] [95462d32] Audio download failed – proceeding with captions only
+2026-11-19 06:59:08,610 [INFO] [95462d32] [transcribing] p=25% | Extracting word-level timestamps...
+2026-11-19 06:59:08,610 [INFO] [95462d32] [transcribing] p=30% | Extracting audio stream from video...
+2026-11-19 06:59:08,662 [ERROR] [95462d32] PIPELINE_CRASH: TypeError: argument should be a str or an os.PathLike object where __fspath__ returns a str, not 'NoneType'
+Traceback (most recent call last):
+  File "/home/max/Documents/viralforge-ai/app/main.py", line 289, in run_processing_pipeline
+    trans_res = transcribe_audio(
+        trans_input,
+        progress_callback=lambda m, p: set_status(m, p, "transcribing"),
+    )
+  File "/home/max/Documents/viralforge-ai/app/transcriber.py", line 33, in transcribe_audio
+    audio_path = extract_audio(video_path)
+  File "/home/max/Documents/viralforge-ai/app/transcriber.py", line 9, in extract_audio
+    audio_path = str(Path(video_path).with_suffix(".wav"))
+                     ~~~~^^^^^^^^^^^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 149, in __init__
+    raise TypeError(
+    ...<2 lines>...
+        f"not {type(path).__name__!r}")
+TypeError: argument should be a str or an os.PathLike object where __fspath__ returns a str, not 'NoneType'
+
+2026-11-19 06:59:13,548 [INFO] [d4a36ebe] [ingesting] p=5% | Fetching video metadata and captions...
+2026-11-19 06:59:26,193 [INFO] [d4a36ebe] [ingesting] p=10% | Metadata: Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) (213s)
+2026-11-19 06:59:26,194 [INFO] [d4a36ebe] STAGE_COMPLETE: ingest in 12.65s | title=Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)
+2026-11-19 06:59:26,195 [INFO] [d4a36ebe] [analyzing] p=12% | Downloading low-bitrate audio for analysis...
+2026-11-19 06:59:31,321 [WARNING] [d4a36ebe] Audio download failed – proceeding with captions only
+2026-11-19 06:59:31,322 [INFO] [d4a36ebe] [transcribing] p=25% | Extracting word-level timestamps...
+2026-11-19 06:59:31,324 [INFO] [d4a36ebe] [transcribing] p=30% | Extracting audio stream from video...
+2026-11-19 06:59:31,353 [ERROR] [d4a36ebe] PIPELINE_CRASH: TypeError: argument should be a str or an os.PathLike object where __fspath__ returns a str, not 'NoneType'
+Traceback (most recent call last):
+  File "/home/max/Documents/viralforge-ai/app/main.py", line 289, in run_processing_pipeline
+    trans_res = transcribe_audio(
+        trans_input,
+        progress_callback=lambda m, p: set_status(m, p, "transcribing"),
+    )
+  File "/home/max/Documents/viralforge-ai/app/transcriber.py", line 33, in transcribe_audio
+    audio_path = extract_audio(video_path)
+  File "/home/max/Documents/viralforge-ai/app/transcriber.py", line 9, in extract_audio
+    audio_path = str(Path(video_path).with_suffix(".wav"))
+                     ~~~~^^^^^^^^^^^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 149, in __init__
+    raise TypeError(
+    ...<2 lines>...
+        f"not {type(path).__name__!r}")
+TypeError: argument should be a str or an os.PathLike object where __fspath__ returns a str, not 'NoneType'
+
+2026-11-19 07:01:27,517 [INFO] [009aaf4f] [ingesting] p=5% | Fetching video metadata and captions...
+2026-11-19 07:01:35,764 [INFO] [009aaf4f] [ingesting] p=10% | Metadata: 3 Minutes Of INSPIRATION | Motivational Speech (187s)
+2026-11-19 07:01:35,765 [INFO] [009aaf4f] STAGE_COMPLETE: ingest in 8.25s | title=3 Minutes Of INSPIRATION | Motivational Speech
+2026-11-19 07:01:35,765 [INFO] [009aaf4f] [analyzing] p=12% | Downloading low-bitrate audio for analysis...
+2026-11-19 07:01:37,038 [WARNING] [009aaf4f] Audio download failed – proceeding with captions only
+2026-11-19 07:01:37,038 [INFO] [009aaf4f] [transcribing] p=25% | Extracting word-level timestamps...
+2026-11-19 07:01:37,039 [ERROR] [009aaf4f] NO_AUDIO_FOR_TRANSCRIBE
+2026-11-19 07:07:19,558 [INFO] [01f7634d] [ingesting] p=5% | Fetching video metadata and captions...
+2026-11-19 07:07:30,649 [INFO] [01f7634d] [ingesting] p=10% | Metadata: Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) (213s)
+2026-11-19 07:07:30,649 [INFO] [01f7634d] STAGE_COMPLETE: ingest in 11.09s | title=Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)
+2026-11-19 07:07:30,650 [INFO] [01f7634d] [analyzing] p=12% | Downloading low-bitrate audio for analysis...
+2026-11-19 07:07:34,006 [WARNING] [01f7634d] Audio download failed – proceeding with captions only
+2026-11-19 07:07:34,013 [INFO] [01f7634d] [transcribing] p=22% | Reading YouTube captions...
+2026-11-19 07:07:34,075 [INFO] [01f7634d] [transcribing] p=23% | Fetching YouTube captions...
+2026-11-19 07:07:35,374 [INFO] [01f7634d] [transcribing] p=24% | Downloading caption tracks...
+2026-11-19 07:07:43,060 [WARNING] [01f7634d] Caption fetch failed: No caption files found — falling back to offline STT
+2026-11-19 07:07:43,062 [INFO] [01f7634d] [transcribing] p=25% | Transcribing with offline speech model...
+2026-11-19 07:07:43,065 [ERROR] [01f7634d] NO_TRANSCRIPT_SOURCE
+2026-11-19 07:14:52,603 [INFO] [71d57313] [ingesting] p=5% | Fetching video metadata and captions...
+2026-11-19 07:15:00,364 [INFO] [71d57313] [ingesting] p=10% | Metadata: Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) (213s)
+2026-11-19 07:15:00,364 [INFO] [71d57313] STAGE_COMPLETE: ingest in 7.76s | title=Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)
+2026-11-19 07:15:00,366 [INFO] [71d57313] [analyzing] p=12% | Downloading low-bitrate audio for analysis...
+2026-11-19 07:15:01,731 [WARNING] [71d57313] Audio download failed – proceeding with captions only
+2026-11-19 07:15:01,732 [INFO] [71d57313] [transcribing] p=22% | Reading YouTube captions...
+2026-11-19 07:15:01,732 [INFO] [71d57313] [transcribing] p=23% | Fetching YouTube captions...
+2026-11-19 07:15:01,733 [INFO] [71d57313] [transcribing] p=24% | Downloading caption tracks...
+2026-11-19 07:15:06,925 [WARNING] [71d57313] Caption fetch failed: No caption files found — falling back to offline STT
+2026-11-19 07:15:06,927 [INFO] [71d57313] [transcribing] p=25% | Transcribing with offline speech model...
+2026-11-19 07:15:06,929 [ERROR] [71d57313] NO_TRANSCRIPT_SOURCE
