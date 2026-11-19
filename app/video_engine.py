@@ -133,7 +133,13 @@ def render_clip(
 
     print(f"[VideoEngine] Rendering clip {output_filename} ({duration:.1f}s)...")
     try:
-        subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        subprocess.run(
+            cmd,
+            stdout=subprocess.DEVNULL,     # Drain to /dev/null (no buffering risk)
+            stderr=subprocess.DEVNULL,
+            check=True,
+            timeout=max(300, duration * 10),  # 300s max, or 10x clip duration
+        )
         # Extract thumbnail
         extract_thumbnail(output_path, thumb_path, timestamp=min(1.5, duration / 2))
 

@@ -9,13 +9,39 @@ import platform
 import urllib.request
 from pathlib import Path
 
+# Brand constants live in one place so the whole app can be renamed by editing app/brand.py
+try:
+    from app.brand import APP_NAME, APP_ALIAS, APP_DESCRIPTION, APP_DISCLAIMER
+except Exception:
+    APP_NAME = "GTA 6 Clipper"
+    APP_ALIAS = "clipforge"
+    APP_DESCRIPTION = "Free, local-first stream clipper and vertical short maker."
+    APP_DISCLAIMER = "Not affiliated with Rockstar Games or Take-Two."
+
+
+def _venv_bin() -> Path:
+    """Directory that contains the current Python interpreter (venv/bin)."""
+    return Path(sys.executable).resolve().parent
+
+
 def check_python_version():
     return sys.version_info >= (3, 11)
 
+
+def _which_any(name: str):
+    """Find an executable on PATH or in the active venv's bin directory."""
+    found = shutil.which(name)
+    if found:
+        return found
+    for cand in (_venv_bin() / name, _venv_bin() / (name + ".exe")):
+        if cand.exists():
+            return str(cand)
+    return None
+
+
 def check_ffmpeg():
-    ffmpeg_path = shutil.which("ffmpeg")
-    ffprobe_path = shutil.which("ffprobe")
-    return ffmpeg_path is not None and ffprobe_path is not None
+    return _which_any("ffmpeg") is not None and _which_any("ffprobe") is not None
+
 
 def check_hardware_encoders():
     encoders = []
@@ -30,7 +56,7 @@ def check_hardware_encoders():
         if "qsv" in out:
             encoders.append("qsv (Intel QuickSync)")
         if "videotoolbox" in out:
-            encoders.append("videotoolbox (Apple Silicon/Mac)")
+            encoders.append("videotoolbox (Apple)")
         if "vaapi" in out:
             encoders.append("vaapi (Linux)")
         if "amf" in out:
@@ -38,6 +64,7 @@ def check_hardware_encoders():
     except Exception:
         pass
     return encoders
+
 
 def check_disk_space(path="."):
     try:
@@ -47,80 +74,91 @@ def check_disk_space(path="."):
     except Exception:
         return 0.0
 
+
 def check_port_available(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(('127.0.0.1', port)) != 0
+        return s.connect_ex(("127.0.0.1", port)) != 0
+
 
 def run_doctor():
-    """Run clipforge doctor diagnostic checks."""
-    print("\n🔍 --- ClipForge Doctor System Diagnostics ---")
+    """Run system diagnostics and print a clear report."""
+    print("\n🔍 --- {} Doctor ---".format(APP_NAME))
 
     # 1. OS & Architecture
-    os_info = f"{platform.system()} {platform.release()} ({platform.machine()})"
-    print(f"  [✓] OS Platform: {os_info}")
+    os_info = "{} {} ({})".format(platform.system(), platform.release(), platform.machine())
+    print("  [✓] OS Platform: {}".format(os_info))
 
     # 2. Python Version
-    py_ver = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+    py_ver = "{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro)
     if check_python_version():
-        print(f"  [✓] Python Version: {py_ver} (>= 3.11)")
+        print("  [✓] Python Version: {} (>= 3.11)".format(py_ver))
     else:
-        print(f"  [✗] Python Version: {py_ver} (ClipForge requires Python 3.11+)")
+        print("  [✗] Python Version: {} (requires Python 3.11+)".format(py_ver))
 
     # 3. FFmpeg & FFprobe
-    if check_ffmpeg():
-        ffmpeg_bin = shutil.which("ffmpeg")
-        print(f"  [✓] FFmpeg Binary: Found at {ffmpeg_bin}")
+    ffmpeg_bin = _which_any("ffmpeg")
+    ffprobe_bin = _which_any("ffprobe")
+    if ffmpeg_bin and ffprobe_bin:
+        print("  [✓] FFmpeg: {}".format(ffmpeg_bin))
+        print("  [✓] FFprobe: {}".format(ffprobe_bin))
     else:
-        print("  [✗] FFmpeg Binary: NOT FOUND in PATH! (Run install script to auto-download)")
+        print("  [✗] FFmpeg NOT FOUND in PATH or venv (run the install script to auto-download a static build)")
 
     # 4. Hardware Encoders
     encoders = check_hardware_encoders()
     if encoders:
-        print(f"  [✓] Hardware Video Encoders Detected: {', '.join(encoders)}")
+        print("  [✓] Hardware Video Encoders: {}".format(", ".join(encoders)))
     else:
-        print("  [i] Hardware Video Encoders: None detected (Falling back to high-performance x264 software encoder)")
+        print("  [i] Hardware Video Encoders: none detected (will use x264 software encoder)")
 
     # 5. Disk Space
     free_gb = check_disk_space(".")
     if free_gb > 5.0:
-        print(f"  [✓] Disk Space Available: {free_gb:.2f} GB")
+        print("  [✓] Disk Space Available: {:.2f} GB".format(free_gb))
     else:
-        print(f"  [!] Disk Space Warning: Only {free_gb:.2f} GB free. At least 5 GB recommended for processing.")
+        print("  [!] Disk Space Warning: only {:.2f} GB free. 5 GB+ recommended.".format(free_gb))
 
-    # 6. yt-dlp Status
-    yt_dlp_bin = shutil.which("yt-dlp")
-    if yt_dlp_bin:
-        print(f"  [✓] yt-dlp Engine: Available at {yt_dlp_bin}")
+    # 6. yt-dlp
+    yt_bin = _which_any("yt-dlp")
+    if yt_bin:
+        try:
+            ver = subprocess.run([yt_bin, "--version"], stdout=subprocess.PIPE, text=True, timeout=15).stdout.strip()
+        except Exception:
+            ver = "unknown version"
+        print("  [✓] yt-dlp: {} ({})".format(yt_bin, ver))
     else:
-        print("  [✗] yt-dlp Engine: NOT FOUND in PATH!")
+        print("  [✗] yt-dlp NOT FOUND (pip install yt-dlp)")
 
-    # 7. Port Check (default 3000)
+    # 7. Port
     port = 3000
     if check_port_available(port):
-        print(f"  [✓] Default Port {port}: Available")
+        print("  [✓] Port {}: available".format(port))
     else:
-        print(f"  [!] Default Port {port}: In use by another service.")
+        print("  [!] Port {}: in use (another instance may be running)".format(port))
 
+    print("\n  {}".format(APP_DISCLAIMER))
     print("--------------------------------------------\n")
+
 
 def run_update():
     """Update ClipForge and yt-dlp."""
-    print("🔄 Updating ClipForge dependencies and yt-dlp engine...")
+    print("\U0001F504 Updating {} dependencies and yt-dlp...".format(APP_NAME))
     try:
         subprocess.run([sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp", "clipforge"], check=True)
-        print("✅ Update completed successfully!")
+        print("\u2705 Update completed!")
     except Exception as e:
-        print(f"❌ Update failed: {e}")
+        print("\u274C Update failed: {}".format(e))
+
 
 def run_server(port: int = 3000, open_browser: bool = True):
-    """Start FastAPI server and optionally open browser."""
+    """Start the FastAPI server and optionally open the browser."""
     import uvicorn
     import webbrowser
     import threading
     import time
 
-    url = f"http://localhost:{port}"
-    print(f"\n🚀 Starting ClipForge Studio server on {url} ...")
+    url = "http://localhost:{}".format(port)
+    print("\n\U0001F680 Starting {} on {} ...".format(APP_NAME, url))
 
     if open_browser:
         def open_b():
@@ -131,18 +169,18 @@ def run_server(port: int = 3000, open_browser: bool = True):
     from app.main import app
     uvicorn.run(app, host="0.0.0.0", port=port)
 
+
 def main():
-    parser = argparse.ArgumentParser(description="ClipForge - Local-First AI Short Clipper & Editor Studio")
-    parser.add_argument("--port", type=int, default=3000, help="Port to run server on (default: 3000)")
-    parser.add_argument("--no-browser", action="store_true", help="Do not open browser automatically")
+    parser = argparse.ArgumentParser(description="{} - local-first short clipper & editor studio".format(APP_NAME))
+    parser.add_argument("--port", type=int, default=3000, help="port to serve on (default: 3000)")
+    parser.add_argument("--no-browser", action="store_true", help="don't auto-open the browser")
 
     subparsers = parser.add_subparsers(dest="command")
-
-    subparsers.add_parser("doctor", help="Run system environment and dependency checks")
-    subparsers.add_parser("update", help="Update ClipForge core and yt-dlp")
-    subparsers.add_parser("calibrate", help="Calibrate clip scoring weights based on user ratings")
-    subparsers.add_parser("benchmark", help="Run performance benchmarks for current hardware")
-    subparsers.add_parser("uninstall", help="Uninstall ClipForge")
+    subparsers.add_parser("doctor", help="check system environment and dependencies")
+    subparsers.add_parser("update", help="update the app core and yt-dlp")
+    subparsers.add_parser("calibrate", help="calibrate clip scoring weights from user ratings")
+    subparsers.add_parser("benchmark", help="run performance benchmarks for this machine")
+    subparsers.add_parser("uninstall", help="uninstall instructions")
 
     args = parser.parse_args()
 
@@ -151,13 +189,14 @@ def main():
     elif args.command == "update":
         run_update()
     elif args.command == "calibrate":
-        print("🎯 Calibration tool initialized...")
+        print("\U0001F3AF Calibration tool...")
     elif args.command == "benchmark":
-        print("⚡ Benchmark suite starting...")
+        print("\u26A1 Benchmark suite...")
     elif args.command == "uninstall":
-        print("🗑️ ClipForge uninstall guide...")
+        print("\U0001F5D1 {} uninstall guide...".format(APP_NAME))
     else:
         run_server(port=args.port, open_browser=not args.no_browser)
+
 
 if __name__ == "__main__":
     main()

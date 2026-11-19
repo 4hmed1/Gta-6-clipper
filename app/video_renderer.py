@@ -64,5 +64,5 @@ def render_final_clip(
         output_path
     ]
 
-    subprocess.run(cmd, check=True)
+    subprocess.run(cmd, check=True, timeout=max(300, duration * 10))
     return output_path

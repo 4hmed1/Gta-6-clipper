@@ -45,5 +45,5 @@ def process_audio_for_broadcast(
         output_video
     ]
 
-    subprocess.run(cmd, check=True)
+    subprocess.run(cmd, check=True, timeout=30)
     return output_video

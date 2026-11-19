@@ -272,8 +272,8 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
             # For local files, extract audio with ffmpeg
             import subprocess
             audio_path = str(Path(source_video).with_suffix(".wav"))
-            cmd = ["ffmpeg", "-y", "-i", source_video, "-vn", "-acodec", "pcm_s16le", "-ar", "16000", "-ac", "1", "-loglevel", "error", audio_path]
-            subprocess.run(cmd, check=False, capture_output=True)
+            cmd = ["ffmpeg", "-y", "-nostdin", "-i", source_video, "-vn", "-acodec", "pcm_s16le", "-ar", "16000", "-ac", "1", "-loglevel", "error", audio_path]
+            subprocess.run(cmd, check=False, capture_output=True, timeout=60)
             if not Path(audio_path).exists():
                 audio_path = ""
 
@@ -498,7 +498,7 @@ def list_clips():
             "filename": f.name,
             "filepath": str(f),
             "download_url": f"/api/clips/download/{f.name}",
-            "thumbnail": f"/api/clips/thumb/{thumb.name}" if thumb_path.exists() else "",
+            "thumbnail": f"/api/clips/thumb/{thumb_path.name}" if thumb_path.exists() else "",
         })
     return {"clips": clips}
 

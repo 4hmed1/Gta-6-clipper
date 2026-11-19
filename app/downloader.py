@@ -22,7 +22,14 @@ def get_video_metadata(filepath: str) -> Dict[str, Any]:
             "-of", "json",
             filepath
         ]
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+        res = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=True,
+            timeout=60,
+        )
         data = json.loads(res.stdout)
         
         duration = float(data.get("format", {}).get("duration", 0))
