@@ -41,9 +41,15 @@
 - [ ] Chaos testing suite.
 
 ## Phase 9: Wizard & API
-- [ ] Wizard UI (Step 2 flow).
-- [ ] Processing status screen.
-- [ ] Results page.
+- [x] Design system tokens (docs/DESIGN_SYSTEM.md) — colors, type, spacing, radius, shadows, motion
+- [x] Create screen static layout (static/index.html) — app bar, tabs, headline, source input, all settings
+- [x] App interaction logic (static/js/app.js) — paste detection, drag-drop, segmented controls, caption gallery, toggles, focus/time range, presets, video list with stepper + clip grid + overflow menu, toasts, confirm dialogs, polling, persistence
+- [x] Backend wiring — ProcessRequest gains clip_count/length_min/length_max/aspect/caption_style/framing/hook_text/tighten_pauses/focus_text/range_start/range_end; detect_viral_clips accepts min/max/max_clips; new endpoints /api/validate, /api/tasks, /api/tasks/cancel, /api/videos/folder
+- [x] UI verification — Playwright screenshots at 360/768/1440px dark+light (audit/screenshots/), UI_REPORT.md
+- [ ] Processing status screen (stepper + clip grid + progress SSE)
+- [ ] Results page (clip cards with scores, reasons, edit/download)
+- [ ] Playwright e2e tests: link validation, settings payload, stepper state, clip grid, delete/cancel, keyboard nav
+- [ ] Lighthouse accessibility ≥ 95, axe zero critical issues
 
 ## Phase 10: CapCut-like Editor
 - [ ] Project JSON model.
