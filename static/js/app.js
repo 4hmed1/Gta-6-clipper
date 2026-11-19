@@ -330,6 +330,7 @@
     ingesting: 0,
     downloading: 0,
     audio_download: 0,
+    captions: 0,
     transcribing: 1,
     analyzing: 1,
     selecting: 1,
@@ -398,8 +399,10 @@
           </div>
         </div>
         <div class="progress-detail hidden" data-role="stuck-banner">
-          <span class="progress-stage-text">Stuck? Retry with lower quality</span>
+          <span class="progress-stage-text" data-role="stuck-text">Stuck? Retry with lower quality</span>
           <button class="retry-button" data-role="retry">Retry lower quality</button>
+          <button class="retry-button" data-role="resume">Resume</button>
+          <button class="retry-button" data-role="delete">Delete</button>
         </div>
         <div class="progress-detail hidden" data-role="error-banner">
           <span class="progress-stage-text" data-role="error-text"></span>
@@ -437,6 +440,22 @@
     card.querySelector('[data-role="retry"]').addEventListener('click', () => {
       fetch(`${API.cancel}/${taskId}`, { method: 'POST' }).catch(() => {});
       startJobWithQuality('lower');
+    });
+
+    card.querySelector('[data-role="resume"]').addEventListener('click', () => {
+      // Resume an interrupted job: re-submit the same URL with the same settings
+      const cardTitle = card.querySelector('.video-title')?.textContent || '';
+      const url = cardTitle.startsWith('http') ? cardTitle : (card.dataset.url || '');
+      if (url) {
+        // Re-submit via the same form values, lower quality
+        const focus = els.focusInput?.value || '';
+        startJobWithQuality('lower', url, focus);
+      }
+    });
+
+    card.querySelector('[data-role="delete"]').addEventListener('click', () => {
+      fetch(`${API.cancel}/${taskId}`, { method: 'POST' });
+      card.remove();
     });
 
     card.querySelector('[data-role="fix"]').addEventListener('click', () => {
@@ -607,6 +626,14 @@
         setCardStatus(card, 'cancelled');
         card.querySelector('[data-role="progress-detail"]').classList.add('hidden');
         state.pollTimer && clearInterval(state.pollTimer);
+      } else if (status === 'interrupted') {
+        setCardStatus(card, 'interrupted');
+        card.querySelector('[data-role="progress-detail"]').classList.add('hidden');
+        const stuckBanner = card.querySelector('[data-role="stuck-banner"]');
+        stuckBanner.classList.remove('hidden');
+        stuckBanner.querySelector('[data-role="stuck-text"]')
+          || stuckBanner.querySelector('.progress-stage-text');
+        state.pollTimer && clearInterval(state.pollTimer);
       }
 
       updateVideoCount();
@@ -693,9 +720,11 @@
     document.title = 'GTA 6 Clipper — Clips ready';
   }
 
-  function startJobWithQuality(quality) {
+  function startJobWithQuality(quality, urlOverride, focusOverride) {
     showToast('Re-running with lower quality settings…');
     localStorage.setItem('gta6_clipper_quality_override', quality);
+    if (urlOverride) els.videoUrl.value = urlOverride;
+    if (focusOverride !== undefined) els.focusInput.value = focusOverride;
     startJob();
   }
 

@@ -218,6 +218,17 @@ def _ytdlp_bin() -> str:
     )
 
 
+def _extract_video_id(url: str) -> Optional[str]:
+    """Normalize any YouTube URL (youtu.be, watch?v=, shorts/, embed/, ?si=) to the video ID."""
+    if not url:
+        return None
+    import re
+    m = re.search(r"(?:v=|youtu\.be\/|shorts\/|embed\/|watch\?v=)([A-Za-z0-9_-]{6,})", url)
+    if m:
+        return m.group(1)
+    return None
+
+
 # ── Module-level async helpers ──
 
 async def _run_subprocess_async(
@@ -308,12 +319,19 @@ async def _fetch_metadata_and_captions(url: str) -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-async def _download_audio_from_url(url: str) -> str:
-    """Download low-bitrate audio (~64 kbps) from a URL for analysis only."""
+async def _download_audio_from_url(url: str, work_dir: str = "", progress_callback=None) -> str:
+    """Download low-bitrate audio (~64 kbps) from a URL for analysis only.
+
+    Each job gets its OWN work directory so two same-link jobs can never
+    collide on a .part file or file lock (suspect (a) from the 12% stall).
+    """
     if not url:
         return ""
     yt = _ytdlp_bin()
-    audio_path = str(DOWNLOADS_DIR / f"audio_{uuid.uuid4().hex[:8]}.wav")
+    # Unique per-job work directory
+    work_path = Path(work_dir) if work_dir else DOWNLOADS_DIR
+    work_path.mkdir(parents=True, exist_ok=True)
+    audio_path = str(work_path / f"audio_{uuid.uuid4().hex[:8]}.wav")
     cmd = [
         yt,
         "-o", audio_path,
@@ -407,12 +425,18 @@ def _run_async(coro):
 def run_processing_pipeline(task_id: str, req: ProcessRequest):
     """Background worker executing the complete pipeline with structured logging."""
     start_time = time.time()
+    # Track lifecycle: queued -> running -> done/failed/interrupted/cancelled
+    # Transition from queued to running when worker starts
+    tasks_state[task_id]["status"] = "running"
 
     def set_status(msg: str, progress: int, stage: str = "processing"):
         tasks_state[task_id]["message"] = msg
         tasks_state[task_id]["progress"] = progress
         tasks_state[task_id]["stage"] = stage
         tasks_state[task_id]["heartbeat"] = time.time()
+        # Transition to running on first progress update
+        if tasks_state[task_id]["status"] == "queued":
+            tasks_state[task_id]["status"] = "running"
         pipeline_logger.info(f"[{task_id}] [{stage}] p={progress}% | {msg}")
 
     def fail_with(message: str, raw: str = ""):
@@ -426,20 +450,12 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
         tasks_state[task_id]["suggested_fix"] = classified["fix"]
         pipeline_logger.error(f"[{task_id}] JOB_FAILED: {message}")
 
-    def fail_with(message: str, raw: str = ""):
-        """Mark job failed with a classified, plain-language error."""
-        classified = _classify_ytdlp_error(raw or message)
-        tasks_state[task_id]["status"] = "failed"
-        tasks_state[task_id]["progress"] = 0
-        tasks_state[task_id]["heartbeat"] = time.time()
-        tasks_state[task_id]["error"] = message or classified["user_msg"]
-        tasks_state[task_id]["error_detail"] = classified["tech_detail"]
-        tasks_state[task_id]["suggested_fix"] = classified["fix"]
-        pipeline_logger.error(f"[{task_id}] JOB_FAILED: {message}")
-
-    def record_stage(stage_name: str, details: str = ""):
-        elapsed = time.time() - start_time
-        pipeline_logger.info(f"[{task_id}] STAGE_COMPLETE: {stage_name} in {elapsed:.2f}s | {details}")
+    # Heartbeat every 2s — prevents false stuck detection
+    def _heartbeat_loop():
+        while tasks_state[task_id].get("status") in ("running", "processing", "queued"):
+            tasks_state[task_id]["heartbeat"] = time.time()
+            time.sleep(2)
+    threading.Thread(target=_heartbeat_loop, daemon=True, name=f"hb-{task_id}").start()
 
     try:
         # ── Step 0: Validate user-provided range server-side ──
@@ -487,55 +503,90 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
         tasks_state[task_id]["video_info"] = video_meta
         record_stage("ingest", f"title={video_meta.get('title')}")
 
-        # ── Step 2: Audio-only download (fast, ~2 MB for a 3-min video) ──
-        set_status("Downloading low-bitrate audio for analysis...", 12, "analyzing")
-        audio_path = ""
+        # ── Step 2: YouTube captions FIRST (no download needed) ──
+        set_status("Checking for YouTube captions...", 12, "captions")
+        captions_result = {"success": False, "words": [], "segments": []}
         if req.url:
             try:
-                audio_path = _run_async(_download_audio_from_url(req.url))
+                from app.youtube_captions import fetch_youtube_captions
+                captions_result = fetch_youtube_captions(
+                    req.url,
+                    progress_callback=lambda m, p: set_status(m, p, "captions"),
+                )
             except Exception as e:
-                pipeline_logger.error(f"[{task_id}] Audio download exception: {e}")
-        elif source_video and Path(source_video).exists():
-            # For local files, extract audio with ffmpeg
-            import subprocess
-            audio_path = str(Path(source_video).with_suffix(".wav"))
-            cmd = ["ffmpeg", "-y", "-nostdin", "-i", source_video, "-vn", "-acodec", "pcm_s16le", "-ar", "16000", "-ac", "1", "-loglevel", "error", audio_path]
-            subprocess.run(cmd, check=False, capture_output=True, timeout=60)
-            if not Path(audio_path).exists():
-                audio_path = ""
+                pipeline_logger.warning(f"[{task_id}] Caption fetch failed: {e}")
 
-        if audio_path and Path(audio_path).exists():
-            set_status("Audio downloaded successfully", 20, "analyzing")
+        if captions_result.get("success") and captions_result.get("words"):
+            set_status(f"Captions loaded ({len(captions_result['words'])} words)", 20, "captions")
+            # We have real word-timed captions — skip Whisper, use these directly
+            words = captions_result.get("words", [])
+            for w in words:
+                if isinstance(w.get("start"), (float,)):
+                    w["start"] = float(w["start"])
+                if isinstance(w.get("end"), (float,)):
+                    w["end"] = float(w["end"])
+            trans_res = {
+                "success": True,
+                "language": captions_result.get("language", "en"),
+                "duration": captions_result.get("duration", 0),
+                "text": captions_result.get("text", ""),
+                "segments": captions_result.get("segments", []),
+                "words": words,
+                "source": "youtube_captions",
+                "is_mock": False,
+            }
+            tasks_state[task_id]["transcript_words"] = words
+            record_stage("captions", f"words={len(words)},source=youtube_captions")
         else:
-            pipeline_logger.warning(f"[{task_id}] Audio download failed – proceeding with captions only")
+            # No captions available — download audio for Whisper transcription
+            set_status("Downloading low-bitrate audio for analysis...", 15, "downloading")
+            audio_path = ""
+            if req.url:
+                try:
+                    audio_path = _run_async(_download_audio_from_url(req.url, str(OUTPUTS_DIR / f"work_{task_id}")))
+                except Exception as e:
+                    pipeline_logger.error(f"[{task_id}] Audio download exception: {e}")
+            elif source_video and Path(source_video).exists():
+                # For local files, extract audio with ffmpeg
+                import subprocess
+                audio_path = str(Path(source_video).with_suffix(".wav"))
+                cmd = ["ffmpeg", "-y", "-nostdin", "-i", source_video, "-vn", "-acodec", "pcm_s16le", "-ar", "16000", "-ac", "1", "-loglevel", "error", audio_path]
+                subprocess.run(cmd, check=False, capture_output=True, timeout=60)
+                if not Path(audio_path).exists():
+                    audio_path = ""
 
-        # ── Step 3: Transcribe with word timing ──
-        set_status("Extracting word-level timestamps...", 25, "transcribing")
-        trans_input = audio_path if (audio_path and Path(audio_path).exists()) else (source_video if source_video else req.filepath)
-        if not trans_input or not os.path.exists(trans_input):
-            tasks_state[task_id]["status"] = "failed"
-            tasks_state[task_id]["error"] = "Audio download failed and no local file available for transcription."
-            pipeline_logger.error(f"[{task_id}] NO_AUDIO_FOR_TRANSCRIBE")
-            return
-        trans_res = transcribe_audio(
-            trans_input,
-            progress_callback=lambda m, p: set_status(m, p, "transcribing"),
-        )
-        if not trans_res.get("success"):
-            tasks_state[task_id]["status"] = "failed"
-            tasks_state[task_id]["error"] = "Transcription failed."
-            pipeline_logger.error(f"[{task_id}] TRANSCRIBE_FAILED")
-            return
+            if audio_path and Path(audio_path).exists():
+                set_status("Audio downloaded successfully", 22, "downloading")
+            else:
+                pipeline_logger.warning(f"[{task_id}] Audio download failed – proceeding with captions only")
 
-        words = trans_res.get("words", [])
-        for w in words:
-            if isinstance(w.get("start"), (float,)):
-                w["start"] = float(w["start"])
-            if isinstance(w.get("end"), (float,)):
-                w["end"] = float(w["end"])
-        trans_res["words"] = words
-        tasks_state[task_id]["transcript_words"] = words
-        record_stage("transcribe", f"words={len(words)},is_mock={trans_res.get('is_mock', False)}")
+            # ── Step 3: Transcribe with word timing ──
+            set_status("Extracting word-level timestamps...", 25, "transcribing")
+            trans_input = audio_path if (audio_path and Path(audio_path).exists()) else (source_video if source_video else req.filepath)
+            if not trans_input or not os.path.exists(trans_input):
+                tasks_state[task_id]["status"] = "failed"
+                tasks_state[task_id]["error"] = "Audio download failed and no local file available for transcription."
+                pipeline_logger.error(f"[{task_id}] NO_AUDIO_FOR_TRANSCRIBE")
+                return
+            trans_res = transcribe_audio(
+                trans_input,
+                progress_callback=lambda m, p: set_status(m, p, "transcribing"),
+            )
+            if not trans_res.get("success"):
+                tasks_state[task_id]["status"] = "failed"
+                tasks_state[task_id]["error"] = "Transcription failed."
+                pipeline_logger.error(f"[{task_id}] TRANSCRIBE_FAILED")
+                return
+
+            words = trans_res.get("words", [])
+            for w in words:
+                if isinstance(w.get("start"), (float,)):
+                    w["start"] = float(w["start"])
+                if isinstance(w.get("end"), (float,)):
+                    w["end"] = float(w["end"])
+            trans_res["words"] = words
+            tasks_state[task_id]["transcript_words"] = words
+            record_stage("transcribe", f"words={len(words)},is_mock={trans_res.get('is_mock', False)}")
 
         # ── Step 4: Clip selection ──
         # Use new UI fields for clip count and length
@@ -631,8 +682,8 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
         tasks_state[task_id]["message"] = f"Successfully generated {len(rendered_clips)} viral shorts!"
         tasks_state[task_id]["clips"] = rendered_clips
 
-        # Cleanup temp audio
-        if audio_path and Path(audio_path).exists():
+        # Cleanup temp audio (only if we downloaded it for Whisper)
+        if 'audio_path' in locals() and audio_path and Path(audio_path).exists():
             try:
                 Path(audio_path).unlink(missing_ok=True)
             except Exception:
@@ -657,16 +708,35 @@ def serve_index():
 @app.post("/api/process")
 def process_video_endpoint(req: ProcessRequest, background_tasks: BackgroundTasks):
     """Start background video clipping pipeline."""
+    # Deduplicate: same video ID + same settings while a job is queued or running.
+    # Normalize youtu.be, youtube.com/watch, shorts and ?si= links to the video ID.
+    video_id = _extract_video_id(req.url) if req.url else None
+    if video_id:
+        for existing_task_id, existing_state in tasks_state.items():
+            if existing_state.get("status") in ("queued", "running", "processing"):
+                existing_url = existing_state.get("url", "")
+                existing_id = _extract_video_id(existing_url) if existing_url else None
+                if existing_id == video_id:
+                    # Same video being processed already — return existing job
+                    return {
+                        "success": True,
+                        "task_id": existing_task_id,
+                        "already_processing": True,
+                        "message": "Already processing this video",
+                    }
     task_id = str(uuid.uuid4())[:8]
     tasks_state[task_id] = {
         "task_id": task_id,
-        "status": "processing",
+        "status": "queued",
         "progress": 0,
-        "message": "Initializing pipeline...",
+        "message": "Queued for processing",
         "clips": [],
         "error": None,
         "heartbeat": time.time(),
+        "queued_at": time.time(),
+        "url": req.url,
     }
+    _active_workers[task_id] = os.getpid()
     _check_and_clear_orphan_tasks()
     background_tasks.add_task(run_processing_pipeline, task_id, req)
     return {"success": True, "task_id": task_id}
@@ -689,10 +759,19 @@ def get_task_status(task_id: str):
     # Include heartbeat age for stuck detection
     now = time.time()
     heartbeat_age = now - state.get("heartbeat", now)
+    # A job with no heartbeat for 10+ s is never shown as working
+    no_heartbeat = heartbeat_age > 10 and not state.get("heartbeat")
+    # Ensure status is always one of the valid terminal states
+    valid_statuses = ("queued", "running", "processing", "completed", "failed", "interrupted", "cancelled")
+    state_status = state.get("status", "queued")
+    if state_status not in valid_statuses:
+        state_status = "queued"
     return {
         **state,
         "heartbeat_age": round(heartbeat_age, 1),
-        "is_stuck": heartbeat_age > 60 and state.get("status") in ("running", "working", "processing"),
+        "is_stuck": heartbeat_age > 60 and state_status in ("running", "processing"),
+        "no_heartbeat": no_heartbeat,
+        "valid_status": state_status in valid_statuses,
     }
 
 
