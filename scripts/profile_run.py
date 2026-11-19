@@ -10,7 +10,6 @@ import os
 import sys
 import time
 import subprocess
-import threading
 from pathlib import Path
 from typing import Dict, Any, List
 
@@ -82,95 +81,15 @@ def create_test_video() -> tuple:
     return video_path, words
 
 
-def profile_stage(name: str, fn, *args, timeout: int = 180, **kwargs) -> Dict[str, Any]:
-    """Run a stage and profile its resource usage in a thread."""
-    start_time = time.time()
-    peak_mem = 0
-    result_data = [None]
-    error_data = [None]
-    
-    def target():
-        nonlocal peak_mem
-        try:
-            # Set resource tracking
-            try:
-                import resource
-                old_limits = resource.getrlimit(resource.RLIMIT_AS)
-                try:
-                    resource.setrlimit(resource.RLIMIT_AS, (1024 * 1024 * 1024, 1024 * 1024 * 1024))
-                except:
-                    pass
-            except:
-                pass
-            
-            result_data[0] = fn(*args, **kwargs)
-            
-            # Get peak RSS after completion
-            try:
-                import resource as res_module
-                peak_mem = res_module.getrusage(res_module.RUSAGE_SELF).ru_maxrss  # KB on Linux
-            except:
-                pass
-        except Exception as e:
-            error_data[0] = e
-    
-    thread = threading.Thread(target=target)
-    thread.start()
-    thread.join(timeout=timeout)
-    elapsed = time.time() - start_time
-    
-    if thread.is_alive():
-        return {
-            "stage": name,
-            "seconds": timeout,
-            "timeout": True,
-            "peak_ram_mb": 0,
-            "bytes_downloaded": 0,
-            "bytes_written": 0,
-            "exit_code": -1,
-            "heartbeat": "STUCK - exceeded timeout"
-        }
-    
-    if error_data[0]:
-        return {
-            "stage": name,
-            "seconds": round(elapsed, 2),
-            "error": str(error_data[0])[:100],
-            "peak_ram_mb": 0,
-            "bytes_downloaded": 0,
-            "bytes_written": 0,
-            "exit_code": -1,
-            "heartbeat": f"FAILED: {str(error_data[0])[:50]}"
-        }
-    
-    # Extract bytes info from result
-    bytes_downloaded = 0
-    bytes_written = 0
-    if result_data[0] and isinstance(result_data[0], dict):
-        bytes_downloaded = result_data[0].get("bytes_downloaded", 0) or 0
-        bytes_written = result_data[0].get("bytes_written", 0) or 0
-    
-    return {
-        "stage": name,
-        "seconds": round(elapsed, 2),
-        "peak_ram_mb": peak_mem,
-        "bytes_downloaded": bytes_downloaded,
-        "bytes_written": bytes_written,
-        "exit_code": 0,
-        "heartbeat": "OK"
-    }
-
-
 def run_profile(video_path: str, words: list, label: str):
-    """Run full pipeline profiling for a given video."""
-    import threading  # ensure it's available
-    
+    """Run full pipeline profiling for a given video using the actual app/ modules."""
     print(f"\n{'='*60}")
     print(f"PROFILING: {label}")
     print(f"{'='*60}")
     
     results = []
     total_start = time.time()
+    file_size = 0
     
     # Stage 1: Metadata/transcript loading
     print("\n--- Stage 1: Loading metadata and captions ---")
@@ -261,36 +180,12 @@ def run_profile(video_path: str, words: list, label: str):
         })
         print(f"  FAILED: {e}")
     
-    # Stage 3: Transcription
+    # Stage 3: Transcription (using app.transcriber)
     print("\n--- Stage 3: Transcription (faster-whisper) ---")
     t1 = time.time()
     try:
-        from faster_whisper import WhisperModel
-        model = WhisperModel("tiny", device="cpu", compute_type="int8")
-        segments_gen, info = model.transcribe(audio_path, word_timestamps=True)
-        
-        segments_data = []
-        all_words = []
-        for segment in segments_gen:
-            seg_obj = {
-                "id": segment.id,
-                "start": round(segment.start, 2),
-                "end": round(segment.end, 2),
-                "text": segment.text.strip(),
-                "words": []
-            }
-            if segment.words:
-                for w in segment.words:
-                    word_item = {
-                        "word": w.word.strip(),
-                        "start": round(w.start, 2),
-                        "end": round(w.end, 2),
-                        "probability": round(w.probability, 2)
-                    }
-                    seg_obj["words"].append(word_item)
-                    all_words.append(word_item)
-            segments_data.append(seg_obj)
-        
+        from app.transcriber import transcribe_audio
+        trans_res = transcribe_audio(audio_path, model_size="tiny", progress_callback=None)
         t2 = time.time()
         rt_factor = (t2 - t1) / (60 / 60)  # real-time vs 60x real-time
         results.append({
@@ -316,27 +211,17 @@ def run_profile(video_path: str, words: list, label: str):
         })
         print(f"  FAILED: {e}")
     
-    # Stage 4: Clip selection
+    # Stage 4: Clip selection (using app.viral_detector)
     print("\n--- Stage 4: Clip selection ---")
     t1 = time.time()
     try:
-        from clipforge.core.selection import ClipSelector
-        
-        selector = ClipSelector(content_type="podcast")
-        with open('/tmp/test_transcript.json') as f:
-            transcript_data = json.load(f)
-        
-        audio_path = '/tmp/test_60s_audio.wav' if os.path.exists('/tmp/test_60s_audio.wav') else None
-        
-        clips = selector.select_clips(
-            source="/tmp/test_60s.mp4",
-            transcript=transcript_data.get("words", []),
-            audio_path=audio_path,
-            min_duration=20.0,
-            max_duration=60.0,
-            max_clips=5
+        from app.viral_detector import detect_viral_clips
+        clips = detect_viral_clips(
+            trans_res,
+            method="heuristic",
+            api_key="",
+            progress_callback=None
         )
-        
         t2 = time.time()
         results.append({
             "stage": "selection",
@@ -449,12 +334,6 @@ def run_profile(video_path: str, words: list, label: str):
     
     # Save to PERF_BASELINE.md
     baseline_path = Path("/home/max/Documents/viralforge-ai/PERF_BASELINE.md")
-    dr_values = [r.get('peak_ram_mb', 0) for r in results]
-    db_values = [r.get('bytes_downloaded', 0) for r in results]
-    bw_values = [r.get('bytes_written', 0) for r in results]
-    max_dr = max(dr_values) if dr_values else 0
-    max_db = max(db_values) if db_values else 0
-    max_bw = max(bw_values) if bw_values else 0
     
     md_content = f"""# PERF_BASELINE.md - Pipeline Profiling Baseline
 
@@ -466,7 +345,7 @@ Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}
 - Video: {video_path} (60s)
 - Audio: extracted at 16kHz mono, ~{file_size/1e3:.1f} KB
 - Transcript: word-level timestamps from faster-whisper
-- Clip selection: podcast content type
+- Clip selection: heuristic method (offline)
 - Render: split_blur layout, vibrant_gold subtitle style
 
 ### (b) 10-minute video with NO captions
@@ -485,9 +364,9 @@ Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}
         dr = r.get('peak_ram_mb', 0)
         db_val = float(r.get('bytes_downloaded', 0)) if r.get('bytes_downloaded') else 0.0
         bw_val = float(r.get('bytes_written', 0)) if r.get('bytes_written') else 0.0
-        db_str = f"{db_val/1e3:.1f}"
-        bw_str = f"{bw_val/1e3:.1f}"
-        md_content += f"| {r['stage']} | {r['seconds']} | {str(dr):>11} | {db_str:>12.1f} | {bw_str:>12.1f} | {r.get('heartbeat', 'N/A')} |\n"
+        db_str = f"{float(db_val)/1e3:.1f}"
+        bw_str = f"{float(bw_val)/1e3:.1f}"
+        md_content += f"| {r['stage']} | {r['seconds']} | {str(dr):>11} | {db_str:>12} | {bw_str:>12} | {r.get('heartbeat', 'N/A')} |\n"
     
     md_content += f"\n## Total Time: {total_seconds:.1f}s\n"
     md_content += f"\n## Per-Video Breakdown\n"
@@ -519,8 +398,6 @@ Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}
 
 
 # Run profiling
-import threading
-
 print("Creating test video and transcript...")
 video_path, words = create_test_video()
 

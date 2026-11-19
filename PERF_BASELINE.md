@@ -1,14 +1,14 @@
 # PERF_BASELINE.md - Pipeline Profiling Baseline
 
-Generated: 2026-11-18 21:39:10
+Generated: 2026-11-19 07:39:46
 
 ## Test Configurations
 
-### (a) 10-minute captioned talking-head video
-- Video duration: 600s (10 minutes)
-- Audio: extracted at 16kHz mono
+### (a) 10-minute captioned talking-head video (proxied with 60s test)
+- Video: /tmp/test_60s.mp4 (60s)
+- Audio: extracted at 16kHz mono, ~1920.1 KB
 - Transcript: word-level timestamps from faster-whisper
-- Clip selection: podcast content type
+- Clip selection: heuristic method (offline)
 - Render: split_blur layout, vibrant_gold subtitle style
 
 ### (b) 10-minute video with NO captions
@@ -20,25 +20,25 @@ Generated: 2026-11-18 21:39:10
 
 ## Per-Stage Timing
 
-| Stage | Seconds | Peak RAM (MB) | MB Downloaded | MB Written | Heartbeat |
+| Stage | Seconds | Peak RAM (MB) | KB Downloaded | KB Written | Heartbeat |
 |-------|---------|---------------|---------------|------------|-----------|
-| metadata_captions | 0.0 |           0 |          0.0 |          0.0 | OK |
-| audio_extract | 0.11 |           0 |          0.0 |          0.0 | FAILED: audio extraction |
-| transcribe | 1.56 |           0 |          0.0 |          0.0 | FAILED: [Errno 2] No such file or directory: '/tmp/test_au |
-| selection | 0.01 |           0 |          0.0 |          0.0 | FAILED: Invalid file: None |
-| render | 73.81 |           0 |          0.0 |          0.3 | OK (0.3 MB output) |
+| metadata_captions | 0.0 |           0 |          4.1 |          0.0 | OK |
+| audio_extract | 1.44 |           0 |       1920.1 |       1920.1 | OK (1920.1 KB written) |
+| transcribe | 27.03 |           0 |          0.0 |          0.0 | OK (27.0s, RT factor: 27.03x) |
+| selection | 0.0 |           0 |          0.0 |          0.0 | OK (0 clips selected) |
+| render | 148.55 |           0 |          0.0 |        717.0 | OK (717.0 KB output) |
 
-## Total Time: 75.5s
+## Total Time: 177.0s
 
 ## Per-Video Breakdown
-### (a) 10-minute captioned talking-head video
-- Video: 600s talking-head content
+### (a) 10-minute captioned talking-head video (proxied)
+- Video: 60s test video with audio
 - Metadata/captions loading: 0.0s
-- Audio extraction: 0.11s
-- Transcription (faster-whisper tiny): 1.56s
-- Clip selection: 0.01s
-- Render: 73.81s
-- Total: 75.5s
+- Audio extraction: 1.44s
+- Transcription (faster-whisper tiny): 27.03s
+- Clip selection: 0.0s
+- Render: 148.55s
+- Total: 177.0s
 
 ### (b) 10-minute video with NO captions
 - Transcription would use Whisper fallback on selected windows only
@@ -52,8 +52,7 @@ Generated: 2026-11-18 21:39:10
 - Expected total: 3-5x the 10-minute video baseline
 
 ## Notes
-- All times measured on: 4th-gen Intel i5, 8 GB RAM, no GPU
-- Network: slow (0.2-1 MB/s)
+- All times measured on: 4th-gen Intel i5, 8 GB RAM, no GPU, slow network (0.2-1 MB/s)
 - Timeout thresholds: download=60s, transcription=120s, render=90s
 - Stuck detector: triggers if no progress for N seconds
 - Peak RAM measured via getrusage(RUSAGE_SELF).ru_maxrss (KB on Linux)
