@@ -13,9 +13,17 @@
     upload: '/api/upload',
     tasks: '/api/tasks',
     cancel: '/api/tasks/cancel',
+    resume: '/api/tasks/resume',
+    delete: '/api/tasks/delete',
     validate: '/api/validate',
     deleteVideo: '/api/videos',
   };
+
+  // Build a URL with the task id interpolated. The route is parametric
+  // (FastAPI: /api/tasks/cancel/{task_id}) so the id must be in the path.
+  function taskUrl(prefix, taskId) {
+    return prefix.endsWith('/' + taskId) ? prefix : prefix + '/' + taskId;
+  }
 
   const VIDEO_EXTENSIONS = ['mp4', 'mov', 'mkv', 'webm'];
   const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2 GB
@@ -430,7 +438,7 @@
 
     card.querySelector('[data-role="cancel"]').addEventListener('click', async () => {
       try {
-        await fetch(`${API.cancel}/${taskId}`, { method: 'POST' });
+        await fetch(taskUrl(API.cancel, taskId), { method: 'POST' });
         setCardStatus(card, 'cancelled');
       } catch {
         showToast('Could not cancel the job.', 'error');
@@ -438,23 +446,39 @@
     });
 
     card.querySelector('[data-role="retry"]').addEventListener('click', () => {
-      fetch(`${API.cancel}/${taskId}`, { method: 'POST' }).catch(() => {});
+      fetch(taskUrl(API.cancel, taskId), { method: 'POST' }).catch(() => {});
       startJobWithQuality('lower');
     });
 
-    card.querySelector('[data-role="resume"]').addEventListener('click', () => {
-      // Resume an interrupted job: re-submit the same URL with the same settings
-      const cardTitle = card.querySelector('.video-title')?.textContent || '';
-      const url = cardTitle.startsWith('http') ? cardTitle : (card.dataset.url || '');
-      if (url) {
-        // Re-submit via the same form values, lower quality
-        const focus = els.focusInput?.value || '';
-        startJobWithQuality('lower', url, focus);
+    card.querySelector('[data-role="resume"]').addEventListener('click', async () => {
+      // Resume an interrupted job via the server-side resume endpoint,
+      // which re-runs the stored URL with the stored settings.
+      try {
+        const res = await fetch(taskUrl(API.resume, taskId), { method: 'POST' });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          showToast(data.detail || 'Could not resume the job.', 'error');
+          return;
+        }
+        const data = await res.json();
+        showToast('Resumed the job — a new card is running.', 'success');
+        // The new task id is returned; let the poller pick it up.
+      } catch {
+        showToast('Could not resume the job.', 'error');
       }
     });
 
-    card.querySelector('[data-role="delete"]').addEventListener('click', () => {
-      fetch(`${API.cancel}/${taskId}`, { method: 'POST' });
+    card.querySelector('[data-role="delete"]').addEventListener('click', async () => {
+      try {
+        const res = await fetch(taskUrl(API.delete, taskId), { method: 'POST' });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          showToast(data.detail || 'Could not delete the job.', 'error');
+          return;
+        }
+      } catch {
+        showToast('Could not delete the job.', 'error');
+      }
       card.remove();
     });
 
@@ -631,8 +655,14 @@
         card.querySelector('[data-role="progress-detail"]').classList.add('hidden');
         const stuckBanner = card.querySelector('[data-role="stuck-banner"]');
         stuckBanner.classList.remove('hidden');
+        // Interrupted = the worker died. Show the plain-language reason
+        // (server restart, timeout, kill) and the Resume/Delete actions.
+        const reason = task.error || 'The job was interrupted (server restart or timeout).';
         stuckBanner.querySelector('[data-role="stuck-text"]')
           || stuckBanner.querySelector('.progress-stage-text');
+        stuckBanner.querySelector('[data-role="stuck-text"]')
+          ? (stuckBanner.querySelector('[data-role="stuck-text"]').textContent = reason)
+          : null;
         state.pollTimer && clearInterval(state.pollTimer);
       }
 

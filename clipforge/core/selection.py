@@ -3,6 +3,7 @@ import yaml
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
+from .._config import package_config as _package_config
 from .signals import analyze_audio_signals
 from .nlp import HookAnalyzer
 from .transcript import YouTubeTranscriptProvider
@@ -17,7 +18,7 @@ class ClipSelector:
         self.load_scoring_weights()
 
     def load_scoring_weights(self):
-        config_path = Path(f"config/scoring/{self.content_type}.yaml")
+        config_path = _package_config(f"scoring/{self.content_type}.yaml")
         if config_path.exists():
             with open(config_path, "r") as f:
                 self.config = yaml.safe_load(f)

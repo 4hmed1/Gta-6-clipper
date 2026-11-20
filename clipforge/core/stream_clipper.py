@@ -2,11 +2,13 @@ import json
 import os
 import numpy as np
 from pathlib import Path
+
+from .._config import package_config as _package_config
 from typing import List, Dict, Any, Optional
 
 class StreamClipperEngine:
-    def __init__(self, config_path: str = "config/stream_clipping.yaml"):
-        self.config_path = config_path
+    def __init__(self, config_path: str = ""):
+        self.config_path = config_path or _package_config("stream_clipping.yaml")
         self.load_config()
 
     def load_config(self):

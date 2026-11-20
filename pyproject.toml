@@ -47,13 +47,13 @@ clipforge = "clipforge.cli:main"
 gta6-clipper = "clipforge.cli:main"
 
 [tool.setuptools]
-packages = ["clipforge", "app"]
+packages = ["clipforge", "clipforge.core", "clipforge.ingest", "clipforge.resilience", "clipforge.security", "app"]
 include-package-data = true
 
 [tool.setuptools.package-data]
 clipforge = ["*.yaml", "*.json"]
 app = ["*.yaml", "*.json"]
-"*" = ["static/**/*", "templates/**/*", "config/**/*"]
+"*" = ["static/**/*", "config/**/*", "assets/**/*", "templates/**/*"]
 
 [tool.setuptools.data-files]
 "clipforge/static" = ["static/index.html", "static/js/*.js", "static/css/*.css"]

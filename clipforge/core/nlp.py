@@ -3,9 +3,11 @@ import yaml
 from pathlib import Path
 from typing import List, Dict, Any
 
+from .._config import package_config as _package_config
+
 class HookAnalyzer:
-    def __init__(self, config_path: str = "config/hooks.yaml"):
-        p = Path(config_path)
+    def __init__(self, config_path: str = ""):
+        p = Path(config_path) if config_path else _package_config("hooks.yaml")
         if p.exists():
             with open(p, "r") as f:
                 self.config = yaml.safe_load(f)

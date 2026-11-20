@@ -10,21 +10,51 @@ UPLOADS_DIR = OUTPUTS_DIR / "uploads"
 STATIC_DIR = BASE_DIR / "static"
 TEMPLATES_DIR = BASE_DIR / "templates"
 
-# Fallback: when installed as a wheel (no source tree), look in the
-# installed package directory for the bundled static assets.
+# Fallback: when installed as a wheel (no source tree), locate the
+# bundled static assets wherever pip put them.
+# NOTE: in a venv, sys.executable is <venv>/bin/python, so the real
+# site-packages is <venv>/lib/pythonX.Y/site-packages — NOT
+# <venv>/bin/site-packages (which does not exist). Also: pip installs
+# ``data-files`` under ``sys.prefix`` (the venv root), so the assets may
+# live at <venv>/clipforge/static rather than inside site-packages.
 if not STATIC_DIR.exists():
-    import sys
-    _site_packages = Path(sys.executable).parent / "site-packages"
-    for _candidate in [
-        _site_packages / "static",
-        _site_packages / "clipforge" / "static",
-        _site_packages / "clipforge_static",
-    ]:
-        if _candidate.exists():
-            STATIC_DIR = _candidate
-            break
+    import os as _os
+    import sys as _sys
+
+    # sys.prefix is venv-aware: in a venv it is the venv root, and the
+    # venv python is a symlink to the system interpreter. Resolving
+    # sys.executable therefore points at /usr/bin/python3.14 and loses
+    # the venv entirely — so we use sys.prefix instead.
+    _venv_root = Path(_sys.prefix)
+    _sp = _venv_root / "lib" / f"python{_sys.version_info.major}.{_sys.version_info.minor}" / "site-packages"
+
+    def _find_static():
+        for base in (_sp, _venv_root):
+            for cand in (
+                base / "static",
+                base / "clipforge" / "static",
+                base / "clipforge_static",
+            ):
+                if cand.exists():
+                    return cand
+        # Walk the venv root as a last resort (data-files layout varies).
+        # Require all three bundled assets so we never match an unrelated
+        # "static" folder that happens to contain an index.html.
+        for _root, _dirs, _files in _os.walk(_venv_root):
+            if (
+                "index.html" in _files
+                and "app.js" in _files
+                and "style.css" in _files
+                and _root.endswith("static")
+            ):
+                return Path(_root)
+        return None
+
+    _found = _find_static()
+    if _found:
+        STATIC_DIR = _found
     else:
-        # Last resort: copy from the source tree if available
+        # Final fallback: copy from the source tree if available
         _src = Path(__file__).resolve().parent.parent / "static"
         if _src.exists():
             STATIC_DIR = _src

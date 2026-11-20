@@ -23,10 +23,19 @@ python3 -m venv "$INSTALL_DIR/venv"
 # 3. Upgrade pip and install GTA 6 Clipper
 echo "⬇️  Downloading and installing GTA 6 Clipper & dependencies..."
 "$INSTALL_DIR/venv/bin/python" -m pip install --upgrade pip
-"$INSTALL_DIR/venv/bin/pip" install git+https://github.com/max/viralforge-ai.git || {
-    # Fallback to local install if offline/development
-    "$INSTALL_DIR/venv/bin/pip" install .
-}
+# Prefer the local checkout (this script is run from the repo root);
+# fall back to GitHub only if the local tree is missing.
+if [ -f "pyproject.toml" ] && [ -d "app" ]; then
+    "$INSTALL_DIR/venv/bin/pip" install . || {
+        echo "⚠️  Local install failed, trying GitHub..."
+        "$INSTALL_DIR/venv/bin/pip" install git+https://github.com/max/viralforge-ai.git
+    }
+else
+    "$INSTALL_DIR/venv/bin/pip" install git+https://github.com/max/viralforge-ai.git || {
+        echo "❌ Could not install ClipForge. Run this script from the cloned repo root."
+        exit 1
+    }
+fi
 
 # 4. Create symlink / wrapper for gta6-clipper command
 BIN_DIR="/usr/local/bin"

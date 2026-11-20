@@ -1,0 +1,2772 @@
+{
+ "2a578eef": {
+  "task_id": "2a578eef",
+  "status": "completed",
+  "progress": 100,
+  "message": "Successfully generated 5 viral shorts!",
+  "clips": [
+   {
+    "success": true,
+    "clip_id": "fb2defc1",
+    "filename": "clip_fb2defc1_43_85.mp4",
+    "filepath": "/home/max/Documents/viralforge-ai/outputs/clips/clip_fb2defc1_43_85.mp4",
+    "thumbnail": "/api/clips/thumb/thumb_fb2defc1.jpg",
+    "start": 43.0,
+    "end": 85.24,
+    "duration": 42.2,
+    "headline": "\u266a Never gonna give you up \u266a...",
+    "download_url": "/api/clips/download/clip_fb2defc1_43_85.mp4",
+    "score": 57,
+    "reason": "Strong hook rating (22/35) and dynamic speech pacing (130 WPM).",
+    "source_video": "/home/max/Documents/viralforge-ai/outputs/downloads/video_2a578eef.mp4",
+    "clip_words": [
+     {
+      "word": "\u266a",
+      "start": 43.0,
+      "end": 43.3,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 43.3,
+      "end": 43.6,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 43.61,
+      "end": 43.91,
+      "probability": 1.0
+     },
+     {
+      "word": "give",
+      "start": 43.91,
+      "end": 44.21,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 44.21,
+      "end": 44.51,
+      "probability": 1.0
+     },
+     {
+      "word": "up",
+      "start": 44.51,
+      "end": 44.81,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 44.82,
+      "end": 45.12,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 45.2,
+      "end": 45.47,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 45.47,
+      "end": 45.74,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 45.74,
+      "end": 46.01,
+      "probability": 1.0
+     },
+     {
+      "word": "let",
+      "start": 46.01,
+      "end": 46.28,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 46.27,
+      "end": 46.54,
+      "probability": 1.0
+     },
+     {
+      "word": "down",
+      "start": 46.54,
+      "end": 46.81,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 46.81,
+      "end": 47.08,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 47.32,
+      "end": 47.74,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 47.74,
+      "end": 48.16,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 48.16,
+      "end": 48.58,
+      "probability": 1.0
+     },
+     {
+      "word": "run",
+      "start": 48.59,
+      "end": 49.01,
+      "probability": 1.0
+     },
+     {
+      "word": "around",
+      "start": 49.01,
+      "end": 49.43,
+      "probability": 1.0
+     },
+     {
+      "word": "and",
+      "start": 49.43,
+      "end": 49.85,
+      "probability": 1.0
+     },
+     {
+      "word": "desert",
+      "start": 49.85,
+      "end": 50.27,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 50.28,
+      "end": 50.7,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 50.7,
+      "end": 51.12,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 51.48,
+      "end": 51.77,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 51.77,
+      "end": 52.06,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 52.05,
+      "end": 52.34,
+      "probability": 1.0
+     },
+     {
+      "word": "make",
+      "start": 52.34,
+      "end": 52.63,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 52.62,
+      "end": 52.91,
+      "probability": 1.0
+     },
+     {
+      "word": "cry",
+      "start": 52.91,
+      "end": 53.2,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 53.19,
+      "end": 53.48,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 53.6,
+      "end": 53.92,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 53.92,
+      "end": 54.24,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 54.24,
+      "end": 54.56,
+      "probability": 1.0
+     },
+     {
+      "word": "say",
+      "start": 54.56,
+      "end": 54.88,
+      "probability": 1.0
+     },
+     {
+      "word": "goodbye",
+      "start": 54.88,
+      "end": 55.2,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 55.2,
+      "end": 55.52,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 55.72,
+      "end": 56.08,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 56.08,
+      "end": 56.44,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 56.45,
+      "end": 56.81,
+      "probability": 1.0
+     },
+     {
+      "word": "tell",
+      "start": 56.81,
+      "end": 57.17,
+      "probability": 1.0
+     },
+     {
+      "word": "a",
+      "start": 57.18,
+      "end": 57.54,
+      "probability": 1.0
+     },
+     {
+      "word": "lie",
+      "start": 57.54,
+      "end": 57.9,
+      "probability": 1.0
+     },
+     {
+      "word": "and",
+      "start": 57.9,
+      "end": 58.26,
+      "probability": 1.0
+     },
+     {
+      "word": "hurt",
+      "start": 58.27,
+      "end": 58.63,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 58.63,
+      "end": 58.99,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 59.0,
+      "end": 59.36,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 60.8,
+      "end": 61.24,
+      "probability": 1.0
+     },
+     {
+      "word": "We've",
+      "start": 61.24,
+      "end": 61.68,
+      "probability": 1.0
+     },
+     {
+      "word": "known",
+      "start": 61.69,
+      "end": 62.13,
+      "probability": 1.0
+     },
+     {
+      "word": "each",
+      "start": 62.13,
+      "end": 62.57,
+      "probability": 1.0
+     },
+     {
+      "word": "other",
+      "start": 62.58,
+      "end": 63.02,
+      "probability": 1.0
+     },
+     {
+      "word": "for",
+      "start": 63.02,
+      "end": 63.46,
+      "probability": 1.0
+     },
+     {
+      "word": "so",
+      "start": 63.47,
+      "end": 63.91,
+      "probability": 1.0
+     },
+     {
+      "word": "long",
+      "start": 63.91,
+      "end": 64.35,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 64.36,
+      "end": 64.8,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 64.88,
+      "end": 65.2,
+      "probability": 1.0
+     },
+     {
+      "word": "Your",
+      "start": 65.2,
+      "end": 65.52,
+      "probability": 1.0
+     },
+     {
+      "word": "heart's",
+      "start": 65.52,
+      "end": 65.84,
+      "probability": 1.0
+     },
+     {
+      "word": "been",
+      "start": 65.84,
+      "end": 66.16,
+      "probability": 1.0
+     },
+     {
+      "word": "aching",
+      "start": 66.16,
+      "end": 66.48,
+      "probability": 1.0
+     },
+     {
+      "word": "but",
+      "start": 66.48,
+      "end": 66.8,
+      "probability": 1.0
+     },
+     {
+      "word": "you're",
+      "start": 66.8,
+      "end": 67.12,
+      "probability": 1.0
+     },
+     {
+      "word": "too",
+      "start": 67.12,
+      "end": 67.44,
+      "probability": 1.0
+     },
+     {
+      "word": "shy",
+      "start": 67.44,
+      "end": 67.76,
+      "probability": 1.0
+     },
+     {
+      "word": "to",
+      "start": 67.76,
+      "end": 68.08,
+      "probability": 1.0
+     },
+     {
+      "word": "say",
+      "start": 68.08,
+      "end": 68.4,
+      "probability": 1.0
+     },
+     {
+      "word": "it",
+      "start": 68.4,
+      "end": 68.72,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 68.72,
+      "end": 69.04,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 69.12,
+      "end": 69.55,
+      "probability": 1.0
+     },
+     {
+      "word": "Inside",
+      "start": 69.55,
+      "end": 69.98,
+      "probability": 1.0
+     },
+     {
+      "word": "we",
+      "start": 69.97,
+      "end": 70.4,
+      "probability": 1.0
+     },
+     {
+      "word": "both",
+      "start": 70.4,
+      "end": 70.83,
+      "probability": 1.0
+     },
+     {
+      "word": "know",
+      "start": 70.83,
+      "end": 71.26,
+      "probability": 1.0
+     },
+     {
+      "word": "what's",
+      "start": 71.25,
+      "end": 71.68,
+      "probability": 1.0
+     },
+     {
+      "word": "been",
+      "start": 71.68,
+      "end": 72.11,
+      "probability": 1.0
+     },
+     {
+      "word": "going",
+      "start": 72.11,
+      "end": 72.54,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 72.53,
+      "end": 72.96,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 73.36,
+      "end": 73.71,
+      "probability": 1.0
+     },
+     {
+      "word": "We",
+      "start": 73.71,
+      "end": 74.06,
+      "probability": 1.0
+     },
+     {
+      "word": "know",
+      "start": 74.06,
+      "end": 74.41,
+      "probability": 1.0
+     },
+     {
+      "word": "the",
+      "start": 74.41,
+      "end": 74.76,
+      "probability": 1.0
+     },
+     {
+      "word": "game",
+      "start": 74.76,
+      "end": 75.11,
+      "probability": 1.0
+     },
+     {
+      "word": "and",
+      "start": 75.11,
+      "end": 75.46,
+      "probability": 1.0
+     },
+     {
+      "word": "we're",
+      "start": 75.45,
+      "end": 75.8,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 75.8,
+      "end": 76.15,
+      "probability": 1.0
+     },
+     {
+      "word": "play",
+      "start": 76.15,
+      "end": 76.5,
+      "probability": 1.0
+     },
+     {
+      "word": "it",
+      "start": 76.5,
+      "end": 76.85,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 76.85,
+      "end": 77.2,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 77.4,
+      "end": 77.86,
+      "probability": 1.0
+     },
+     {
+      "word": "And",
+      "start": 77.86,
+      "end": 78.32,
+      "probability": 1.0
+     },
+     {
+      "word": "if",
+      "start": 78.33,
+      "end": 78.79,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 78.79,
+      "end": 79.25,
+      "probability": 1.0
+     },
+     {
+      "word": "ask",
+      "start": 79.26,
+      "end": 79.72,
+      "probability": 1.0
+     },
+     {
+      "word": "me",
+      "start": 79.72,
+      "end": 80.18,
+      "probability": 1.0
+     },
+     {
+      "word": "how",
+      "start": 80.18,
+      "end": 80.64,
+      "probability": 1.0
+     },
+     {
+      "word": "I'm",
+      "start": 80.65,
+      "end": 81.11,
+      "probability": 1.0
+     },
+     {
+      "word": "feeling",
+      "start": 81.11,
+      "end": 81.57,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 81.58,
+      "end": 82.04,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 82.4,
+      "end": 82.68,
+      "probability": 1.0
+     },
+     {
+      "word": "Don't",
+      "start": 82.68,
+      "end": 82.96,
+      "probability": 1.0
+     },
+     {
+      "word": "tell",
+      "start": 82.97,
+      "end": 83.25,
+      "probability": 1.0
+     },
+     {
+      "word": "me",
+      "start": 83.25,
+      "end": 83.53,
+      "probability": 1.0
+     },
+     {
+      "word": "you're",
+      "start": 83.54,
+      "end": 83.82,
+      "probability": 1.0
+     },
+     {
+      "word": "too",
+      "start": 83.82,
+      "end": 84.1,
+      "probability": 1.0
+     },
+     {
+      "word": "blind",
+      "start": 84.1,
+      "end": 84.38,
+      "probability": 1.0
+     },
+     {
+      "word": "to",
+      "start": 84.39,
+      "end": 84.67,
+      "probability": 1.0
+     },
+     {
+      "word": "see",
+      "start": 84.67,
+      "end": 84.95,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 84.96,
+      "end": 85.24,
+      "probability": 1.0
+     }
+    ]
+   },
+   {
+    "success": true,
+    "clip_id": "d0b2c213",
+    "filename": "clip_d0b2c213_85_118.mp4",
+    "filepath": "/home/max/Documents/viralforge-ai/outputs/clips/clip_d0b2c213_85_118.mp4",
+    "thumbnail": "/api/clips/thumb/thumb_d0b2c213.jpg",
+    "start": 85.32,
+    "end": 118.76,
+    "duration": 33.4,
+    "headline": "\u266a Never gonna give you up \u266a...",
+    "download_url": "/api/clips/download/clip_d0b2c213_85_118.mp4",
+    "score": 52,
+    "reason": "Strong hook rating (22/35) and dynamic speech pacing (122 WPM).",
+    "source_video": "/home/max/Documents/viralforge-ai/outputs/downloads/video_2a578eef.mp4",
+    "clip_words": [
+     {
+      "word": "\u266a",
+      "start": 85.32,
+      "end": 85.6,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 85.6,
+      "end": 85.88,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 85.88,
+      "end": 86.16,
+      "probability": 1.0
+     },
+     {
+      "word": "give",
+      "start": 86.16,
+      "end": 86.44,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 86.44,
+      "end": 86.72,
+      "probability": 1.0
+     },
+     {
+      "word": "up",
+      "start": 86.72,
+      "end": 87.0,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 87.0,
+      "end": 87.28,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 87.36,
+      "end": 87.64,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 87.64,
+      "end": 87.92,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 87.92,
+      "end": 88.2,
+      "probability": 1.0
+     },
+     {
+      "word": "let",
+      "start": 88.2,
+      "end": 88.48,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 88.48,
+      "end": 88.76,
+      "probability": 1.0
+     },
+     {
+      "word": "down",
+      "start": 88.76,
+      "end": 89.04,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 89.04,
+      "end": 89.32,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 89.44,
+      "end": 89.92,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 89.92,
+      "end": 90.4,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 90.39,
+      "end": 90.87,
+      "probability": 1.0
+     },
+     {
+      "word": "run",
+      "start": 90.87,
+      "end": 91.35,
+      "probability": 1.0
+     },
+     {
+      "word": "around",
+      "start": 91.34,
+      "end": 91.82,
+      "probability": 1.0
+     },
+     {
+      "word": "and",
+      "start": 91.82,
+      "end": 92.3,
+      "probability": 1.0
+     },
+     {
+      "word": "desert",
+      "start": 92.29,
+      "end": 92.77,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 92.77,
+      "end": 93.25,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 93.24,
+      "end": 93.72,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 93.8,
+      "end": 94.06,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 94.06,
+      "end": 94.32,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 94.31,
+      "end": 94.57,
+      "probability": 1.0
+     },
+     {
+      "word": "make",
+      "start": 94.57,
+      "end": 94.83,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 94.83,
+      "end": 95.09,
+      "probability": 1.0
+     },
+     {
+      "word": "cry",
+      "start": 95.09,
+      "end": 95.35,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 95.34,
+      "end": 95.6,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 95.76,
+      "end": 96.13,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 96.13,
+      "end": 96.5,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 96.51,
+      "end": 96.88,
+      "probability": 1.0
+     },
+     {
+      "word": "say",
+      "start": 96.88,
+      "end": 97.25,
+      "probability": 1.0
+     },
+     {
+      "word": "goodbye",
+      "start": 97.25,
+      "end": 97.62,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 97.63,
+      "end": 98.0,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 98.08,
+      "end": 98.48,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 98.48,
+      "end": 98.88,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 98.87,
+      "end": 99.27,
+      "probability": 1.0
+     },
+     {
+      "word": "tell",
+      "start": 99.27,
+      "end": 99.67,
+      "probability": 1.0
+     },
+     {
+      "word": "a",
+      "start": 99.66,
+      "end": 100.06,
+      "probability": 1.0
+     },
+     {
+      "word": "lie",
+      "start": 100.06,
+      "end": 100.46,
+      "probability": 1.0
+     },
+     {
+      "word": "and",
+      "start": 100.46,
+      "end": 100.86,
+      "probability": 1.0
+     },
+     {
+      "word": "hurt",
+      "start": 100.85,
+      "end": 101.25,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 101.25,
+      "end": 101.65,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 101.64,
+      "end": 102.04,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 102.2,
+      "end": 102.47,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 102.47,
+      "end": 102.74,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 102.75,
+      "end": 103.02,
+      "probability": 1.0
+     },
+     {
+      "word": "give",
+      "start": 103.02,
+      "end": 103.29,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 103.3,
+      "end": 103.57,
+      "probability": 1.0
+     },
+     {
+      "word": "up",
+      "start": 103.57,
+      "end": 103.84,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 103.85,
+      "end": 104.12,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 104.28,
+      "end": 104.58,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 104.58,
+      "end": 104.88,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 104.87,
+      "end": 105.17,
+      "probability": 1.0
+     },
+     {
+      "word": "let",
+      "start": 105.17,
+      "end": 105.47,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 105.47,
+      "end": 105.77,
+      "probability": 1.0
+     },
+     {
+      "word": "down",
+      "start": 105.77,
+      "end": 106.07,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 106.06,
+      "end": 106.36,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 106.48,
+      "end": 106.88,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 106.88,
+      "end": 107.28,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 107.28,
+      "end": 107.68,
+      "probability": 1.0
+     },
+     {
+      "word": "run",
+      "start": 107.68,
+      "end": 108.08,
+      "probability": 1.0
+     },
+     {
+      "word": "around",
+      "start": 108.08,
+      "end": 108.48,
+      "probability": 1.0
+     },
+     {
+      "word": "and",
+      "start": 108.48,
+      "end": 108.88,
+      "probability": 1.0
+     },
+     {
+      "word": "desert",
+      "start": 108.88,
+      "end": 109.28,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 109.28,
+      "end": 109.68,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 109.68,
+      "end": 110.08,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 110.76,
+      "end": 111.04,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 111.04,
+      "end": 111.32,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 111.32,
+      "end": 111.6,
+      "probability": 1.0
+     },
+     {
+      "word": "make",
+      "start": 111.6,
+      "end": 111.88,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 111.88,
+      "end": 112.16,
+      "probability": 1.0
+     },
+     {
+      "word": "cry",
+      "start": 112.16,
+      "end": 112.44,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 112.44,
+      "end": 112.72,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 112.8,
+      "end": 113.11,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 113.11,
+      "end": 113.42,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 113.43,
+      "end": 113.74,
+      "probability": 1.0
+     },
+     {
+      "word": "say",
+      "start": 113.74,
+      "end": 114.05,
+      "probability": 1.0
+     },
+     {
+      "word": "goodbye",
+      "start": 114.05,
+      "end": 114.36,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 114.37,
+      "end": 114.68,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 114.96,
+      "end": 115.34,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 115.34,
+      "end": 115.72,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 115.72,
+      "end": 116.1,
+      "probability": 1.0
+     },
+     {
+      "word": "tell",
+      "start": 116.1,
+      "end": 116.48,
+      "probability": 1.0
+     },
+     {
+      "word": "a",
+      "start": 116.48,
+      "end": 116.86,
+      "probability": 1.0
+     },
+     {
+      "word": "lie",
+      "start": 116.86,
+      "end": 117.24,
+      "probability": 1.0
+     },
+     {
+      "word": "and",
+      "start": 117.24,
+      "end": 117.62,
+      "probability": 1.0
+     },
+     {
+      "word": "hurt",
+      "start": 117.62,
+      "end": 118.0,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 118.0,
+      "end": 118.38,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 118.38,
+      "end": 118.76,
+      "probability": 1.0
+     }
+    ]
+   },
+   {
+    "success": true,
+    "clip_id": "d94de54a",
+    "filename": "clip_d94de54a_110_141.mp4",
+    "filepath": "/home/max/Documents/viralforge-ai/outputs/clips/clip_d94de54a_110_141.mp4",
+    "thumbnail": "/api/clips/thumb/thumb_d94de54a.jpg",
+    "start": 110.76,
+    "end": 141.08,
+    "duration": 30.3,
+    "headline": "\u266a Never gonna make you cry \u266a...",
+    "download_url": "/api/clips/download/clip_d94de54a_110_141.mp4",
+    "score": 52,
+    "reason": "Strong hook rating (22/35) and dynamic speech pacing (100 WPM).",
+    "source_video": "/home/max/Documents/viralforge-ai/outputs/downloads/video_2a578eef.mp4",
+    "clip_words": [
+     {
+      "word": "\u266a",
+      "start": 110.76,
+      "end": 111.04,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 111.04,
+      "end": 111.32,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 111.32,
+      "end": 111.6,
+      "probability": 1.0
+     },
+     {
+      "word": "make",
+      "start": 111.6,
+      "end": 111.88,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 111.88,
+      "end": 112.16,
+      "probability": 1.0
+     },
+     {
+      "word": "cry",
+      "start": 112.16,
+      "end": 112.44,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 112.44,
+      "end": 112.72,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 112.8,
+      "end": 113.11,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 113.11,
+      "end": 113.42,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 113.43,
+      "end": 113.74,
+      "probability": 1.0
+     },
+     {
+      "word": "say",
+      "start": 113.74,
+      "end": 114.05,
+      "probability": 1.0
+     },
+     {
+      "word": "goodbye",
+      "start": 114.05,
+      "end": 114.36,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 114.37,
+      "end": 114.68,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 114.96,
+      "end": 115.34,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 115.34,
+      "end": 115.72,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 115.72,
+      "end": 116.1,
+      "probability": 1.0
+     },
+     {
+      "word": "tell",
+      "start": 116.1,
+      "end": 116.48,
+      "probability": 1.0
+     },
+     {
+      "word": "a",
+      "start": 116.48,
+      "end": 116.86,
+      "probability": 1.0
+     },
+     {
+      "word": "lie",
+      "start": 116.86,
+      "end": 117.24,
+      "probability": 1.0
+     },
+     {
+      "word": "and",
+      "start": 117.24,
+      "end": 117.62,
+      "probability": 1.0
+     },
+     {
+      "word": "hurt",
+      "start": 117.62,
+      "end": 118.0,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 118.0,
+      "end": 118.38,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 118.38,
+      "end": 118.76,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 119.84,
+      "end": 120.36,
+      "probability": 1.0
+     },
+     {
+      "word": "(Ooh,",
+      "start": 120.36,
+      "end": 120.88,
+      "probability": 1.0
+     },
+     {
+      "word": "give",
+      "start": 120.88,
+      "end": 121.4,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 121.4,
+      "end": 121.92,
+      "probability": 1.0
+     },
+     {
+      "word": "up)",
+      "start": 121.92,
+      "end": 122.44,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 122.44,
+      "end": 122.96,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 123.72,
+      "end": 124.33,
+      "probability": 1.0
+     },
+     {
+      "word": "(Ooh,",
+      "start": 124.33,
+      "end": 124.94,
+      "probability": 1.0
+     },
+     {
+      "word": "give",
+      "start": 124.93,
+      "end": 125.54,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 125.54,
+      "end": 126.15,
+      "probability": 1.0
+     },
+     {
+      "word": "up)",
+      "start": 126.15,
+      "end": 126.76,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 126.75,
+      "end": 127.36,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 128.48,
+      "end": 128.69,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 128.69,
+      "end": 128.89,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 128.89,
+      "end": 129.09,
+      "probability": 1.0
+     },
+     {
+      "word": "give,",
+      "start": 129.09,
+      "end": 129.3,
+      "probability": 1.0
+     },
+     {
+      "word": "never",
+      "start": 129.3,
+      "end": 129.5,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 129.5,
+      "end": 129.7,
+      "probability": 1.0
+     },
+     {
+      "word": "give",
+      "start": 129.71,
+      "end": 129.92,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 129.91,
+      "end": 130.12,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 130.24,
+      "end": 130.5,
+      "probability": 1.0
+     },
+     {
+      "word": "(Give",
+      "start": 130.5,
+      "end": 130.76,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 130.77,
+      "end": 131.03,
+      "probability": 1.0
+     },
+     {
+      "word": "up)",
+      "start": 131.03,
+      "end": 131.29,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 131.3,
+      "end": 131.56,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 132.48,
+      "end": 132.7,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 132.7,
+      "end": 132.92,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 132.92,
+      "end": 133.14,
+      "probability": 1.0
+     },
+     {
+      "word": "give,",
+      "start": 133.14,
+      "end": 133.36,
+      "probability": 1.0
+     },
+     {
+      "word": "never",
+      "start": 133.36,
+      "end": 133.58,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 133.58,
+      "end": 133.8,
+      "probability": 1.0
+     },
+     {
+      "word": "give",
+      "start": 133.8,
+      "end": 134.02,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 134.02,
+      "end": 134.24,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 134.36,
+      "end": 134.67,
+      "probability": 1.0
+     },
+     {
+      "word": "(Give",
+      "start": 134.67,
+      "end": 134.98,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 134.98,
+      "end": 135.29,
+      "probability": 1.0
+     },
+     {
+      "word": "up)",
+      "start": 135.3,
+      "end": 135.61,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 135.61,
+      "end": 135.92,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 136.76,
+      "end": 137.24,
+      "probability": 1.0
+     },
+     {
+      "word": "We've",
+      "start": 137.24,
+      "end": 137.72,
+      "probability": 1.0
+     },
+     {
+      "word": "known",
+      "start": 137.72,
+      "end": 138.2,
+      "probability": 1.0
+     },
+     {
+      "word": "each",
+      "start": 138.2,
+      "end": 138.68,
+      "probability": 1.0
+     },
+     {
+      "word": "other",
+      "start": 138.68,
+      "end": 139.16,
+      "probability": 1.0
+     },
+     {
+      "word": "for",
+      "start": 139.16,
+      "end": 139.64,
+      "probability": 1.0
+     },
+     {
+      "word": "so",
+      "start": 139.64,
+      "end": 140.12,
+      "probability": 1.0
+     },
+     {
+      "word": "long",
+      "start": 140.12,
+      "end": 140.6,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 140.6,
+      "end": 141.08,
+      "probability": 1.0
+     }
+    ]
+   },
+   {
+    "success": true,
+    "clip_id": "a851fd5a",
+    "filename": "clip_a851fd5a_132_153.mp4",
+    "filepath": "/home/max/Documents/viralforge-ai/outputs/clips/clip_a851fd5a_132_153.mp4",
+    "thumbnail": "/api/clips/thumb/thumb_a851fd5a.jpg",
+    "start": 132.48,
+    "end": 153.2,
+    "duration": 20.7,
+    "headline": "\u266a Never gonna give, never gonna give \u266a...",
+    "download_url": "/api/clips/download/clip_a851fd5a_132_153.mp4",
+    "score": 52,
+    "reason": "Strong hook rating (22/35) and dynamic speech pacing (138 WPM).",
+    "source_video": "/home/max/Documents/viralforge-ai/outputs/downloads/video_2a578eef.mp4",
+    "clip_words": [
+     {
+      "word": "\u266a",
+      "start": 132.48,
+      "end": 132.7,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 132.7,
+      "end": 132.92,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 132.92,
+      "end": 133.14,
+      "probability": 1.0
+     },
+     {
+      "word": "give,",
+      "start": 133.14,
+      "end": 133.36,
+      "probability": 1.0
+     },
+     {
+      "word": "never",
+      "start": 133.36,
+      "end": 133.58,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 133.58,
+      "end": 133.8,
+      "probability": 1.0
+     },
+     {
+      "word": "give",
+      "start": 133.8,
+      "end": 134.02,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 134.02,
+      "end": 134.24,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 134.36,
+      "end": 134.67,
+      "probability": 1.0
+     },
+     {
+      "word": "(Give",
+      "start": 134.67,
+      "end": 134.98,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 134.98,
+      "end": 135.29,
+      "probability": 1.0
+     },
+     {
+      "word": "up)",
+      "start": 135.3,
+      "end": 135.61,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 135.61,
+      "end": 135.92,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 136.76,
+      "end": 137.24,
+      "probability": 1.0
+     },
+     {
+      "word": "We've",
+      "start": 137.24,
+      "end": 137.72,
+      "probability": 1.0
+     },
+     {
+      "word": "known",
+      "start": 137.72,
+      "end": 138.2,
+      "probability": 1.0
+     },
+     {
+      "word": "each",
+      "start": 138.2,
+      "end": 138.68,
+      "probability": 1.0
+     },
+     {
+      "word": "other",
+      "start": 138.68,
+      "end": 139.16,
+      "probability": 1.0
+     },
+     {
+      "word": "for",
+      "start": 139.16,
+      "end": 139.64,
+      "probability": 1.0
+     },
+     {
+      "word": "so",
+      "start": 139.64,
+      "end": 140.12,
+      "probability": 1.0
+     },
+     {
+      "word": "long",
+      "start": 140.12,
+      "end": 140.6,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 140.6,
+      "end": 141.08,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 141.2,
+      "end": 141.51,
+      "probability": 1.0
+     },
+     {
+      "word": "Your",
+      "start": 141.51,
+      "end": 141.82,
+      "probability": 1.0
+     },
+     {
+      "word": "heart's",
+      "start": 141.82,
+      "end": 142.13,
+      "probability": 1.0
+     },
+     {
+      "word": "been",
+      "start": 142.12,
+      "end": 142.43,
+      "probability": 1.0
+     },
+     {
+      "word": "aching",
+      "start": 142.43,
+      "end": 142.74,
+      "probability": 1.0
+     },
+     {
+      "word": "but",
+      "start": 142.74,
+      "end": 143.05,
+      "probability": 1.0
+     },
+     {
+      "word": "you're",
+      "start": 143.05,
+      "end": 143.36,
+      "probability": 1.0
+     },
+     {
+      "word": "too",
+      "start": 143.35,
+      "end": 143.66,
+      "probability": 1.0
+     },
+     {
+      "word": "shy",
+      "start": 143.66,
+      "end": 143.97,
+      "probability": 1.0
+     },
+     {
+      "word": "to",
+      "start": 143.97,
+      "end": 144.28,
+      "probability": 1.0
+     },
+     {
+      "word": "say",
+      "start": 144.28,
+      "end": 144.59,
+      "probability": 1.0
+     },
+     {
+      "word": "it",
+      "start": 144.58,
+      "end": 144.89,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 144.89,
+      "end": 145.2,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 145.28,
+      "end": 145.71,
+      "probability": 1.0
+     },
+     {
+      "word": "Inside",
+      "start": 145.71,
+      "end": 146.14,
+      "probability": 1.0
+     },
+     {
+      "word": "we",
+      "start": 146.13,
+      "end": 146.56,
+      "probability": 1.0
+     },
+     {
+      "word": "both",
+      "start": 146.56,
+      "end": 146.99,
+      "probability": 1.0
+     },
+     {
+      "word": "know",
+      "start": 146.99,
+      "end": 147.42,
+      "probability": 1.0
+     },
+     {
+      "word": "what's",
+      "start": 147.41,
+      "end": 147.84,
+      "probability": 1.0
+     },
+     {
+      "word": "been",
+      "start": 147.84,
+      "end": 148.27,
+      "probability": 1.0
+     },
+     {
+      "word": "going",
+      "start": 148.27,
+      "end": 148.7,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 148.69,
+      "end": 149.12,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 149.52,
+      "end": 149.85,
+      "probability": 1.0
+     },
+     {
+      "word": "We",
+      "start": 149.85,
+      "end": 150.18,
+      "probability": 1.0
+     },
+     {
+      "word": "know",
+      "start": 150.19,
+      "end": 150.52,
+      "probability": 1.0
+     },
+     {
+      "word": "the",
+      "start": 150.52,
+      "end": 150.85,
+      "probability": 1.0
+     },
+     {
+      "word": "game",
+      "start": 150.86,
+      "end": 151.19,
+      "probability": 1.0
+     },
+     {
+      "word": "and",
+      "start": 151.19,
+      "end": 151.52,
+      "probability": 1.0
+     },
+     {
+      "word": "we're",
+      "start": 151.53,
+      "end": 151.86,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 151.86,
+      "end": 152.19,
+      "probability": 1.0
+     },
+     {
+      "word": "play",
+      "start": 152.2,
+      "end": 152.53,
+      "probability": 1.0
+     },
+     {
+      "word": "it",
+      "start": 152.53,
+      "end": 152.86,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 152.87,
+      "end": 153.2,
+      "probability": 1.0
+     }
+    ]
+   },
+   {
+    "success": true,
+    "clip_id": "978383fc",
+    "filename": "clip_978383fc_161_195.mp4",
+    "filepath": "/home/max/Documents/viralforge-ai/outputs/clips/clip_978383fc_161_195.mp4",
+    "thumbnail": "/api/clips/thumb/thumb_978383fc.jpg",
+    "start": 161.4,
+    "end": 195.2,
+    "duration": 33.8,
+    "headline": "\u266a Never gonna give you up \u266a...",
+    "download_url": "/api/clips/download/clip_978383fc_161_195.mp4",
+    "score": 52,
+    "reason": "Strong hook rating (22/35) and dynamic speech pacing (120 WPM).",
+    "source_video": "/home/max/Documents/viralforge-ai/outputs/downloads/video_2a578eef.mp4",
+    "clip_words": [
+     {
+      "word": "\u266a",
+      "start": 161.4,
+      "end": 161.68,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 161.68,
+      "end": 161.96,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 161.96,
+      "end": 162.24,
+      "probability": 1.0
+     },
+     {
+      "word": "give",
+      "start": 162.24,
+      "end": 162.52,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 162.52,
+      "end": 162.8,
+      "probability": 1.0
+     },
+     {
+      "word": "up",
+      "start": 162.8,
+      "end": 163.08,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 163.08,
+      "end": 163.36,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 163.44,
+      "end": 163.75,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 163.75,
+      "end": 164.06,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 164.07,
+      "end": 164.38,
+      "probability": 1.0
+     },
+     {
+      "word": "let",
+      "start": 164.38,
+      "end": 164.69,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 164.7,
+      "end": 165.01,
+      "probability": 1.0
+     },
+     {
+      "word": "down",
+      "start": 165.01,
+      "end": 165.32,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 165.33,
+      "end": 165.64,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 165.72,
+      "end": 166.16,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 166.16,
+      "end": 166.6,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 166.61,
+      "end": 167.05,
+      "probability": 1.0
+     },
+     {
+      "word": "run",
+      "start": 167.05,
+      "end": 167.49,
+      "probability": 1.0
+     },
+     {
+      "word": "around",
+      "start": 167.5,
+      "end": 167.94,
+      "probability": 1.0
+     },
+     {
+      "word": "and",
+      "start": 167.94,
+      "end": 168.38,
+      "probability": 1.0
+     },
+     {
+      "word": "desert",
+      "start": 168.39,
+      "end": 168.83,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 168.83,
+      "end": 169.27,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 169.28,
+      "end": 169.72,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 169.8,
+      "end": 170.06,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 170.06,
+      "end": 170.32,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 170.33,
+      "end": 170.59,
+      "probability": 1.0
+     },
+     {
+      "word": "make",
+      "start": 170.59,
+      "end": 170.85,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 170.85,
+      "end": 171.11,
+      "probability": 1.0
+     },
+     {
+      "word": "cry",
+      "start": 171.11,
+      "end": 171.37,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 171.38,
+      "end": 171.64,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 171.8,
+      "end": 172.16,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 172.16,
+      "end": 172.52,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 172.52,
+      "end": 172.88,
+      "probability": 1.0
+     },
+     {
+      "word": "say",
+      "start": 172.88,
+      "end": 173.24,
+      "probability": 1.0
+     },
+     {
+      "word": "goodbye",
+      "start": 173.24,
+      "end": 173.6,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 173.6,
+      "end": 173.96,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 174.04,
+      "end": 174.4,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 174.4,
+      "end": 174.76,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 174.75,
+      "end": 175.11,
+      "probability": 1.0
+     },
+     {
+      "word": "tell",
+      "start": 175.11,
+      "end": 175.47,
+      "probability": 1.0
+     },
+     {
+      "word": "a",
+      "start": 175.46,
+      "end": 175.82,
+      "probability": 1.0
+     },
+     {
+      "word": "lie",
+      "start": 175.82,
+      "end": 176.18,
+      "probability": 1.0
+     },
+     {
+      "word": "and",
+      "start": 176.18,
+      "end": 176.54,
+      "probability": 1.0
+     },
+     {
+      "word": "hurt",
+      "start": 176.53,
+      "end": 176.89,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 176.89,
+      "end": 177.25,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 177.24,
+      "end": 177.6,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 178.2,
+      "end": 178.49,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 178.49,
+      "end": 178.78,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 178.78,
+      "end": 179.07,
+      "probability": 1.0
+     },
+     {
+      "word": "give",
+      "start": 179.07,
+      "end": 179.36,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 179.37,
+      "end": 179.66,
+      "probability": 1.0
+     },
+     {
+      "word": "up",
+      "start": 179.66,
+      "end": 179.95,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 179.95,
+      "end": 180.24,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 180.32,
+      "end": 180.62,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 180.62,
+      "end": 180.92,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 180.93,
+      "end": 181.23,
+      "probability": 1.0
+     },
+     {
+      "word": "let",
+      "start": 181.23,
+      "end": 181.53,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 181.53,
+      "end": 181.83,
+      "probability": 1.0
+     },
+     {
+      "word": "down",
+      "start": 181.83,
+      "end": 182.13,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 182.14,
+      "end": 182.44,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 182.52,
+      "end": 182.98,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 182.98,
+      "end": 183.44,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 183.44,
+      "end": 183.9,
+      "probability": 1.0
+     },
+     {
+      "word": "run",
+      "start": 183.89,
+      "end": 184.35,
+      "probability": 1.0
+     },
+     {
+      "word": "around",
+      "start": 184.35,
+      "end": 184.81,
+      "probability": 1.0
+     },
+     {
+      "word": "and",
+      "start": 184.81,
+      "end": 185.27,
+      "probability": 1.0
+     },
+     {
+      "word": "desert",
+      "start": 185.27,
+      "end": 185.73,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 185.72,
+      "end": 186.18,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 186.18,
+      "end": 186.64,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 186.72,
+      "end": 187.01,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 187.01,
+      "end": 187.3,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 187.29,
+      "end": 187.58,
+      "probability": 1.0
+     },
+     {
+      "word": "make",
+      "start": 187.58,
+      "end": 187.87,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 187.86,
+      "end": 188.15,
+      "probability": 1.0
+     },
+     {
+      "word": "cry",
+      "start": 188.15,
+      "end": 188.44,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 188.43,
+      "end": 188.72,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 188.84,
+      "end": 189.15,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 189.15,
+      "end": 189.46,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 189.47,
+      "end": 189.78,
+      "probability": 1.0
+     },
+     {
+      "word": "say",
+      "start": 189.78,
+      "end": 190.09,
+      "probability": 1.0
+     },
+     {
+      "word": "goodbye",
+      "start": 190.09,
+      "end": 190.4,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 190.41,
+      "end": 190.72,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 190.84,
+      "end": 191.28,
+      "probability": 1.0
+     },
+     {
+      "word": "Never",
+      "start": 191.28,
+      "end": 191.72,
+      "probability": 1.0
+     },
+     {
+      "word": "gonna",
+      "start": 191.71,
+      "end": 192.15,
+      "probability": 1.0
+     },
+     {
+      "word": "tell",
+      "start": 192.15,
+      "end": 192.59,
+      "probability": 1.0
+     },
+     {
+      "word": "a",
+      "start": 192.58,
+      "end": 193.02,
+      "probability": 1.0
+     },
+     {
+      "word": "lie",
+      "start": 193.02,
+      "end": 193.46,
+      "probability": 1.0
+     },
+     {
+      "word": "and",
+      "start": 193.46,
+      "end": 193.9,
+      "probability": 1.0
+     },
+     {
+      "word": "hurt",
+      "start": 193.89,
+      "end": 194.33,
+      "probability": 1.0
+     },
+     {
+      "word": "you",
+      "start": 194.33,
+      "end": 194.77,
+      "probability": 1.0
+     },
+     {
+      "word": "\u266a",
+      "start": 194.76,
+      "end": 195.2,
+      "probability": 1.0
+     }
+    ]
+   }
+  ],
+  "error": null,
+  "heartbeat": 1795170803.6672995,
+  "queued_at": 1795170589.6036968,
+  "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+  "resumed_from": "840b04b6",
+  "stage": "rendering",
+  "video_info": {
+   "success": true,
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)",
+   "duration": 213,
+   "thumbnail": "https://i.ytimg.com/vi_webp/dQw4w9WgXcQ/maxresdefault.webp",
+   "available_captions": [
+    "en",
+    "de-DE",
+    "ja",
+    "pt-BR",
+    "es-419",
+    "ab",
+    "aa",
+    "af",
+    "ak",
+    "sq",
+    "am",
+    "ar",
+    "hy",
+    "as",
+    "ay",
+    "az",
+    "bn",
+    "ba",
+    "eu",
+    "be",
+    "bho",
+    "bs",
+    "br",
+    "bg",
+    "my",
+    "ca",
+    "ceb",
+    "zh-Hans",
+    "zh-Hant",
+    "co",
+    "hr",
+    "cs",
+    "da",
+    "dv",
+    "nl",
+    "dz",
+    "en-orig",
+    "eo",
+    "et",
+    "ee",
+    "fo",
+    "fj",
+    "fil",
+    "fi",
+    "fr",
+    "gaa",
+    "gl",
+    "lg",
+    "ka",
+    "de",
+    "el",
+    "gn",
+    "gu",
+    "ht",
+    "ha",
+    "haw",
+    "iw",
+    "hi",
+    "hmn",
+    "hu",
+    "is",
+    "ig",
+    "id",
+    "iu",
+    "ga",
+    "it",
+    "jv",
+    "kl",
+    "kn",
+    "kk",
+    "kha",
+    "km",
+    "rw",
+    "ko",
+    "kri",
+    "ku",
+    "ky",
+    "lo",
+    "la",
+    "lv",
+    "ln",
+    "lt",
+    "lua",
+    "luo",
+    "lb",
+    "mk",
+    "mg",
+    "ms",
+    "ml",
+    "mt",
+    "gv",
+    "mi",
+    "mr",
+    "mn",
+    "mfe",
+    "ne",
+    "new",
+    "nso",
+    "no",
+    "ny",
+    "oc",
+    "or",
+    "om",
+    "os",
+    "pam",
+    "ps",
+    "fa",
+    "pl",
+    "pt",
+    "pt-PT",
+    "pa",
+    "qu",
+    "ro",
+    "rn",
+    "ru",
+    "sm",
+    "sg",
+    "sa",
+    "gd",
+    "sr",
+    "crs",
+    "sn",
+    "sd",
+    "si",
+    "sk",
+    "sl",
+    "so",
+    "st",
+    "es",
+    "su",
+    "sw",
+    "ss",
+    "sv",
+    "tg",
+    "ta",
+    "tt",
+    "te",
+    "th",
+    "bo",
+    "ti",
+    "to",
+    "ts",
+    "tn",
+    "tum",
+    "tr",
+    "tk",
+    "uk",
+    "ur",
+    "ug",
+    "uz",
+    "ve",
+    "vi",
+    "war",
+    "cy",
+    "fy",
+    "wo",
+    "xh",
+    "yi",
+    "yo",
+    "zu"
+   ],
+   "video_id": "dQw4w9WgXcQ"
+  }
+ }
+}

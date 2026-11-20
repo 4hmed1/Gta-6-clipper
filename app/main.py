@@ -45,6 +45,55 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 # In-memory task state tracking for real-time progress
 tasks_state: Dict[str, Dict[str, Any]] = {}
 
+# On-disk mirror of tasks_state so that a server restart leaves every
+# in-flight job as a clean INTERRUPTED card with Resume/Delete (SPRINT
+# Block C / checklist E) instead of silently losing it.
+TASKS_FILE = OUTPUTS_DIR / "tasks.json"
+# Large transient payloads that are never needed after a restart.
+_TASKS_PERSIST_SKIP = {"transcript_words"}
+
+
+def _save_tasks() -> None:
+    """Atomically persist task state to disk (crash-safe, cheap)."""
+    import json
+    data = {}
+    for tid, state in tasks_state.items():
+        slim = {k: v for k, v in state.items() if k not in _TASKS_PERSIST_SKIP}
+        slim["task_id"] = tid
+        data[tid] = slim
+    tmp = TASKS_FILE.with_suffix(".json.tmp")
+    try:
+        tmp.write_text(json.dumps(data, indent=1, default=str))
+        os.replace(tmp, TASKS_FILE)
+    except Exception as e:  # never let persistence break the pipeline
+        pipeline_logger.warning(f"task persistence failed: {e}")
+
+
+def _load_tasks() -> None:
+    """Load task state from disk and mark anything mid-flight as INTERRUPTED."""
+    if not TASKS_FILE.exists():
+        return
+    import json
+    try:
+        data = json.loads(TASKS_FILE.read_text())
+    except Exception as e:
+        pipeline_logger.warning(f"task load failed: {e}")
+        return
+    now = time.time()
+    for tid, state in data.items():
+        state["task_id"] = tid
+        if state.get("status") in ("queued", "running", "processing"):
+            # The worker died with the old server process.
+            state["status"] = "interrupted"
+            state["progress"] = 0
+            state["message"] = "Server restarted while the job was running."
+            state["error"] = "The job was interrupted by a server restart."
+            state["suggested_fix"] = "Press Resume to restart the job, or Delete to remove it."
+            state["can_resume"] = True
+            state["can_delete"] = True
+            state["heartbeat"] = now
+        tasks_state[tid] = state
+
 # Track the PID of each running pipeline worker
 # so the orphan detector can distinguish a genuinely-dead worker
 # from a slow subprocess call (yt-dlp, FFmpeg).
@@ -291,32 +340,47 @@ async def _run_subprocess_async(
 
 
 async def _fetch_metadata_and_captions(url: str) -> Dict[str, Any]:
-    """Fetch metadata + caption tracks without downloading the video."""
+    """Fetch metadata + caption tracks without downloading the video.
+
+    Tries multiple player clients and a generous timeout because the first
+    request to YouTube is the slowest part of the whole pipeline on a
+    0.2-1 MB/s connection. A 30 s timeout is too tight in practice.
+    """
     import json
-    try:
-        yt = _ytdlp_bin()
-        cmd = [yt, "--no-playlist", "--skip-download", "--dump-json", "--socket-timeout", "15", "--js-runtimes", "node", url]
-        res = await _run_subprocess_async(cmd, timeout=30.0, label="metadata")
-        if res["timed_out"]:
-            raise Exception("YouTube did not respond in 30s (metadata fetch timed out)")
-        if res["returncode"] != 0:
-            err = res["stderr"].decode("utf-8", errors="replace")[:500]
-            raise Exception(f"yt-dlp failed: {err}")
-        data = json.loads(res["stdout"].decode("utf-8", errors="replace"))
-        captions = data.get("automatic_captions", {}) or {}
-        manual_captions = data.get("captions", {}) or {}
-        all_caps = {**manual_captions, **captions}
-        return {
-            "success": True,
-            "title": data.get("title", "Untitled"),
-            "duration": data.get("duration", 0),
-            "thumbnail": data.get("thumbnail", ""),
-            "available_captions": list(all_caps.keys()),
-            "video_id": data.get("id", ""),
-        }
-    except Exception as e:
-        pipeline_logger.error(f"Metadata fetch error: {e}")
-        return {"success": False, "error": str(e)}
+    last_err = ""
+    for client in (None, "android", "web"):
+        try:
+            yt = _ytdlp_bin()
+            cmd = [yt, "--no-playlist", "--skip-download", "--dump-json",
+                   "--socket-timeout", "20", "--js-runtimes", "node"]
+            if client:
+                cmd += ["--extractor-args", f"youtube:player_client={client}"]
+            cmd.append(url)
+            res = await _run_subprocess_async(cmd, timeout=60.0, label=f"metadata-{client or 'default'}")
+            if res["timed_out"]:
+                last_err = "YouTube did not respond in 60s (metadata fetch timed out)"
+                continue
+            if res["returncode"] != 0:
+                err = res["stderr"].decode("utf-8", errors="replace")[:500]
+                last_err = f"yt-dlp failed: {err}"
+                continue
+            data = json.loads(res["stdout"].decode("utf-8", errors="replace"))
+            captions = data.get("automatic_captions", {}) or {}
+            manual_captions = data.get("captions", {}) or {}
+            all_caps = {**manual_captions, **captions}
+            return {
+                "success": True,
+                "title": data.get("title", "Untitled"),
+                "duration": data.get("duration", 0),
+                "thumbnail": data.get("thumbnail", ""),
+                "available_captions": list(all_caps.keys()),
+                "video_id": data.get("id", ""),
+            }
+        except Exception as e:
+            last_err = f"yt-dlp failed: {e}"
+            continue
+    pipeline_logger.error(f"Metadata fetch error: {last_err}")
+    return {"success": False, "error": last_err or "Metadata fetch failed"}
 
 
 async def _download_audio_from_url(url: str, work_dir: str = "", progress_callback=None) -> str:
@@ -438,10 +502,14 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
         if tasks_state[task_id]["status"] == "queued":
             tasks_state[task_id]["status"] = "running"
         pipeline_logger.info(f"[{task_id}] [{stage}] p={progress}% | {msg}")
+        _save_tasks()
 
     def fail_with(message: str, raw: str = ""):
         """Mark job failed with a classified, plain-language error."""
-        classified = _classify_ytdlp_error(raw or message)
+        # Classify the RAW yt-dlp error first (it contains the real
+        # "video is unavailable" / "private" / "403" text); fall back to
+        # the human message only when no raw error was captured.
+        classified = _classify_ytdlp_error(raw) if raw else _classify_ytdlp_error(message)
         tasks_state[task_id]["status"] = "failed"
         tasks_state[task_id]["progress"] = 0
         tasks_state[task_id]["heartbeat"] = time.time()
@@ -449,6 +517,7 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
         tasks_state[task_id]["error_detail"] = classified["tech_detail"]
         tasks_state[task_id]["suggested_fix"] = classified["fix"]
         pipeline_logger.error(f"[{task_id}] JOB_FAILED: {message}")
+        _save_tasks()
 
     def record_stage(stage_name: str, details: str = ""):
         elapsed = time.time() - start_time
@@ -685,6 +754,7 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
         tasks_state[task_id]["progress"] = 100
         tasks_state[task_id]["message"] = f"Successfully generated {len(rendered_clips)} viral shorts!"
         tasks_state[task_id]["clips"] = rendered_clips
+        _save_tasks()
 
         # Cleanup temp audio (only if we downloaded it for Whisper)
         if 'audio_path' in locals() and audio_path and Path(audio_path).exists():
@@ -742,6 +812,7 @@ def process_video_endpoint(req: ProcessRequest, background_tasks: BackgroundTask
     }
     _active_workers[task_id] = os.getpid()
     _check_and_clear_orphan_tasks()
+    _save_tasks()
     background_tasks.add_task(run_processing_pipeline, task_id, req)
     return {"success": True, "task_id": task_id}
 
@@ -836,8 +907,9 @@ def list_clips():
 
 @app.on_event("startup")
 async def startup_event():
-    """On startup, recover orphan tasks and start the janitor."""
+    """On startup, recover orphan tasks, load persisted state, and start the janitor."""
     import asyncio
+    _load_tasks()
     _check_and_clear_orphan_tasks()
     # Start background janitor (runs every 10s)
     asyncio.create_task(_janitor_loop())
@@ -851,7 +923,7 @@ async def _janitor_loop():
 
 
 @app.get("/api/validate")
-def validate_endpoint(url: str = ""):
+async def validate_endpoint(url: str = ""):
     """Validate a YouTube URL and return title/duration when available."""
     if not url:
         raise HTTPException(status_code=400, detail="url is required")
@@ -864,12 +936,13 @@ def validate_endpoint(url: str = ""):
         return {"success": False, "error": "That does not look like a YouTube link."}
     try:
         cmd = [
-            _ytdlp_bin(), "--no-playlist", "--skip-download", "--dump-json", url,
+            _ytdlp_bin(), "--no-playlist", "--skip-download", "--dump-json",
+            "--socket-timeout", "20", "--js-runtimes", "node", url,
         ]
-        proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
-        if proc.returncode == 0:
+        res = await _run_subprocess_async(cmd, timeout=45.0, label="validate")
+        if res["returncode"] == 0:
             import json as _json
-            data = _json.loads(proc.stdout.decode("utf-8", errors="replace"))
+            data = _json.loads(res["stdout"].decode("utf-8", errors="replace"))
             return {
                 "success": True,
                 "title": data.get("title", url),
@@ -887,7 +960,7 @@ def list_tasks_endpoint():
     return {"tasks": list(tasks_state.values())}
 
 
-@app.post("/api/tasks/cancel")
+@app.post("/api/tasks/cancel/{task_id}")
 def cancel_task_endpoint(task_id: str):
     """Cancel a running task."""
     state = tasks_state.get(task_id)
@@ -895,6 +968,65 @@ def cancel_task_endpoint(task_id: str):
         raise HTTPException(status_code=404, detail="Task not found")
     state["status"] = "cancelled"
     state["message"] = "Cancelled by user."
+    _save_tasks()
+    return {"success": True}
+
+
+@app.post("/api/tasks/resume/{task_id}")
+def resume_task_endpoint(task_id: str, background_tasks: BackgroundTasks):
+    """Resume an INTERRUPTED job by re-running it with the same settings."""
+    state = tasks_state.get(task_id)
+    if not state:
+        raise HTTPException(status_code=404, detail="Task not found")
+    if state.get("status") not in ("interrupted", "failed"):
+        raise HTTPException(status_code=400, detail="Task is not resumable")
+    url = state.get("url")
+    if not url:
+        raise HTTPException(status_code=400, detail="Task has no URL to resume")
+    # Rebuild the request from the stored snapshot (best-effort).
+    req = ProcessRequest(
+        url=url,
+        clip_count=state.get("clip_count") or state.get("max_clips") or 5,
+        length_min=state.get("length_min") or state.get("min_duration") or 20.0,
+        length_max=state.get("length_max") or state.get("max_duration") or 60.0,
+        measured_speed_mbps=state.get("measured_speed_mbps", 2.0),
+        layout=state.get("layout", "split_blur"),
+        caption_style=state.get("caption_style", "pop-bold"),
+    )
+    # Mark the old task as superseded so the new run is the live one.
+    state["status"] = "interrupted"
+    state["message"] = "Superseded by a Resume."
+    _save_tasks()
+    new_id = str(uuid.uuid4())[:8]
+    tasks_state[new_id] = {
+        "task_id": new_id,
+        "status": "queued",
+        "progress": 0,
+        "message": "Resumed from " + task_id,
+        "clips": [],
+        "error": None,
+        "heartbeat": time.time(),
+        "queued_at": time.time(),
+        "url": url,
+        "resumed_from": task_id,
+    }
+    _active_workers[new_id] = os.getpid()
+    _save_tasks()
+    background_tasks.add_task(run_processing_pipeline, new_id, req)
+    return {"success": True, "task_id": new_id, "resumed_from": task_id}
+
+
+@app.post("/api/tasks/delete/{task_id}")
+def delete_task_endpoint(task_id: str):
+    """Delete a task record (and its downloaded source video)."""
+    state = tasks_state.get(task_id)
+    if not state:
+        raise HTTPException(status_code=404, detail="Task not found")
+    if state.get("status") in ("queued", "running", "processing"):
+        raise HTTPException(status_code=400, detail="Stop the job first, then delete it.")
+    tasks_state.pop(task_id, None)
+    _active_workers.pop(task_id, None)
+    _save_tasks()
     return {"success": True}
 
 

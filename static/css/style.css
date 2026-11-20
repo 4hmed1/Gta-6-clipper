@@ -167,6 +167,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  /* Block C: the header must stay on ONE row at 360/768/1440 px.
+     nowrap + auto-x means chips never wrap to a second line; they
+     truncate instead. */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .app-bar-logo {
@@ -1196,7 +1202,37 @@ body {
 }
 
 /* ══════ RESPONSIVE ═════ */
+/* The app bar must stay on ONE row at 1440, 1024 and 768 px (SPRINT Block C).
+   We never let the inner row wrap: at 768 px we shrink the brand name and
+   collapse the status chips instead of letting them drop to a second line. */
+.app-bar-inner {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+@media (max-width: 1440px) {
+  /* At 1440 the centered 760px inner row is tight: shrink the brand
+     name and chips so nothing wraps vertically inside the 56px bar. */
+  .app-bar-logo-text { font-size: 1.05rem; }
+  .app-bar-tab { padding: var(--space-2) var(--space-3); font-size: 0.8rem; }
+  .status-chip { font-size: 0.62rem; padding: 1px var(--space-2); }
+  .status-chip span { white-space: nowrap; }
+}
+
+@media (max-width: 1024px) {
+  .app-bar-inner { max-width: 100%; padding: 0 var(--space-3); }
+  .status-chip { font-size: 0.6rem; padding: var(--space-1); }
+}
+
 @media (max-width: 768px) {
+  .app-bar-logo-text { display: none; }            /* icon only → saves ~90 px */
+  .app-bar-logo { gap: 0; }
+  .app-bar-logo-icon { margin-right: var(--space-1); }
+  .app-bar-tab { padding: var(--space-2) var(--space-3); font-size: 0.78rem; }
+  .app-bar-status { gap: var(--space-2); }
+  .status-chip { font-size: 0.6rem; padding: 2px 6px; }
+  .status-chip svg { width: 10px; height: 10px; }
   .caption-style-grid { grid-template-columns: repeat(2, 1fr); }
   .aspect-ratio-grid { grid-template-columns: 1fr; }
   .clip-grid { grid-template-columns: 1fr; }
