@@ -54,3 +54,7 @@ include-package-data = true
 clipforge = ["*.yaml", "*.json"]
 app = ["*.yaml", "*.json"]
 "*" = ["static/**/*", "templates/**/*", "config/**/*"]
+
+[tool.setuptools.data-files]
+"clipforge/static" = ["static/index.html", "static/js/*.js", "static/css/*.css"]
+"clipforge/config" = ["config/*.yaml", "config/scoring/*.yaml"]

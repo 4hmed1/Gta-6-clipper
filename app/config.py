@@ -10,6 +10,25 @@ UPLOADS_DIR = OUTPUTS_DIR / "uploads"
 STATIC_DIR = BASE_DIR / "static"
 TEMPLATES_DIR = BASE_DIR / "templates"
 
+# Fallback: when installed as a wheel (no source tree), look in the
+# installed package directory for the bundled static assets.
+if not STATIC_DIR.exists():
+    import sys
+    _site_packages = Path(sys.executable).parent / "site-packages"
+    for _candidate in [
+        _site_packages / "static",
+        _site_packages / "clipforge" / "static",
+        _site_packages / "clipforge_static",
+    ]:
+        if _candidate.exists():
+            STATIC_DIR = _candidate
+            break
+    else:
+        # Last resort: copy from the source tree if available
+        _src = Path(__file__).resolve().parent.parent / "static"
+        if _src.exists():
+            STATIC_DIR = _src
+
 # Ensure all working directories exist
 for directory in [OUTPUTS_DIR, DOWNLOADS_DIR, CLIPS_DIR, UPLOADS_DIR]:
     directory.mkdir(parents=True, exist_ok=True)
