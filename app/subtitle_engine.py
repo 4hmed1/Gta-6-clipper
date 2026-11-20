@@ -114,7 +114,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: KineticViral,{style['font_name']},{style['font_size'] * 2.3},{style['primary_color']},&H000000FF&,{style['outline_color']},{style['back_color']},{style['bold']},0,0,0,100,100,1,0,1,{style['outline'] * 2},{style['shadow'] * 2},2,50,50,450,1
+Style: KineticViral,{style['font_name']},{style['font_size'] * 2.3},{style['primary_color']},&H000000FF&,{style['outline_color']},{style['back_color']},{style['bold']},0,0,0,100,100,1,0,1,{style['outline'] * 2},{style['shadow'] * 2},2,50,50,120,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -123,26 +123,35 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     dialogue_lines = []
 
     for batch in batches:
-        for idx, active_w in enumerate(batch):
-            w_start = max(0.0, active_w["start"] - clip_start)
-            w_end = max(0.0, active_w["end"] - clip_start)
-            if w_end <= w_start:
-                w_end = w_start + 0.22
+        # ONE dialogue line per batch — not one per word. The old code
+        # created a line for every word in the batch, each showing the
+        # full batch text, so a 3-word batch rendered 3 overlapping
+        # copies of the same caption (the "doubling" bug).
+        batch_start = max(0.0, batch[0]["start"] - clip_start)
+        batch_end = max(0.0, batch[-1]["end"] - clip_start)
+        if batch_end <= batch_start:
+            batch_end = batch_start + 0.22
 
-            # Kinetic dynamic phrase construction:
-            phrase_parts = []
-            for j, w in enumerate(batch):
-                word_text = w["word"].upper() if style["uppercase"] else w["word"]
-                if j == idx:
-                    # Active Word: 118% Scale Pop + High-contrast Highlight Color
-                    phrase_parts.append(f"{{\\fscx118\\fscy118\\c{style['highlight_color']}}}{word_text}{{\\fscx100\\fscy100\\c{style['primary_color']}}}")
-                else:
-                    phrase_parts.append(word_text)
-
-            text_line = " ".join(phrase_parts)
-            dialogue_lines.append(
-                f"Dialogue: 0,{format_ass_time(w_start)},{format_ass_time(w_end)},KineticViral,,0,0,0,,{text_line}"
+        # Karaoke-style word sweep inside a single line:
+        #   \k{centis}  = highlight grows across this word
+        #   \fscx118    = pop-in scale on the active word
+        #   \fscx100    = back to normal after the word
+        # The highlight moves word-by-word without duplicating text.
+        phrase_parts = []
+        for w in batch:
+            word_text = w["word"].upper() if style["uppercase"] else w["word"]
+            w_dur = max(0.05, w["end"] - w["start"])
+            centis = int(w_dur * 100)
+            phrase_parts.append(
+                f"{{\\k{centis}\\fscx118\\fscy118\\c{style['highlight_color']}}}"
+                f"{word_text}"
+                f"{{\\fscx100\\fscy100\\c{style['primary_color']}}}"
             )
+
+        text_line = " ".join(phrase_parts)
+        dialogue_lines.append(
+            f"Dialogue: 0,{format_ass_time(batch_start)},{format_ass_time(batch_end)},KineticViral,,0,0,0,,{text_line}"
+        )
 
     full_ass_content = ass_header + "\n".join(dialogue_lines) + "\n"
 
