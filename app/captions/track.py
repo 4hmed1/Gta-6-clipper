@@ -209,9 +209,6 @@ def parse_youtube_json3(
 
 # Marker tokens that must always be removed from captions
 _MARKER_PATTERNS = [
-    (re.compile(r"^\s*>>\s*"), "YOUTUBE_SPEAKER_CHANGE"),   # >> at line start
-    (re.compile(r">\s*$"), "SEGMENT_MARKER"),               # trailing >
-    (re.compile(r"-->\s*$"), "SEGMENT_END_MARKER"),        # -->
     (re.compile(r"\[Music\]", re.IGNORECASE), "BRACKET_MUSIC"),
     (re.compile(r"\[Applause\]", re.IGNORECASE), "BRACKET_APPLAUSE"),
     (re.compile(r"\(laughs\)", re.IGNORECASE), "BRACKET_LAUGHTER"),
@@ -220,6 +217,12 @@ _MARKER_PATTERNS = [
     (re.compile(r"♫", re.IGNORECASE), "MUSIC_NOTE"),
     (re.compile(r"&[a-zA-Z]+;"), "HTML_ENTITY"),            # & < etc.
     (re.compile(r"[\x00-\x08\x0e-\x1f]"), "CONTROL_CHAR"),  # invisible/control
+    # YouTube speaker-change markers: >> at start of line, or anywhere
+    (re.compile(r"^\s*>>\s*", re.MULTILINE), "YOUTUBE_SPEAKER_CHANGE"),
+    (re.compile(r"\s*>>\s*"), "YOUTUBE_SPEAKER_CHANGE_ANYWHERE"),
+    # Segment markers: trailing >
+    (re.compile(r">\s*$"), "SEGMENT_MARKER"),
+    (re.compile(r"-->\s*$"), "SEGMENT_END_MARKER"),
 ]
 
 _PROFANITY_CENSOR_TOKEN = "[__]"  # YouTube's censor token (may have spaces)
@@ -245,6 +248,16 @@ def _strip_markers(text: str) -> str:
     for pattern, _ in patterns:
         result = pattern.sub("", result)
     # Clean up multiple spaces left behind
+    result = re.sub(r"\s+", " ", result).strip()
+    # Also clean up any leading/trailing punctuation that was left behind
+    # after marker removal (e.g., "Seriously?THING." → "Seriously? Thing.")
+    # Insert a space between word-ending punctuation and a capital letter
+    result = re.sub(r"([.!?])([A-Z])", r"\1 \2", result)
+    # Also handle the case where a word starts with a digit or symbol after
+    # punctuation removal (e.g., "Seriously?THING" → "Seriously? Thing")
+    # Use a broader pattern: any non-space character after word-ending punctuation
+    result = re.sub(r"([.!?])([^\s])", r"\1 \2", result)
+    # Collapse any remaining double spaces
     result = re.sub(r"\s+", " ", result).strip()
     return result
 
@@ -709,14 +722,16 @@ def generate_ass_events(
                 w_text = w_text.upper()
 
             # Build the karaoke segment for this word:
-            # \\k{centis} = highlight grows across this word (centiseconds)
-            # \\fscx118\\fscy118 = pop-in scale on this word
-            # \\fscx100\\fscy100 = back to normal after this word
-            # \\c{highlight} = highlight colour for this word's active phase
-            # \\c{primary} = primary colour for after the word
+            # \k{centis} = highlight grows across this word (centiseconds)
+            # \fscx118\fscy118 = pop-in scale on this word
+            # \fscx100\fscy100 = back to normal after this word
+            # \c{highlight} = highlight colour for this word's active phase
+            # \c{primary} = primary colour for after the word
+            # NOTE: in Python f-strings, \\ → \ (single backslash in output),
+            # which is what ASS expects. DO NOT use \\\\ (that produces \\).
             phrase_parts.append(
-                f"{{\\k{centis}\\\\fscx118\\\\fscy118\\\\c{highlight}}}{w_text}"
-                f"{{\\fscx100\\\\fscy100\\\\c{primary}}}"
+                f"{{\\k{centis}\\fscx118\\fscy118\\c{highlight}}}{w_text}"
+                f"{{\\fscx100\\fscy100\\c{primary}}}"
             )
 
         text_line = " ".join(phrase_parts)
@@ -894,6 +909,111 @@ def whisper_words_to_our_words(
 # -------------------------------------------------------------------------__
 
 # ---------------------------------------------------------------------------
+# 9. Entry point for already-parsed words (used by video_engine.py)
+# ---------------------------------------------------------------------------
+
+def caption_track_from_words(
+    words: List[Dict[str, Any]],
+    *,
+    clip_start: float = 0.0,
+    clip_end: float = 1.0,
+    style_name: str = "vibrant_gold",
+    words_per_batch: int = 3,
+    pause_threshold: float = 0.35,
+    max_words_per_group: int = 4,
+    mask_profanity: bool = True,
+    censor_mode: str = "OFF",
+    margin_v: int = 420,
+    wrap_style: int = 2,
+    max_lines: int = 2,
+    max_chars_per_line: int = 16,
+    font_name: str = "Montserrat",
+    font_size: int = 28,
+    uppercase: bool = True,
+) -> Tuple[str, dict]:
+    """Convert already-parsed words (dict format) to ASS content.
+
+    This is the entry point used by video_engine.py. The words are in the
+    standard dict format: [{"word": "...", "start": 0.5, "end": 0.8}, ...].
+
+    The pipeline: clean each word → collapse stutters → make monotonic →
+    clamp to clip bounds → group → generate ASS events.
+    """
+    # 1. Convert dicts to Word dataclasses
+    word_objs: List[Word] = []
+    for w in words:
+        word_text = w.get("word", "").strip()
+        if not word_text:
+            continue
+        word_objs.append(Word(
+            word=word_text,
+            start=float(w.get("start", 0.0)),
+            end=float(w.get("end", 0.0)),
+        ))
+
+    # 2. Clean each word's text
+    cleaned: List[Word] = []
+    for w in word_objs:
+        new_text = clean_word_text(
+            w.word,
+            mask_profanity=mask_profanity,
+            censor_mode=censor_mode,
+        )
+        cleaned.append(Word(word=new_text, start=w.start, end=w.end))
+
+    # 3. Collapse stutters
+    no_dup = collapse_stutters(cleaned, max_gap=1.0)
+
+    # 4. Make monotonic non-overlapping
+    monotonic = make_monotonic(no_dup)
+
+    # 5. Clamp to clip bounds
+    clamped = clamp_to_clip_bounds(monotonic, clip_start, clip_end)
+
+    # 6. Group into caption groups
+    groups = group_words(
+        clamped,
+        words_per_batch=words_per_batch,
+        pause_threshold=pause_threshold,
+        max_words_per_group=max_words_per_group,
+    )
+
+    # 7. Generate ASS events
+    ass_content = generate_ass_events(
+        groups,
+        style_name=style_name,
+        clip_start=clip_start,
+        clip_end=clip_end,
+        margin_v=margin_v,
+        wrap_style=wrap_style,
+        max_lines=max_lines,
+        max_chars_per_line=max_chars_per_line,
+        font_name=font_name,
+        font_size=font_size,
+        uppercase=uppercase,
+    )
+
+    metadata = {
+        "n_input_words": len(word_objs),
+        "n_cleaned": len(cleaned),
+        "n_after_stutters": len(no_dup),
+        "n_monotonic": len(monotonic),
+        "n_clamped": len(clamped),
+        "n_groups": len(groups),
+        "clip_start": clip_start,
+        "clip_end": clip_end,
+        "style_name": style_name,
+        "words_per_batch": words_per_batch,
+        "pause_threshold": pause_threshold,
+        "max_words_per_group": max_words_per_group,
+        "mask_profanity": mask_profanity,
+        "censor_mode": censor_mode,
+    }
+
+    return ass_content, metadata
+
+
+# ---------------------------------------------------------------------------
 # Style presets (BGR hex format: &H00BBGGRR&)
 # ---------------------------------------------------------------------------
 
@@ -955,4 +1075,22 @@ STYLES = _STYLES
 # by re-assigning any internal references after the dict creation.
 # (All internal code uses _STYLES or STYLES interchangeably; this just
 # guarantees the names are resolvable.)
-del _STYLES  # noqa: F811 — deliberately redefined as STYLES below
+
+# Export symbols
+__all__ = [
+    "Word",
+    "CaptionGroup",
+    "parse_youtube_json3",
+    "clean_word_text",
+    "collapse_stutters",
+    "make_monotonic",
+    "clamp_to_clip_bounds",
+    "fill_gaps",
+    "group_words",
+    "generate_ass_events",
+    "caption_track_from_json3",
+    "caption_track_from_words",
+    "whisper_words_to_our_words",
+    "format_ass_time",
+    "STYLES",
+]

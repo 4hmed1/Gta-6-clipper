@@ -4,7 +4,7 @@ import uuid
 from pathlib import Path
 from typing import Dict, Any, List
 from app.config import CLIPS_DIR
-from app.subtitle_engine import generate_ass_subtitles
+from app.captions.track import caption_track_from_json3, caption_track_from_words, Word, STYLES
 
 def escape_ffmpeg_path(path: str) -> str:
     """Escape path for ffmpeg filtergraph syntax."""
@@ -57,16 +57,30 @@ def render_clip(
 
     duration = max(1.0, end_time - start_time)
 
-    # 1. Generate Kinetic ASS Subtitles
+    # 1. Generate Kinetic ASS Subtitles using the new captions/track.py module
     has_subtitles = bool(words)
     if has_subtitles:
-        generate_ass_subtitles(
+        ass_content, meta = caption_track_from_words(
             words=words,
             clip_start=start_time,
             clip_end=end_time,
-            output_ass_path=sub_path,
-            style_name=subtitle_style
+            style_name=subtitle_style,
+            words_per_batch=3,
+            pause_threshold=0.35,
+            max_words_per_group=4,
+            mask_profanity=True,
+            censor_mode="OFF",
+            margin_v=420,
+            wrap_style=2,
+            max_lines=2,
+            max_chars_per_line=16,
+            font_name="Montserrat",
+            font_size=28,
+            uppercase=True,
         )
+        # Write the ASS file
+        Path(sub_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(sub_path).write_text(ass_content, encoding="utf-8")
 
     # 2. Construct ffmpeg filter graph
     escaped_sub = escape_ffmpeg_path(sub_path)

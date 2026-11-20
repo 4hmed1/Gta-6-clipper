@@ -152,8 +152,40 @@ class ClipSelector:
         return overlap_duration / max(duration1, duration2)
 
     def _generate_headline(self, candidate: Dict[str, Any]) -> str:
-        # Simple headline generation from first few words
-        words = candidate["text"].split()
-        if len(words) > 5:
-            return " ".join(words[:5]) + "..."
-        return candidate["text"]
+        # Clean headline text: strip YouTube markers (>>, [ __ ], [Music], ♪)
+        # and collapse stutters before display.
+        from app.captions.track import _strip_markers
+        text = candidate.get("text", "")
+        # Strip markers from the full text
+        cleaned = _strip_markers(text)
+        # Replace [ __ ] with ****
+        cleaned = re.sub(r"\[\s*__\s*\]", "****", cleaned, flags=re.IGNORECASE)
+        # Collapse immediate stutters (duplicate adjacent words, including
+        # multi-word repeats like "can I can I" → "can I")
+        words = cleaned.split()
+        result = []
+        # Try multi-word stutter collapse: if the last N words match the next N words,
+        # skip the duplicate.
+        max_stutter_len = 3  # try up to 3-word repeats
+        i = 0
+        while i < len(words):
+            found_stutter = False
+            for n in range(min(max_stutter_len, len(result)), 0, -1):
+                if i + n > len(words):
+                    continue
+                prev_n = [w.lower().rstrip(".,!?;:'\"()[]{}") for w in result[-n:]]
+                next_n = [w.lower().rstrip(".,!?;:'\"()[]{}") for w in words[i:i+n]]
+                if prev_n == next_n:
+                    # Skip the duplicate
+                    i += n
+                    found_stutter = True
+                    break
+            if not found_stutter:
+                result.append(words[i])
+                i += 1
+        # Take first 5-8 words
+        if len(result) > 8:
+            return " ".join(result[:8]) + "..."
+        elif len(result) > 5:
+            return " ".join(result[:5]) + "..."
+        return " ".join(result) if result else candidate["text"]

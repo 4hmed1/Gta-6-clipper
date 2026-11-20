@@ -87,9 +87,18 @@ def analyze_viral_moments_heuristic(
 
             total_score = min(99, hook_score + emotion_score + velocity_score + length_score)
 
-            # Generate hook headline
+            # Generate hook headline (cleaned)
+            from app.captions.track import _strip_markers
+            import re as _re
             first_words = first_sentence.split()[:8]
-            headline = " ".join(first_words)
+            # Clean each word: strip markers, profanity censor, stutters
+            cleaned_words = []
+            for w in first_words:
+                w = _strip_markers(w)
+                w = _re.sub(r"\[\s*__\s*\]", "****", w, flags=_re.IGNORECASE)
+                if w and (not cleaned_words or cleaned_words[-1].lower().rstrip(".,!?;:'\"()[]{}") != w.lower().rstrip(".,!?;:'\"()[]{}")):
+                    cleaned_words.append(w)
+            headline = " ".join(cleaned_words)
             if not headline.endswith((".", "!", "?")):
                 headline += "..."
 
