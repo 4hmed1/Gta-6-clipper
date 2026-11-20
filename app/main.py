@@ -450,6 +450,10 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
         tasks_state[task_id]["suggested_fix"] = classified["fix"]
         pipeline_logger.error(f"[{task_id}] JOB_FAILED: {message}")
 
+    def record_stage(stage_name: str, details: str = ""):
+        elapsed = time.time() - start_time
+        pipeline_logger.info(f"[{task_id}] STAGE_COMPLETE: {stage_name} in {elapsed:.2f}s | {details}")
+
     # Heartbeat every 2s — prevents false stuck detection
     def _heartbeat_loop():
         while tasks_state[task_id].get("status") in ("running", "processing", "queued"):
