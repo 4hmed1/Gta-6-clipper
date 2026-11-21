@@ -1,4 +1,5 @@
 import os
+import shutil
 import uuid
 import signal
 import threading
@@ -433,44 +434,119 @@ async def _download_sections(
     sections: List[Dict[str, float]],
     output_path: str,
     target_height: int = 720,
+    progress_callback=None,
 ) -> Dict[str, Any]:
     """Download the full video at low resolution for local cutting.
 
-    Uses multiple player clients (android, web, ios, tv) to bypass YouTube bot checks.
-    We download once at low quality and let FFmpeg cut locally (faster and more reliable).
+    Robust ladder (each step is tried only if the previous failed):
+      1. auto client selection (no extractor-args) — yt-dlp picks what works
+      2. android client
+      3. web_safari client
+      4. tv client
+      5. ios client
+
+    For each client we try several format selectors, from best quality down to
+    "worst" (any video at all), because some videos have no formats <= 720p and
+    some have no separate audio streams. We never give up while any stream exists.
+
+    Timeouts are short (90s per attempt) so a blocked client fails fast instead
+    of hanging the UI at 70% for many minutes.
     """
     if not sections:
         return {"success": False, "error": "No valid sections specified"}
-    player_clients = ["android", "web", "ios", "tv_embedded"]
 
-    for client in player_clients:
-        yt = _ytdlp_bin()
-        cmd = [
-            yt,
-            "-o", output_path,
-            "--format", f"best[height<={target_height}]/best",
-            "--quiet", "--no-warnings", "--no-playlist",
-            "--retries", "3", "--fragment-retries", "3",
-            "--socket-timeout", "15",
-            "--js-runtimes", "node",
-            "--extractor-args", f"youtube:player_client={client}",
-            url,
-        ]
-        try:
-            res = await _run_subprocess_async(cmd, timeout=300.0, label=f"download-{client}")
-            if res["timed_out"]:
-                pipeline_logger.warning(f"player_client={client} timed out (300s)")
-                continue
-            if res["returncode"] == 0 and Path(output_path).exists():
-                file_size = Path(output_path).stat().st_size
-                pipeline_logger.info(f"Download succeeded with player_client={client} ({file_size/1e6:.1f} MB)")
-                return {"success": True, "filepath": str(output_path), "file_size_mb": round(file_size / 1e6, 2)}
-            err = res["stderr"].decode("utf-8", errors="replace")[:200] if res["stderr"] else "Unknown error"
-            pipeline_logger.warning(f"player_client={client} failed: {err}")
-        except Exception as e:
-            pipeline_logger.warning(f"player_client={client} exception: {e}")
+    # Format ladders: prefer capped-resolution muxed/best, degrade gracefully.
+    format_ladders = [
+        f"bv*[height<={target_height}][ext=mp4]+ba[ext=m4a]/b[height<={target_height}][ext=mp4]",
+        f"bv*[height<={target_height}]+ba/b[height<={target_height}]",
+        f"bestvideo[height<={target_height}]+bestaudio/best[height<={target_height}]",
+        "bv*+ba/b",          # any video+audio, any resolution
+        "b",                 # best muxed stream
+        "worst",             # last resort: smallest single stream
+    ]
 
-    return {"success": False, "error": "All player clients failed. Try --cookies-from-browser or a local upload."}
+    # Client ladder: None = let yt-dlp choose (most reliable today).
+    client_ladder = [None, "android", "web_safari", "tv", "ios"]
+
+    last_err = "Unknown error"
+
+    def _report(msg: str) -> None:
+        if progress_callback:
+            try:
+                progress_callback(msg)
+            except Exception:
+                pass
+
+    for client in client_ladder:
+        for fi, fmt in enumerate(format_ladders):
+            yt = _ytdlp_bin()
+            cmd = [
+                yt,
+                "-o", output_path,
+                "--format", fmt,
+                "--merge-output-format", "mp4",
+                "--no-playlist", "--no-warnings",
+                "--retries", "2", "--fragment-retries", "2",
+                "--socket-timeout", "15",
+                "--no-part",
+            ]
+            # Only pass js-runtimes when node is actually available.
+            if shutil.which("node"):
+                cmd += ["--js-runtimes", "node"]
+            if client:
+                cmd += ["--extractor-args", f"youtube:player_client={client}"]
+
+            cmd.append(url)
+
+            label = f"dl-{client or 'auto'}-{fi}"
+            _report(f"Downloading video (attempt {label})...")
+            try:
+                res = await _run_subprocess_async(cmd, timeout=90.0, label=label)
+                if res["timed_out"]:
+                    last_err = f"{label}: timed out (90s)"
+                    pipeline_logger.warning(last_err)
+                    continue
+                if res["returncode"] == 0 and Path(output_path).exists():
+                    file_size = Path(output_path).stat().st_size
+                    if file_size < 100_000:  # sanity: <100 KB means broken
+                        last_err = f"{label}: output too small ({file_size} bytes)"
+                        pipeline_logger.warning(last_err)
+                        try:
+                            Path(output_path).unlink(missing_ok=True)
+                        except Exception:
+                            pass
+                        continue
+                    pipeline_logger.info(
+                        f"Download succeeded (client={client or 'auto'}, fmt={fmt}, "
+                        f"{file_size/1e6:.1f} MB)"
+                    )
+                    return {
+                        "success": True,
+                        "filepath": str(output_path),
+                        "file_size_mb": round(file_size / 1e6, 2),
+                        "client": client or "auto",
+                        "format": fmt,
+                    }
+                err = res["stderr"].decode("utf-8", errors="replace").strip()[-300:]
+                last_err = f"{label}: {err or 'non-zero exit'}"
+                pipeline_logger.warning(last_err)
+                # If the error is a hard "video unavailable", stop early.
+                low = err.lower()
+                if any(k in low for k in ("video unavailable", "private video", "removed by the uploader", "age-restricted")):
+                    pipeline_logger.error("Video is not downloadable; aborting ladder.")
+                    return {
+                        "success": False,
+                        "error": err,
+                        "abort": True,
+                    }
+            except Exception as e:
+                last_err = f"{label}: exception {e}"
+                pipeline_logger.warning(last_err)
+
+    return {
+        "success": False,
+        "error": f"All download attempts failed. Last error: {last_err}",
+    }
 
 
 def _run_async(coro):

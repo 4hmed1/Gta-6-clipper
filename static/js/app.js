@@ -682,38 +682,93 @@
       el.dataset.clipId = clip.clip_id || clip.id || '';
 
       const videoUrl = clip.download_url || (clip.filepath ? `/${clip.filepath}` : '');
+      const score = clip.score || 0;
+      const duration = clip.duration || 0;
+      const headline = escapeHtml(clip.headline || clip.title || 'Clip');
+      const reasonsHtml = Array.isArray(clip.reasons)
+        ? clip.reasons.slice(0, 4).map((r) => `<span class="reason-chip">${escapeHtml(r)}</span>`).join('')
+        : clip.reason
+          ? `<span class="reason-chip">${escapeHtml(clip.reason)}</span>`
+          : '';
+
       el.innerHTML = `
         <div class="clip-preview">
-          ${videoUrl ? `<video src="${videoUrl}" preload="metadata" muted playsinline></video>` : ''}
-          <span class="clip-score-ring">${clip.score || 0}</span>
-          <span class="clip-duration">${formatTime(clip.duration || 0)}</span>
+          <video class="clip-video" src="${videoUrl || '#'}" preload="metadata" muted playsinline></video>
+          <button class="clip-play-btn" data-act="toggle-play" aria-label="Play clip">
+            <svg class="icon-play" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <svg class="icon-pause hidden" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+          </button>
+          <div class="clip-progress hidden" data-role="progress"><div class="clip-progress-fill" data-role="fill"></div></div>
+          <div class="clip-overlay" data-role="overlay">
+            <span class="clip-score-ring">${score}</span>
+            <span class="clip-duration">${formatTime(duration)}</span>
+          </div>
         </div>
         <div class="clip-info">
-          <p class="clip-headline">${escapeHtml(clip.headline || clip.title || 'Clip')}</p>
-          <div class="clip-reasons">
-            ${Array.isArray(clip.reasons)
-              ? clip.reasons.slice(0, 4).map((r) => `<span class="reason-chip">${escapeHtml(r)}</span>`).join('')
-              : clip.reason
-                ? `<span class="reason-chip">${escapeHtml(clip.reason)}</span>`
-                : ''}
-          </div>
+          <p class="clip-headline">${headline}</p>
+          <div class="clip-reasons">${reasonsHtml}</div>
           <div class="clip-actions-row">
             <button class="clip-action-button" data-act="download">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
               Download
             </button>
+            <button class="clip-action-button" data-act="view">View</button>
             <button class="clip-action-button" data-act="copy">Copy title</button>
           </div>
         </div>
       `;
 
-      // Hover-play
-      const video = el.querySelector('video');
-      if (video) {
-        el.addEventListener('mouseenter', () => video.play().catch(() => {}));
-        el.addEventListener('mouseleave', () => video.pause());
+      const video = el.querySelector('.clip-video');
+      const playBtn = el.querySelector('[data-act="toggle-play"]');
+      const overlay = el.querySelector('[data-role="overlay"]');
+      const progress = el.querySelector('[data-role="progress"]');
+      const fill = el.querySelector('[data-role="fill"]');
+      let userPlaying = false;
+
+      function setIcon(isPlaying) {
+        playBtn.querySelector('.icon-play').classList.toggle('hidden', isPlaying);
+        playBtn.querySelector('.icon-pause').classList.toggle('hidden', !isPlaying);
+        playBtn.setAttribute('aria-label', isPlaying ? 'Pause clip' : 'Play clip');
       }
 
+      playBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!videoUrl) return;
+        if (userPlaying) {
+          userPlaying = false;
+          video.pause();
+        } else {
+          userPlaying = true;
+          video.muted = true;
+          video.play().then(() => overlay.classList.add('playing')).catch(() => {});
+        }
+      });
+
+      video.addEventListener('play', () => setIcon(true));
+      video.addEventListener('pause', () => setIcon(false));
+      video.addEventListener('ended', () => { userPlaying = false; overlay.classList.remove('playing'); });
+      video.addEventListener('timeupdate', () => {
+        if (video.duration > 0) fill.style.width = `${(video.currentTime / video.duration) * 100}%`;
+      });
+
+      // Hover preview (silent) with progress bar; the button stays the source of truth.
+      el.addEventListener('mouseenter', () => {
+        if (videoUrl && !userPlaying) {
+          progress.classList.remove('hidden');
+          video.currentTime = 0;
+          video.muted = true;
+          video.play().catch(() => {});
+        }
+      });
+      el.addEventListener('mouseleave', () => {
+        if (!userPlaying) {
+          progress.classList.add('hidden');
+          video.pause();
+          fill.style.width = '0%';
+        }
+      });
+
+      el.querySelector('[data-act="view"]').addEventListener('click', () => openClipViewer(clip));
       el.querySelector('[data-act="download"]').addEventListener('click', () => {
         if (clip.download_url) {
           const a = document.createElement('a');
@@ -740,6 +795,85 @@
       if (grid.children.length >= 2) dlAll.classList.remove('hidden');
     });
     updateVideoCount();
+  }
+
+  // ------------------------------------------------------------------
+  // Clip viewer modal — full player with native play/pause + seek
+  // ------------------------------------------------------------------
+  function openClipViewer(clip) {
+    const videoUrl = clip.download_url || (clip.filepath ? `/${clip.filepath}` : '');
+    const existing = document.querySelector('.clip-viewer-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.className = 'clip-viewer-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.innerHTML = `
+      <div class="clip-viewer-backdrop" data-act="close"></div>
+      <div class="clip-viewer-panel">
+        <div class="clip-viewer-header">
+          <h3>${escapeHtml(clip.headline || clip.title || 'Clip')}</h3>
+          <button class="clip-viewer-close" data-act="close" aria-label="Close viewer">&#10005;</button>
+        </div>
+        <div class="clip-viewer-video-wrap" data-role="video-wrap">
+          ${videoUrl
+            ? `<video class="clip-viewer-video" src="${videoUrl}" controls autoplay playsinline></video>`
+            : '<div class="clip-viewer-error">This clip has no video file yet.</div>'}
+        </div>
+        <div class="clip-viewer-info">
+          <p class="clip-viewer-headline">${escapeHtml(clip.headline || clip.title || 'Clip')}</p>
+          <div class="clip-viewer-reasons">
+            ${Array.isArray(clip.reasons)
+              ? clip.reasons.slice(0, 6).map((r) => `<span class="reason-chip">${escapeHtml(r)}</span>`).join('')
+              : ''}
+          </div>
+          <div class="clip-viewer-actions">
+            <button class="clip-viewer-btn" data-act="download">Download</button>
+            <button class="clip-viewer-btn" data-act="copy">Copy title &amp; hashtags</button>
+          </div>
+          <p class="clip-viewer-meta">${formatTime(clip.duration || 0)} &bull; Score ${clip.score || 0}/100</p>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    document.body.classList.add('modal-open');
+
+    const close = () => {
+      const v = modal.querySelector('video');
+      if (v) { try { v.pause(); } catch (e) { /* ignore */ } }
+      modal.remove();
+      document.body.classList.remove('modal-open');
+      document.removeEventListener('keydown', onKey);
+    };
+    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    modal.querySelectorAll('[data-act="close"]').forEach((b) => b.addEventListener('click', close));
+    document.addEventListener('keydown', onKey);
+
+    modal.querySelector('[data-act="download"]').addEventListener('click', () => {
+      if (clip.download_url) {
+        const a = document.createElement('a');
+        a.href = clip.download_url;
+        a.download = clip.filename || 'clip.mp4';
+        a.click();
+      } else if (videoUrl) { window.open(videoUrl, '_blank'); }
+    });
+    modal.querySelector('[data-act="copy"]').addEventListener('click', async () => {
+      const text = `${clip.headline || clip.title || ''} #shorts #viral`;
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('Title and hashtags copied.');
+      } catch { showToast('Could not copy to clipboard.', 'error'); }
+    });
+
+    const video = modal.querySelector('video');
+    if (video) {
+      video.addEventListener('error', () => {
+        const wrap = modal.querySelector('[data-role="video-wrap"]');
+        wrap.innerHTML = '<div class="clip-viewer-error">Could not load the video file. Use Download to save it instead.</div>';
+      });
+    }
+    modal.querySelector('.clip-viewer-close').focus();
   }
 
   function notifyCompletion(task, card) {

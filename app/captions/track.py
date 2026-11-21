@@ -692,7 +692,7 @@ def generate_ass_events(
 
     style_line = (
         f"Style: {DEFAULT_STYLE_NAME},{s['font_name']},{s['font_size'] * 2.3},"
-        f"{primary},&H000000FF&,{outline},&H{back[2:]}&,{bold},0,0,0,"
+        f"{primary},&H000000FF&,{outline},{back},{bold},0,0,0,"
         f"100,100,1,0,1,{outline_w},{shadow * 2},2,50,50,120,1"
     )
     ass_lines.append(style_line)
