@@ -38,3 +38,7 @@ outputs/uploads/*
 Thumbs.db
 .vscode/
 .idea/
+
+outputs/
+*.wav
+*.mp4

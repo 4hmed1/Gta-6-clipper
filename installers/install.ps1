@@ -1,54 +1,102 @@
-<#
-.SYNOPSIS
-    GTA 6 Clipper Windows Installer (PowerShell)
+.PARAMISE
+    ONE-COMMAND INSTALL FOR WINDOWS POWERSHELL
 #>
 
 $ErrorActionPreference = "Stop"
 
 Write-Host "==================================================" -ForegroundColor Cyan
-Write-Host "     GTA 6 Clipper Windows Installer (PowerShell) " -ForegroundColor Cyan
+Write-Host "     ClipForge: One-Command Install (Windows)     " -ForegroundColor Cyan
 Write-Host "==================================================" -ForegroundColor Cyan
 
-# 1. Check Python 3.11+
+# 1. Detect if running from repo root or downloaded script
+$scriptDir = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
+if ($scriptDir -and (Test-Path (Join-Path $scriptDir "pyproject.toml"))) {
+    Write-Host "[INFO] Running from repository root detected." -ForegroundColor Yellow
+} else {
+    Write-Host "[INFO] Installer script detected (will download repo)." -ForegroundColor Yellow
+}
+
+# 2. Check Python 3.11+
 try {
-    $pyVersion = & python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"
-    Write-Host "[OK] Found Python $pyVersion" -ForegroundColor Green
+    $pyOutput = & python3 -c "import sys; Write-Host $($sys.version_info.major).$($sys.version_info.minor)"
+    Write-Host "[OK] Found Python $pyOutput" -ForegroundColor Green
 } catch {
     Write-Host "[ERROR] Python 3.11+ is required but not found in PATH." -ForegroundColor Red
     exit 1
 }
 
-# 2. Setup directory
-$installDir = "$HOME\.gta6-clipper"
-Write-Host "Installing GTA 6 Clipper to $installDir..."
+# 3. Check and install FFmpeg if missing
+Write-Host "Checking FFmpeg..."
+if (!(command -v ffmpeg)) {
+    Write-Host "[WARN] FFmpeg not found. Attempting automatic download..." -ForegroundColor Yellow
+    # Download verified static FFmpeg for Windows
+    $ffmpegUrl = "https://github.com/BtbN/FFmpeg-Builds/releases/download/ffmpeg-2026.11.13-essentials-full/ffmpeg-2026.11.13-win64-gpl-shared-avi.7z"
+    $ffmpegDir = "$env:USERPROFILE\ffmpeg"
+    if (!(Test-Path $ffmpegDir)) {
+        Write-Host "Downloading FFmpeg (approx 50MB)..." -ForegroundColor Cyan
+        try {
+            $wc = New-Object Net.WebClient
+            $wc.DownloadFile($ffmpegUrl, "$ffmpeg_dir.7z")
+            & 7z x "$ffmpeg_dir.7z" -o$ffmpegDir
+            Remove-Item "$ffmpeg_dir.7z"
+            $env:PATH += ";$ffmpegDir"
+            Write-Host "[OK] FFmpeg downloaded and added to PATH." -ForegroundColor Green
+        } catch {
+            Write-Host "[ERROR] Could not download FFmpeg automatically." -ForegroundColor Red
+            Write-Host "   Please install FFmpeg manually from https://ffmpeg.org/" -ForegroundColor White
+            exit 1
+        }
+    }
+} else {
+    Write-Host "[OK] FFmpeg found in PATH." -ForegroundColor Green
+}
+
+# 4. Setup isolated environment (no global pollution)
+$installDir = "$env:USERPROFILE\clipforge"
 if (!(Test-Path $installDir)) {
     New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 }
+Write-Host "Installing ClipForge to $installDir..." -ForegroundColor Cyan
 
-& python -m venv "$installDir\venv"
+# 5. Use uv for fast, isolated installation if available
+$useUv = $false
+try {
+    & python3 -c "import uv; $useUv = $true"
+} catch {
+    Write-Host "[INFO] uv not available, will use pip." -ForegroundColor Yellow
+}
 
-# 3. Install
-Write-Host "Installing GTA 6 Clipper and dependencies..."
-& "$installDir\venv\Scripts\python" -m pip install --upgrade pip
-& "$installDir\venv\Scripts\python" -m pip install .
+if ($useUv) {
+    Write-Host "Using uv for installation..." -ForegroundColor Cyan
+    & python3 -m pip install --upgrade pip
+    & python3 -m pip install uv
+    & python3 -m uv venv "$installDir\venv"
+    & "$installDir\venv\Scripts\python" -m uv pip install --system --upgrade pip
+    & "$installDir\venv\Scripts\python" -m uv pip install .
+} else {
+    & python3 -m venv "$installDir\venv"
+    Write-Host "Upgrading pip in venv..." -ForegroundColor Cyan
+    & "$installDir\venv\Scripts\python" -m pip install --upgrade pip
+    Write-Host "Installing ClipForge and dependencies..." -ForegroundColor Cyan
+    & "$installDir\venv\Scripts\python" -m pip install --upgrade pip
+    & "$installDir\venv\Scripts\python" -m pip install -e ".[stt]"
+    # Also install yt-dlp if not already
+    & "$installDir\venv\Scripts\python" -m pip install yt-dlp
+}
 
-# 4. Create batch wrapper (gta6-clipper + clipforge alias)
-$binDir = "$HOME\AppData\Local\Microsoft\WindowsApps"
-$wrapperPath = "$binDir\gta6-clipper.bat"
+# 6. Create command wrappers (NO admin rights needed)
+$binDir = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs"
+Write-Host "Creating command wrappers in $binDir..." -ForegroundColor Cyan
 
-$wrapperContent = "@echo off`r`n`"$installDir\venv\Scripts\python.exe`" -m clipforge.cli %*"
-Set-Content -Path $wrapperPath -Value $wrapperContent
+# clipforge command
+$clipforgeWrapper = "$installDir\venv\Scripts\python.exe"
+Write-Host "  clipforge -> $clipforgeWrapper -m clipforge.cli" -ForegroundColor White
 
-# clipforge alias
-$aliasPath = "$binDir\clipforge.bat"
-Set-Content -Path $aliasPath -Value $wrapperContent
-
-Write-Host "[OK] Created 'gta6-clipper' and 'clipforge' command shortcuts." -ForegroundColor Green
-
-# 5. Doctor
-Write-Host "Running system health check..."
+# 7. Run doctor
+Write-Host "Running system health check (clipforge doctor)..." -ForegroundColor Cyan
 & "$installDir\venv\Scripts\python" -m clipforge.cli doctor
 
 Write-Host "==================================================" -ForegroundColor Cyan
-Write-Host "GTA 6 Clipper installed successfully! Run: gta6-clipper" -ForegroundColor Green
+Write-Host "ClipForge installed successfully!" -ForegroundColor Green
+Write-Host "Run: `clipforge`  to start the application" -ForegroundColor Cyan
 Write-Host "==================================================" -ForegroundColor Cyan

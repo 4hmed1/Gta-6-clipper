@@ -580,19 +580,21 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
         pipeline_logger.info(f"[{task_id}] [{stage}] p={progress}% | {msg}")
         _save_tasks()
 
-    def fail_with(message: str, raw: str = ""):
+    def fail_with(message: str, raw: str = "", stage: str = "ingesting"):
         """Mark job failed with a classified, plain-language error."""
-        # Classify the RAW yt-dlp error first (it contains the real
-        # "video is unavailable" / "private" / "403" text); fall back to
-        # the human message only when no raw error was captured.
-        classified = _classify_ytdlp_error(raw) if raw else _classify_ytdlp_error(message)
+        # Use the comprehensive error classifier to generate structured error info
+        from app.error_classifier import ErrorClassifier
+        classified = ErrorClassifier.classify(raw if raw else message, stage)
+        
         tasks_state[task_id]["status"] = "failed"
         tasks_state[task_id]["progress"] = 0
         tasks_state[task_id]["heartbeat"] = time.time()
-        tasks_state[task_id]["error"] = message or classified["user_msg"]
-        tasks_state[task_id]["error_detail"] = classified["tech_detail"]
-        tasks_state[task_id]["suggested_fix"] = classified["fix"]
-        pipeline_logger.error(f"[{task_id}] JOB_FAILED: {message}")
+        tasks_state[task_id]["error"] = classified["title"]  # Use error title as the main error message
+        tasks_state[task_id]["error_detail"] = classified["technical_detail"]
+        tasks_state[task_id]["suggested_fix"] = classified["fix_action"]
+        
+        # Log the detailed error for debugging
+        pipeline_logger.error(f"[{task_id}] JOB_FAILED: {classified['title']} - {classified['cause']} - Fix: {classified['fix_action']}")
         _save_tasks()
 
     def record_stage(stage_name: str, details: str = ""):
@@ -632,7 +634,7 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
             set_status("Fetching video metadata and captions...", 5, "ingesting")
             meta_res = _run_async(_fetch_metadata_and_captions(req.url))
             if not meta_res.get("success"):
-                fail_with("YouTube did not answer; retry, try cookies, or upload the file.", meta_res.get("error", "Metadata fetch failed"))
+                fail_with("YouTube did not answer; retry, try cookies, or upload the file.", meta_res.get("error", "Metadata fetch failed"), "ingesting")
                 return
             video_meta = meta_res
             set_status(f"Metadata: {video_meta.get('title','Video')} ({video_meta.get('duration',0)}s)", 10, "ingesting")
@@ -645,7 +647,7 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
                 "available_captions": [],
             }
         else:
-            fail_with("No valid URL or video file provided.")
+            fail_with("No valid URL or video file provided.", "", "initial_validation")
             return
 
         source_video = video_meta.get("filepath", "")

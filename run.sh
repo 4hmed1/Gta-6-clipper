@@ -23,11 +23,15 @@ echo "🔄 Activating virtual environment..."
 source venv/bin/activate
 
 echo "📥 Installing GTA 6 Clipper & dependencies..."
-pip install -r requirements.txt
-pip install -e .
+pip install -e ".[stt]"
 
-# Install optional STT engine
-pip install -e ".[stt]" 2>/dev/null || echo "⚠️  Optional offline STT (faster-whisper) not installed. Run: pip install -e '.[stt]'"
+# Use the myenv environment if it exists, otherwise use the local venv
+if [ -d "../myenv" ] && [ -f "../myenv/bin/python" ]; then
+    echo "Using existing myenv environment..."
+    source ../myenv/bin/activate
+else
+    echo "Using local venv..."
+fi
 
-echo "✨ Starting GTA 6 Clipper Studio on http://localhost:3000..."
-python3 -m uvicorn app.main:app --host 0.0.0.0 --port 3000 --reload
+echo "✨ Starting GTA 6 Clipper Studio on http://localhost:8760..."
+python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8760 --reload

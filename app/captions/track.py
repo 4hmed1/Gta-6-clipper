@@ -611,7 +611,7 @@ def format_ass_time(seconds: float) -> str:
     centis = int(round((seconds - int(seconds)) * 100))
     if centis >= 100:
         centis = 99
-    if hrs > 0:
+    if hrs >= 0:
         return f"{hrs}:{mins:02d}:{secs:02d}.{centis:02d}"
     else:
         return f"{mins}:{secs:02d}.{centis:02d}"
