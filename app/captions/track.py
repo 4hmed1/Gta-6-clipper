@@ -1019,7 +1019,7 @@ def caption_track_from_words(
 
 _STYLES = {
     "vibrant_gold": {
-        "font_name": "DejaVu Sans",
+        "font_name": "Montserrat ExtraBold",
         "font_size": 28,
         "primary_color": "&H00FFFFFF&",    # Crisp White inactive
         "highlight_color": "&H0022E6FF&",  # Electric Vibrant Gold/Yellow
@@ -1031,7 +1031,7 @@ _STYLES = {
         "uppercase": True
     },
     "neon_green": {
-        "font_name": "DejaVu Sans",
+        "font_name": "Poppins ExtraBold",
         "font_size": 30,
         "primary_color": "&H00FFFFFF&",
         "highlight_color": "&H0033FF55&",  # Intense Neon Cyber Green
@@ -1043,7 +1043,7 @@ _STYLES = {
         "uppercase": True
     },
     "cyber_cyan": {
-        "font_name": "DejaVu Sans",
+        "font_name": "Inter ExtraBold",
         "font_size": 28,
         "primary_color": "&H00F0F0F0&",
         "highlight_color": "&H00FFF000&",  # Electric Neon Cyan
@@ -1055,7 +1055,7 @@ _STYLES = {
         "uppercase": False
     },
     "minimal": {
-        "font_name": "DejaVu Sans",
+        "font_name": "Inter ExtraBold",
         "font_size": 22,
         "primary_color": "&H00FFFFFF&",
         "highlight_color": "&H00A0A0FF&",
@@ -1063,6 +1063,79 @@ _STYLES = {
         "back_color": "&H60000000&",
         "bold": 0,
         "outline": 3,
+        "shadow": 1,
+        "uppercase": False
+    },
+    "clean_pop": {
+        "font_name": "Montserrat ExtraBold",
+        "font_size": 96,
+        "primary_color": "&H00FFFFFF&",    # White text
+        "highlight_color": "&H00FFD60A&",  # Active word highlight
+        "outline_color": "&H00000000&",   # Black outline
+        "back_color": "&H00000000&",      # No background
+        "bold": -1,
+        "outline": 8,
+        "shadow": 1,
+        "uppercase": False
+    },
+    "bold_impact": {
+        "font_name": "Anton",
+        "font_size": 112,
+        "primary_color": "&H00FFFFFF&",    # White text
+        "highlight_color": "&H00FF3B30&",  # Active word color
+        "outline_color": "&H00000000&",   # Black outline
+        "back_color": "&H00000000&",      # No background
+        "bold": -1,
+        "outline": 9,
+        "shadow": 1,
+        "uppercase": True,
+        "tracking": 1
+    },
+    "neon_edge": {
+        "font_name": "Poppins ExtraBold",
+        "font_size": 92,
+        "primary_color": "&H00FFFFFF&",    # White fill
+        "highlight_color": "&H00FF2DAA&",  # Active word color
+        "outline_color": "&H0000E5FF&",   # Cyan outline
+        "back_color": "&H00000000&",      # No background
+        "bold": -1,
+        "outline": 6,
+        "shadow": 1,
+        "uppercase": False
+    },
+    "minimal_lower_third": {
+        "font_name": "Inter ExtraBold",
+        "font_size": 84,
+        "primary_color": "&H00FFFFFF&",    # White text on box
+        "highlight_color": "&H003DDC84&",  # Accent underline color
+        "outline_color": "&H001A1A1A&",   # Dark outline
+        "back_color": "&H88000000&",     # 55% black box
+        "bold": -1,
+        "outline": 8,
+        "shadow": 1,
+        "uppercase": False
+    },
+    "karaoke_gold": {
+        "font_name": "Archivo Black",
+        "font_size": 96,
+        "primary_color": "&H00FFFFFF&",    # White text
+        "highlight_color": "&H00FFC300&",  # Gold left-to-right sweep
+        "outline_color": "&H001A1A1A&",   # Dark outline
+        "back_color": "&H00000000&",      # No background
+        "bold": -1,
+        "outline": 8,
+        "shadow": 1,
+        "uppercase": False
+    },
+    "gaming_glow": {
+        "font_name": "Bebas Neue",
+        "font_size": 120,
+        "primary_color": "&H00F5F5F5&",    # Light gray-white
+        "highlight_color": "&H007CFF00&",  # Active word glow
+        "outline_color": "&H00111111&",   # Dark outline
+        "back_color": "&H00000000&",      # No background
+        "bold": -1,
+        "outline": 8,
         "shadow": 1,
         "uppercase": False
     },
@@ -1075,6 +1148,76 @@ STYLES = _STYLES
 # by re-assigning any internal references after the dict creation.
 # (All internal code uses _STYLES or STYLES interchangeably; this just
 # guarantees the names are resolvable.)
+
+# ---------------------------------------------------------------------------
+# Font resolution: bundled open-license fonts with system fallbacks
+# ---------------------------------------------------------------------------
+
+_DEFAULT_FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
+
+
+def _resolve_font(font_name: str, fonts_dir: Path = _DEFAULT_FONTS_DIR) -> Path:
+    """Resolve a font name to a Path, searching fonts_dir first, then system paths.
+
+    Returns the Path to the .ttf file. Raises FileNotFoundError if not found.
+    """
+    # Normalize: strip all spaces and hyphens for robust matching
+    normalized_name = font_name.lower().replace(" ", "").replace("-", "")
+
+    # 1. Search in the bundled fonts directory
+    if fonts_dir.exists():
+        for f in fonts_dir.glob("*.ttf"):
+            f_norm = f.name.lower().replace(" ", "").replace("-", "")
+            if normalized_name in f_norm or font_name.lower() in f.name.lower():
+                return f.resolve()
+
+    # 2. Search system font directories (read-only fallback)
+    system_dirs = [
+        Path("/usr/share/fonts/truetype/dejavu"),
+        Path("/usr/share/fonts/TTF"),
+        Path("/usr/share/fonts/OTF"),
+        Path("/usr/local/share/fonts"),
+        Path.home() / ".local" / "share" / "fonts",
+        Path("/System/Library/Fonts"),
+        Path("/Library/Fonts"),
+    ]
+    for sd in system_dirs:
+        if sd.exists():
+            for f in sd.glob("*.ttf"):
+                f_norm = f.name.lower().replace(" ", "").replace("-", "")
+                if normalized_name in f_norm or font_name.lower() in f.name.lower():
+                    return f.resolve()
+
+    # 3. If not found anywhere, raise a clear error
+    raise FileNotFoundError(
+        f"Font '{font_name}' not found in bundled fonts directory ({fonts_dir}) "
+        f"or any system font directory. "
+        f"Place the open-license (.ttf/.otf) font file there, or add it to the bundle. "
+        f"Required for caption rendering — no silent fallback to DejaVu."
+    )
+
+
+def _verify_fonts_at_startup() -> None:
+    """Verify that all style fonts can be resolved at module import time.
+
+    This fails fast if any bundled font is missing, preventing silent
+    DejaVu fallback which produces a cheap-looking output.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    for style_name, style in _STYLES.items():
+        try:
+            font_path = _resolve_font(style["font_name"])
+            logger.info(f"Font resolved: {style_name} -> {font_path.name}")
+        except FileNotFoundError as e:
+            logger.error(f"STARTUP FAIL: {e}")
+            # Re-raise so the app won't start with missing fonts
+            raise
+
+
+# Verify all fonts at import time (will raise if any are missing)
+# NOTE: This runs after _STYLES is defined at module bottom
+_VERIFY_FONTS_AT_STARTUP = _verify_fonts_at_startup()
 
 # Export symbols
 __all__ = [

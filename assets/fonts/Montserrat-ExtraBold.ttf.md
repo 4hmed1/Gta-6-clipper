@@ -1,0 +1,1 @@
+License: SIL OFL 1.1
