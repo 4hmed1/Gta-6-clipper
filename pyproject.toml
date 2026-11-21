@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -24,10 +24,11 @@ dependencies = [
     "numpy>=1.24.0",
     "scipy>=1.10.0",
     "librosa>=0.10.0",
-    "scenedetect[opencv]>=0.6.0",
+    "scenedetect>=0.6.0",
     "opencv-python>=4.8.0",
     "ffmpeg-python>=0.2.0",
     "pyyaml>=6.0.1",
+    "platformdirs>=4.0",
 ]
 
 [project.optional-dependencies]
@@ -46,15 +47,9 @@ dev = [
 clipforge = "clipforge.cli:main"
 gta6-clipper = "clipforge.cli:main"
 
-[tool.setuptools]
-packages = ["clipforge", "clipforge.core", "clipforge.ingest", "clipforge.resilience", "clipforge.security", "app"]
-include-package-data = true
+[tool.setuptools.packages.find]
+include = ["clipforge*", "app*"]
 
 [tool.setuptools.package-data]
+app = ["static/**/*", "config/**/*", "templates/**/*", "assets/**/*", "*.yaml", "*.json"]
 clipforge = ["*.yaml", "*.json"]
-app = ["*.yaml", "*.json"]
-"*" = ["static/**/*", "config/**/*", "assets/**/*", "templates/**/*"]
-
-[tool.setuptools.data-files]
-"clipforge/static" = ["static/index.html", "static/js/*.js", "static/css/*.css"]
-"clipforge/config" = ["config/*.yaml", "config/scoring/*.yaml"]

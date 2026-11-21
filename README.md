@@ -20,6 +20,12 @@ curl -fsSL https://raw.githubusercontent.com/4hmed1/Gta-6-clipper/main/installer
 irm https://githubusercontent.com/4hmed1/Gta-6-clipper/main/installers/install.ps1 | iex
 ```
 
+**Alternative: git + manual install** (Linux & macOS):
+
+```bash
+git clone https://github.com/4hmed1/Gta-6-clipper.git && cd Gta-6-clipper && bash installers/install.sh
+```
+
 The installer creates an isolated virtual environment, installs ClipForge + dependencies, downloads a verified static FFmpeg if none is found, adds the `clipforge` command to your PATH, and runs a health check. No admin rights required.
 
 Then run:

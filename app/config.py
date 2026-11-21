@@ -1,14 +1,14 @@
 import os
 from pathlib import Path
 
-# Base Paths
-BASE_DIR = Path(__file__).resolve().parent.parent
+# Base Paths (relative to this config.py inside app/)
+BASE_DIR = Path(__file__).resolve().parent  # points to app/
 OUTPUTS_DIR = BASE_DIR / "outputs"
 DOWNLOADS_DIR = OUTPUTS_DIR / "downloads"
 CLIPS_DIR = OUTPUTS_DIR / "clips"
 UPLOADS_DIR = OUTPUTS_DIR / "uploads"
-STATIC_DIR = BASE_DIR / "static"
-TEMPLATES_DIR = BASE_DIR / "templates"
+STATIC_DIR = BASE_DIR / "static"  # app/static/
+TEMPLATES_DIR = BASE_DIR / "templates"  # app/templates/
 
 # Fallback: when installed as a wheel (no source tree), locate the
 # bundled static assets wherever pip put them.

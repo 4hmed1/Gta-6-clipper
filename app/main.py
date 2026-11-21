@@ -851,6 +851,11 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
 
 # ── FastAPI HTTP Routes ──
 
+@app.get("/api/health")
+def health_check():
+    """Health check endpoint returning status and version."""
+    return {"status": "ok", "version": "0.1.0"}
+
 @app.get("/")
 def serve_index():
     """Serve the bundled frontend studio."""
