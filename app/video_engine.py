@@ -57,6 +57,27 @@ def render_clip(
 
     duration = max(1.0, end_time - start_time)
 
+    # PROVE TIME BASE CONTRACT: words are source-relative times, clip_start/end are applied at render seek
+    import subprocess
+    try:
+        ffprobe_cmd = ["ffprobe", "-hide_banner", "-show_entries",
+                       "format=duration,start_time", "-v", "error",
+                       source_video]
+        probe = subprocess.run(ffprobe_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True, text=True)
+        lines = [l for l in probe.stdout.strip().split('\n') if ':' in l]
+        source_start = float([l for l in lines if l.startswith('start_time:')][0].split(':')[1])
+        source_duration = float([l for l in lines if l.startswith('duration:')][0].split(':')[1])
+        source_end = source_start + source_duration
+        # Validate that clip_start/end are within source bounds
+        assert source_start <= start_time < source_end, f"clip_start {start_time} outside source [{source_start}, {source_end})"
+        assert 0 <= end_time <= source_end, f"clip_end {end_time} outside source [0, {source_end})"
+    except Exception as e:
+        print(f"[VideoEngine] PROBE ERROR: {e}")
+        source_start, source_duration = 0.0, duration
+
+    print(f"[VideoEngine] Clip #{clip_id}: source={source_start:.1f}..{source_end:.1f}s, requested={start_time:.1f}..{end_time:.1f}s (duration={duration:.1f}s)")
+    print(f"[VideoEngine] Clip #{clip_id}: First word (if any): {words[0] if words else 'NONE'} ... Last word: {words[-1] if words else 'NONE'}")
+
     # 1. Generate Kinetic ASS Subtitles using the new captions/track.py module
     has_subtitles = bool(words)
     if has_subtitles:
@@ -74,13 +95,27 @@ def render_clip(
             wrap_style=2,
             max_lines=2,
             max_chars_per_line=16,
-            font_name="Montserrat",
+            font_name="DejaVu Sans",  # Fallback to system font
             font_size=28,
             uppercase=True,
         )
         # Write the ASS file
         Path(sub_path).parent.mkdir(parents=True, exist_ok=True)
         Path(sub_path).write_text(ass_content, encoding="utf-8")
+
+        # FAIL LOUDLY: Validate that ASS actually has Dialogue events
+        dialogue_count = ass_content.count('Dialogue:')
+        if dialogue_count == 0:
+            print(f"[VideoEngine] CRITICAL ERROR: Caption generation produced NO Dialogue events for clip {clip_id}")
+            raise ValueError(f"CAPTIONS_FAILED: Generated ASS has no Dialogue events (words={len(words)}, style={subtitle_style})")
+
+        first_diag_line = [l for l in ass_content.split('\n') if l.startswith('Dialogue:')][0]
+        first_time = eval(first_diag_line.split(',')[2].strip())  # Start time in ASS format (s.s)
+        first_real_time = first_time + start_time  # Convert ASS time to source time
+
+        print(f"[VideoEngine] Clip #{clip_id}: ASS generated with {dialogue_count} Dialogue events")
+        print(f"[VideoEngine] Clip #{clip_id}: First Dialogue at ASS_time={first_time:.2f}s -> Real_time={first_real_time:.2f}s")
+        print(f"[VideoEngine] Clip #{clip_id}: Meta: {meta}")
 
     # 2. Construct ffmpeg filter graph
     escaped_sub = escape_ffmpeg_path(sub_path)

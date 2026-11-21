@@ -1019,7 +1019,7 @@ def caption_track_from_words(
 
 _STYLES = {
     "vibrant_gold": {
-        "font_name": "Montserrat",
+        "font_name": "DejaVu Sans",
         "font_size": 28,
         "primary_color": "&H00FFFFFF&",    # Crisp White inactive
         "highlight_color": "&H0022E6FF&",  # Electric Vibrant Gold/Yellow
@@ -1031,7 +1031,7 @@ _STYLES = {
         "uppercase": True
     },
     "neon_green": {
-        "font_name": "Impact",
+        "font_name": "DejaVu Sans",
         "font_size": 30,
         "primary_color": "&H00FFFFFF&",
         "highlight_color": "&H0033FF55&",  # Intense Neon Cyber Green
@@ -1043,7 +1043,7 @@ _STYLES = {
         "uppercase": True
     },
     "cyber_cyan": {
-        "font_name": "Arial",
+        "font_name": "DejaVu Sans",
         "font_size": 28,
         "primary_color": "&H00F0F0F0&",
         "highlight_color": "&H00FFF000&",  # Electric Neon Cyan
@@ -1055,7 +1055,7 @@ _STYLES = {
         "uppercase": False
     },
     "minimal": {
-        "font_name": "Arial",
+        "font_name": "DejaVu Sans",
         "font_size": 22,
         "primary_color": "&H00FFFFFF&",
         "highlight_color": "&H00A0A0FF&",
