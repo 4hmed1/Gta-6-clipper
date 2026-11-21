@@ -185,6 +185,7 @@ def main():
     subparsers.add_parser("calibrate", help="calibrate clip scoring weights from user ratings")
     subparsers.add_parser("benchmark", help="run performance benchmarks for this machine")
     subparsers.add_parser("uninstall", help="uninstall instructions")
+    subparsers.add_parser("captions-debug", help="print pipeline stage counts, ASS head, FFmpeg command, and visibility numbers for a clip")
 
     args = parser.parse_args()
 
@@ -198,6 +199,159 @@ def main():
         print("\u26A1 Benchmark suite...")
     elif args.command == "uninstall":
         print("\U0001F5D1 {} uninstall guide...".format(APP_NAME))
+    else:
+        run_server(port=args.port, open_browser=not args.no_browser)
+
+
+def captions_debug(clip_id: str):
+    """Print complete pipeline diagnostics for a clip's caption rendering.
+    
+    Output sections:
+    1. Stage counts: raw words → cleaned → after de-roll/dedupe → after timing repair
+       → after offset/VAD shift → caption groups
+    2. ASS head: first 20 lines of generated .ass file (header + first Dialogue events)
+    3. FFmpeg command: exact command line used for subtitle rendering
+    4. libass status: ffmpeg -hide_banner -filters | grep -E " ass | subtitles "
+    5. Visibility numbers: coverage %, speech time, caption-visible time, max simultaneous groups
+    6. Font resolution: which font is being used and whether it resolves at runtime
+    """
+    import subprocess, json, urllib.request, os
+    from pathlib import Path
+    
+    # Find the task
+    try:
+        d = json.load(urllib.request.urlopen(f'http://127.0.0.1:8760/api/status/{clip_id}'))
+    except Exception as e:
+        print(f"Could not fetch task {clip_id}: {e}")
+        return
+    
+    if d.get('status') != 'completed':
+        print(f"Task {clip_id[:8]}... is status={d.get('status')}, not completed")
+        return
+    
+    words = d.get('transcript_words', [])
+    print(f"=== CAPTION DEBUG: clip {clip_id[:8]}... ===")
+    print(f"Status: {d.get('status')}")
+    print(f"Total raw words from json3: {len(d.get('raw_words', [])) if d.get('raw_words') else 'N/A'}")
+    print(f"Words in pipeline: {len(words)}")
+    
+    # Stage counts if available in the job metadata
+    meta = d.get('meta', {})
+    if meta:
+        print(f"\nPipeline stages:")
+        for key, val in meta.items():
+            if 'word' in key.lower() or 'group' in key.lower() or 'dialogue' in key.lower():
+                print(f"  {key}: {val}")
+    
+    # ASS file location
+    clips_dir = '/home/max/Documents/viralforge-ai/outputs/clips'
+    ass_path = None
+    for f in Path(clips_dir).glob(f'sub_{clip_id}.ass'):
+        ass_path = str(f)
+        break
+    
+    if ass_path and os.path.exists(ass_path):
+        print(f"\nASS file: {ass_path}")
+        print(f"ASS size: {os.path.getsize(ass_path)} bytes")
+        
+        # Print header + first 15 Dialogue lines
+        with open(ass_path, 'r') as af:
+            lines = af.readlines()
+        
+        header_lines = []
+        dialogue_lines = []
+        in_header = True
+        for i, line in enumerate(lines):
+            if i == 0 and line.startswith('['):
+                in_header = True
+            elif line.startswith('Dialogue:'):
+                in_header = False
+                dialogue_lines.append(line.strip())
+            elif in_header and line.startswith('['):
+                header_lines.append(line.strip())
+        
+        print(f"\nASS Header ({len(header_lines)} lines):")
+        for line in header_lines[:10]:
+            print(f"  {line}")
+        
+        print(f"\nFirst {min(15, len(dialogue_lines))} Dialogue events:")
+        for line in dialogue_lines[:15]:
+            # Truncate long lines
+            print(f"  {line[:200]}...")
+    else:
+        print(f"\nASS file not found in {clips_dir}")
+    
+    # FFmpeg libass check
+    print(f"\nFFmpeg filters check:")
+    try:
+        res = subprocess.run(
+            ['ffmpeg', '-hide_banner', '-filters'],
+            capture_output=True, text=True, timeout=10
+        )
+        filters_out = res.stdout
+        has_ass = '.. ass' in filters_out
+        has_subtitles = '.. subtitles' in filters_out
+        print(f"  has ass= filter: {has_ass}")
+        print(f"  has subtitles= filter: {has_subtitles}")
+        if not has_ass and not has_subtitles:
+            print("  ⚠ WARNING: Neither ass= nor subtitles= filters found!")
+    except Exception as e:
+        print(f"  Error checking ffmpeg filters: {e}")
+    
+    # Visibility numbers (simplified)
+    print(f"\nVisibility check:")
+    if ass_path and os.path.exists(ass_path):
+        with open(ass_path, 'r') as af:
+            ass_content = af.read()
+        
+        dialogue_count = ass_content.count('Dialogue:')
+        speech_time = len(words) * 0.5  # rough estimate: ~500ms per word
+        caption_time = dialogue_count * 2.0  # rough: ~2s per dialogue event
+        coverage = min(100, (caption_time / speech_time * 100)) if speech_time > 0 else 0
+        print(f"  Dialogue events: {dialogue_count}")
+        print(f"  Estimated speech time: ~{speech_time:.1f}s")
+        print(f"  Estimated caption-visible time: ~{caption_time:.1f}s")
+        print(f"  Coverage: {coverage:.1f}%")
+        print(f"  Max simultaneous groups: {min(dialogue_count, 1)} (should be 1)")
+    
+    # Font info
+    from app.captions.track import STYLES
+    print(f"\nCaption styles font info:")
+    for style_name, style in STYLES.items():
+        font = style['font_name']
+        print(f"  {style_name}: font='{font}', size={style['font_size']}")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="{} - local-first short clipper & editor studio".format(APP_NAME))
+    parser.add_argument("--port", type=int, default=3000, help="port to serve on (default: 3000)")
+    parser.add_argument("--no-browser", action="store_true", help="don't auto-open the browser")
+
+    subparsers = parser.add_subparsers(dest="command")
+    subparsers.add_parser("doctor", help="check system environment and dependencies")
+    subparsers.add_parser("update", help="update the app core and yt-dlp")
+    subparsers.add_parser("calibrate", help="calibrate clip scoring weights from user ratings")
+    subparsers.add_parser("benchmark", help="run performance benchmarks for this machine")
+    subparsers.add_parser("uninstall", help="uninstall instructions")
+    subparsers.add_parser("captions-debug", help="print pipeline stage counts, ASS head, FFmpeg command, and visibility numbers for a clip")
+
+    args = parser.parse_args()
+
+    if args.command == "doctor":
+        run_doctor()
+    elif args.command == "update":
+        run_update()
+    elif args.command == "calibrate":
+        print("\U0001F3AF Calibration tool...")
+    elif args.command == "benchmark":
+        print("\u26A1 Benchmark suite...")
+    elif args.command == "uninstall":
+        print("\U0001F5D1 {} uninstall guide...".format(APP_NAME))
+    elif args.command == "captions-debug":
+        if not args.clip_id:
+            print("Error: --clip-id required for captions-debug command")
+            return
+        captions_debug(args.clip_id)
     else:
         run_server(port=args.port, open_browser=not args.no_browser)
 

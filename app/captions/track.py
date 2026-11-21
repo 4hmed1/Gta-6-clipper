@@ -633,7 +633,7 @@ def generate_ass_events(
     wrap_style: int = 2,  # no auto-wrapping surprises
     max_lines: int = 2,
     max_chars_per_line: int = 16,
-    font_name: str = "Montserrat",
+    font_name: str = "DejaVu Sans",
     font_size: int = 28,
     uppercase: bool = True,
 ) -> str:
@@ -771,7 +771,7 @@ def caption_track_from_json3(
     wrap_style: int = 2,
     max_lines: int = 2,
     max_chars_per_line: int = 16,
-    font_name: str = "Montserrat",
+    font_name: str = "DejaVu Sans",
     font_size: int = 28,
     uppercase: bool = True,
 ) -> Tuple[str, dict]:
@@ -927,7 +927,7 @@ def caption_track_from_words(
     wrap_style: int = 2,
     max_lines: int = 2,
     max_chars_per_line: int = 16,
-    font_name: str = "Montserrat",
+    font_name: str = "DejaVu Sans",
     font_size: int = 28,
     uppercase: bool = True,
 ) -> Tuple[str, dict]:
