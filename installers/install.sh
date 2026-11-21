@@ -1,6 +1,5 @@
-#!/usr/bin/env sh
-# ClipForge: One-Command Install (macOS / Linux)
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
 echo "=================================================="
 echo "     ClipForge: One-Command Install (macOS/Linux) "
@@ -45,9 +44,10 @@ if ! command -v ffmpeg >/dev/null 2>&1; then
     
     echo "Downloading FFmpeg (approx 60MB)..."
     curl -fL "$FFMPEG_URL" -o "/tmp/ffmpeg.tar.xz"
+    mkdir -p "$FFMPEG_DIR"
     tar -xJf "/tmp/ffmpeg.tar.xz" -C "$FFMPEG_DIR" --strip-components=1 2>/dev/null || \
         tar -xf "/tmp/ffmpeg.tar.xz" -C "$FFMPEG_DIR" --strip-components=1 2>/dev/null
-    Remove-Item "/tmp/ffmpeg.tar.xz" 2>/dev/null || true
+    rm -f "/tmp/ffmpeg.tar.xz"
     export PATH="$FFMPEG_DIR:$PATH"
     echo "[OK] FFmpeg downloaded and added to PATH."
 else
@@ -73,7 +73,7 @@ if "$INSTALL_DIR/venv/bin/python" -c "import uv" 2>/dev/null; then
     "$INSTALL_DIR/venv/bin/python" -m uv pip install .
 else
     echo "Using pip for installation..."
-    "$INSTALL_DIR/venv/bin/python" -m pip install -e ".[stt]"
+    "$INSTALL_DIR/venv/bin/python" -m pip install .
     # Also install yt-dlp if not already in venv
     "$INSTALL_DIR/venv/bin/python" -m pip install yt-dlp
 fi
