@@ -70,10 +70,10 @@ if "$INSTALL_DIR/venv/bin/python" -c "import uv" 2>/dev/null; then
     echo "Using uv for installation..."
     "$INSTALL_DIR/venv/bin/python" -m pip install uv
     "$INSTALL_DIR/venv/bin/python" -m uv pip install --system --upgrade pip
-    "$INSTALL_DIR/venv/bin/python" -m uv pip install .
+    "$INSTALL_DIR/venv/bin/python" -m uv pip install --system --force-reinstall .
 else
     echo "Using pip for installation..."
-    "$INSTALL_DIR/venv/bin/python" -m pip install .
+    "$INSTALL_DIR/venv/bin/python" -m pip install --force-reinstall .
     # Also install yt-dlp if not already in venv
     "$INSTALL_DIR/venv/bin/python" -m pip install yt-dlp
 fi

@@ -312,7 +312,8 @@ def captions_debug(clip_id: str):
     
     # Find the task
     try:
-        d = json.load(urllib.request.urlopen(f'http://127.0.0.1:{port}/api/status/{clip_id}'))
+        req = urllib.request.urlopen(f'http://127.0.0.1:{port}/api/status/{clip_id}', timeout=5)
+        d = json.load(req)
     except Exception as e:
         print(f"Could not fetch task {clip_id}: {e}")
         return
@@ -335,16 +336,36 @@ def captions_debug(clip_id: str):
             if 'word' in key.lower() or 'group' in key.lower() or 'dialogue' in key.lower():
                 print(f"  {key}: {val}")
     
-    # User data directory for clips
+    # User data directory for clips (may contain migrated/backed-up clips)
     import platformdirs
-    user_data_dir = platformdirs.user_data_dir("ClipForge")
+    from app.config import BASE_DIR
+    user_data_dir = Path(platformdirs.user_data_dir("ClipForge"))
     clips_dir = user_data_dir / "outputs" / "clips"
     
-    # ASS file location
+    # ASS file location: search using clip IDs from the task
     ass_path = None
-    for f in clips_dir.glob(f'sub_{clip_id}.ass'):
-        ass_path = str(f)
-        break
+    clips = d.get('clips', [])
+    # Search clip IDs from the task first, then fall back to searching all .ass files
+    search_clip_ids = [c.get('clip_id', '') for c in clips if c.get('clip_id')]
+    
+    # Determine search directories
+    search_dirs = [clips_dir, BASE_DIR / "outputs" / "clips"]
+    
+    for sd in search_dirs:
+        # Try clip IDs from the task
+        for cid in search_clip_ids:
+            target_file = sd / f'sub_{cid}.ass'
+            if target_file.exists():
+                ass_path = str(target_file)
+                break
+        if ass_path:
+            break
+        
+        # Fall back: if no clip IDs matched, search for any .ass file
+        if not ass_path:
+            all_ass = list(sd.glob('*.ass'))
+            if all_ass:
+                ass_path = str(all_ass[0])
     
     if ass_path and os.path.exists(ass_path):
         print(f"\nASS file: {ass_path}")
@@ -375,7 +396,13 @@ def captions_debug(clip_id: str):
             # Truncate long lines
             print(f"  {line[:200]}...")
     else:
-        print(f"\nASS file not found in {clips_dir}")
+        print(f"\nASS file not found")
+        # List available ASS files for debugging
+        for sd in search_dirs:
+            if sd.exists():
+                ass_files = list(sd.glob('*.ass'))
+                if ass_files:
+                    print(f"  Available ASS files in {sd}: {[f.name for f in ass_files]}")
     
     # FFmpeg libass check
     ffmpeg_bin = _which_any("ffmpeg")

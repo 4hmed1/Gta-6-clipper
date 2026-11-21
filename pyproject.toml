@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "clipforge"
-version = "0.1.0"
+version = "0.1.1"
 description = "Install-in-One-Command Clipping Studio: Turn long videos into viral vertical shorts locally."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -48,6 +48,7 @@ clipforge = "clipforge.cli:main"
 gta6-clipper = "clipforge.cli:main"
 
 [tool.setuptools.packages.find]
+where = ["."]
 include = ["clipforge*", "app*"]
 
 [tool.setuptools.package-data]
