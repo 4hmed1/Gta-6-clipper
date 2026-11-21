@@ -45,7 +45,7 @@
 
 **macOS / Linux:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/4hmed1/Gta-6-clipper/main/installers/install.sh | sh
+git clone https://github.com/4hmed1/Gta-6-clipper.git && cd Gta-6-clipper && bash installers/install.sh
 ```
 
 **Windows (PowerShell):**
