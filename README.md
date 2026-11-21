@@ -1,84 +1,74 @@
-# ClipForge
+# ClipForge: Install-in-One-Command Clipping Studio
 
-**Install-in-one-command. Turn any YouTube link into ready-to-post vertical Shorts — fully local, no account, no watermark.**
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/release/python-3110/)
+[![Windows PowerShell](https://img.shields.io/badge/powerShell-install-1f425f.svg)](https://docs.microsoft.com/en-us/powershell/)
+[![macOS/Linux](https://img.shields.io/badge/mac%20Linux-install-1f425f.svg)](https://curl.se/)
 
-## What it does
+## 🚀 Turn YouTube into Vertical Shorts — Locally, Free, No API Keys
 
-Paste a YouTube link (or upload a local video). ClipForge finds the best moments, scores them with explainable reasons, burns kinetic captions, reframes to 9:16, and renders ready-to-post Shorts — all on your own machine. Nothing is uploaded. No AI, no cloud, no usage caps.
+**ClipForge** is an open-source, local-first application that transforms a YouTube link into ready-to-post vertical Shorts, Reels, and TikTok videos. Install with **one command** on Windows, macOS, or Linux, and never touch FFmpeg, Python paths, or config files.
 
-## One-command install
+### 🌟 Why ClipForge Wins
 
-**macOS / Linux** (curl + sh):
+| Feature | ClipForge (Free) | Paid Tools |
+|---------|------------------|------------|
+| **Cost** | ✅ Free, unlimited, no watermark | ❌ Subscription required |
+| **Privacy** | ✅ 100% offline, nothing uploaded | ❌ Cloud processing, data sent |
+| **API Keys** | ✅ Zero paid APIs required | ❌ OpenAI/Google keys needed |
+| **Installation** | ✅ One-command on all platforms | ❌ Manual FFmpeg/config setup |
+| **Caption Quality** | ✅ Explainable DSP/statistics text heuristics | ❌ Black-box LLM outputs |
+| **Hardware** | ✅ Runs on weak PCs (4th-gen i5, 8 GB RAM, no GPU) | ❌ Requires GPU for AI features |
+| **Watermark** | ✅ No watermark ever | ❌ Branded watermarks |
 
+### ✅ Core Features
+
+- **YouTube Link → Clips**: Paste any YouTube URL, get title, duration, thumbnail in 2 seconds
+- **Explainable Clip Picking**: Each clip shows a score and reasons (hook, energy, heatmap, pacing) — deterministic, same input gives same output
+- **Runs on Weak PCs**: Design target: 4th-gen Intel i5, 8 GB RAM, no GPU, HDD or slow SSD
+- **Self-Healing Engine**: Detects failures and fixes or works around them automatically
+- **Questions First, Smart Defaults**: Short wizard shapes output; every question skippable
+- **Real Editor**: Full timeline editor (CapCut-style) — split, trim, effects, transitions, audio, undo/redo
+- **One-Command Install**: `clipforge` command opens browser; no manual config ever
+
+### 📋 Step-By-Step Workflow
+
+| Step | Action |
+|------|--------|
+| **1. Link** | Paste YouTube URL (or drop local video). Validate instantly; show title, duration, thumbnail within 2 seconds |
+| **2. The Wizard** | One-screen-per-group UI: content type, clip length, number of clips, time range, captions (on/off, style gallery), reframe (auto/blur/smart face/crop), platform preset (TikTok/Reels/Shorts), extras (hook title card, progress bar, watermark, BGM), quality (fast/balanced/best). Final summary card, then "Start". Choices saved as named preset |
+| **3. Processing** | Progress screen: stage names ("Reading captions", "Finding best moments", "Rendering clip 2 of 8"), real percentage, time estimate, Cancel button. First clip previews appear as soon as ready; user can review while rest render |
+| **4. Results** | Ranked clip cards: video preview (hover to play), score, "why this clip" chips, title, duration. Actions: Edit, Download, Regenerate, Delete, Select several, Download all as zip. Sort and filter by score or duration |
+| **5. The Editor** | CapCut-style timeline editor: left panels (media/text/captions/effects), center phone-frame preview with safe-zone toggle, right properties inspector, bottom timeline. Features: timeline with tracks (video/captions/text/audio), split/trim/duplicate/speed/freeze/crop/flip, inline caption edit, brightness/contrast/saturation filters, transitions, loudness normalize, music with ducking, unlimited undo/redo, autosave, keyboard shortcuts, ctrl+scroll zoom, drag-and-drop |
+
+### 📦 One-Command Installation
+
+**macOS / Linux:**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/4hmed1/Gta-6-clipper/main/installers/install.sh | sh
 ```
 
-**Windows** (PowerShell):
-
+**Windows (PowerShell):**
 ```powershell
-irm https://githubusercontent.com/4hmed1/Gta-6-clipper/main/installers/install.ps1 | iex
+irm https://raw.githubusercontent.com/4hmed1/Gta-6-clipper/main/installers/install.ps1 | iex
 ```
 
-The installer creates an isolated virtual environment, installs ClipForge + dependencies, downloads a verified static FFmpeg if none is found, adds the `clipforge` command to your PATH, and runs a health check. No admin rights required.
+The installer:
+- Detects OS/arch
+- Installs Python 3.11+ if needed
+- Creates an isolated virtual environment
+- Downloads a verified static FFmpeg if none is found (checksums verified)
+- Installs yt-dlp
+- Adds the `clipforge` command to PATH
+- Runs a health check
+- Starts the server on `http://localhost:8760` and opens your browser
 
-Then run:
-
+**After install, run:**
 ```bash
-clipforge
+clipforge  # opens http://localhost:8760
 ```
 
-It opens **http://localhost:8760** in your browser. From a different directory:
-
-```bash
-clipforge --port 8080 --no-browser
-```
-
-### Verified install path
-
-A clean install from the built wheel (no source tree, run from `/tmp`) resolves the bundled web UI and scoring configs correctly and starts the server:
-
-```
-$ cd /tmp && /path/to/venv/bin/clipforge --port 8761 --no-browser
-🚀 Starting GTA 6 Clipper on http://localhost:8761 ...
-$ curl http://127.0.0.1:8761/api/tasks
-{"tasks":[]}
-$ curl -o /dev/null -s -w "%{http_code}\n" http://127.0.0.1:8761/
-200
-```
-
-### System requirements
-
-- **Python 3.11+** (installed automatically)
-- **4 GB RAM minimum, 8 GB recommended**
-- **No GPU required** — CPU encoding works; hardware encoders (NVENC/QSV/Videotoolbox) are used automatically when available
-- **Disk**: ~500 MB for the app + ~100 MB per analyzed video
-- **Network**: YouTube access for metadata and downloads
-
-## Known limitations (honest)
-
-- **No mobile editor** — the editor is desktop-class only. Mobile is on the roadmap.
-- **No auto-publishing** — clips are downloaded to your disk; you post them yourself.
-- **Optional offline speech-to-text** (`faster-whisper`) is OFF by default and installed only if you opt in. Default text source is YouTube captions with word timing.
-- **Weak-network videos**: on a connection slower than ~0.5 MB/s the app downloads only the sections it needs and reports honest timing. Very long videos on very slow connections may exceed the 3-minute target — the app tells you this in plain language instead of hanging.
-- **Not every video has captions** — caption-less videos fall back to offline STT (if enabled) or audio-signal analysis with a notice.
-
-## Troubleshooting
-
-See [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md).
-
-Run `clipforge doctor` for a health check (Python, FFmpeg, encoders, disk, ports, permissions).
-
-## Privacy
-
-- **Zero telemetry** — nothing leaves your machine except the YouTube API request for metadata
-- **Zero upload** — videos are downloaded to your disk and processed locally
-- **No accounts** — no sign-up, no login, no tracking
-
-## License
-
-
-## ⚖️ Feature Comparison: ClipForge vs. Paid Clippers
+### ⚖️ Feature Comparison: ClipForge vs. Paid Tools
 
 | Feature | ClipForge (Free) | Descript | Otter.ai | Riverside.fm |
 |---------|------------------|----------|----------|--------------|
@@ -92,7 +82,7 @@ Run `clipforge doctor` for a health check (Python, FFmpeg, encoders, disk, ports
 | **Runs Weak PCs** | ✅ 4th-gen i5, 8GB RAM | ❌ Requires GPU | ❌ Requires GPU | ❌ Requires GPU |
 | **Watermark** | ✅ None ever | ❌ Some tiers | ❌ Some tiers | ❌ Some tiers |
 
-## ❓ FAQ — 11 Direct Q&A (Answer Engine Optimization)
+### ❓ FAQ — Direct Q&A Pairs
 
 **Q: What is ClipForge?**  
 A: ClipForge is a free, open-source, local application that turns YouTube links into vertical video Shorts, Reels, and TikTok videos with auto-generated captions. It runs 100% offline on your computer with no paid APIs or cloud services.
@@ -127,18 +117,18 @@ A: The current v0.1.0 release processes one video at a time. A batch queue featu
 **Q: How do I update ClipForge?**  
 A: Run `clipforge update` from the command line. This updates the app and yt-dlp to the latest versions.
 
-## 👥 Contributors & Built With
+### 👥 Contributors & Built With
 
 This project was built with the assistance of AI coding agents and is maintained by the open-source community.
 
 - **4hmed1**: Creator & Lead Developer — conceptualization, core pipeline design, installer scripts, documentation, and release management
 - **Claude Code**: AI coding assistant — contributed to bug fixes, test generation, refactoring, and documentation optimization
 - **OpenCode**: AI agent framework — provided the execution environment, test runner, and project orchestration
-- **ME (Max)**: Project coordination, AI agent prompt engineering, quality assurance, and final release preparation
+- **Max**: Project coordination, AI agent prompt engineering, quality assurance, and final release preparation
 
-## 🛠️ Built With
+### 🛠️ Built With
 
-- **Python 3.14** — core language
+- **Python 3.11+** — core language
 - **FastAPI** — backend framework
 - **Pydantic v2** — data validation
 - **React + TypeScript + Vite + Tailwind** — frontend (bundled into Python package)
@@ -153,8 +143,12 @@ This project was built with the assistance of AI coding agents and is maintained
 - **pytest** — testing suite (14 tests passing)
 - **Playwright** — end-to-end UI testing
 
+### 📚 Documentation
+
+- [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) — Known issues and fixes
+- [CONTRIBUTING.md](CONTRIBUTING.md) — How to contribute
+- [LICENSE](LICENSE) — MIT License
+
 ---
 
 *ClipForge: Free, local, open-source. Turn YouTube into Shorts — no account, no watermark, no paid APIs, 100% offline.*
-
-LICENSE.
