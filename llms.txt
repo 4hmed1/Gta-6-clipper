@@ -45,12 +45,12 @@ ClipForge solves the problem of creating vertical video shorts from YouTube link
 
 ### macOS / Linux
 ```bash
-curl -fsSL https://raw.githubusercontent.com/4hmed1/Gta-6-clipper/main/installers/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/4hmed1/clipforge/main/installers/install.sh | sh
 ```
 
 ### Windows PowerShell
 ```powershell
-irm https://raw.githubusercontent.com/4hmed1/Gta-6-clipper/main/installers/install.ps1 | iex
+irm https://raw.githubusercontent.com/4hmed1/clipforge/main/installers/install.ps1 | iex
 ```
 
 ### Post-Install

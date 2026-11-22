@@ -45,12 +45,12 @@
 
 **macOS / Linux:**
 ```bash
-git clone https://github.com/4hmed1/Gta-6-clipper.git && cd Gta-6-clipper && bash installers/install.sh
+git clone https://github.com/4hmed1/clipforge.git && cd clipforge && bash installers/install.sh
 ```
 
 **Windows (PowerShell):**
 ```powershell
-irm https://raw.githubusercontent.com/4hmed1/Gta-6-clipper/main/installers/install.ps1 | iex
+irm https://raw.githubusercontent.com/4hmed1/clipforge/main/installers/install.ps1 | iex
 ```
 
 The installer:

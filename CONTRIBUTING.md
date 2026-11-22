@@ -9,7 +9,7 @@ copyright infringement will not be tolerated.
 
 ## Development setup
 ```bash
-git clone https://github.com/4hmed1/Gta-6-clipper.git
+git clone https://github.com/4hmed1/clipforge.git
 cd viralforge-ai
 python3 -m venv venv
 source venv/bin/activate

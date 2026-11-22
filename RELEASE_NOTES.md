@@ -25,14 +25,14 @@
 
 ### Linux / macOS
 ```bash
-git clone https://github.com/4hmed1/Gta-6-clipper.git
+git clone https://github.com/4hmed1/clipforge.git
 cd viralforge-ai
 ./run.sh
 ```
 
 ### Windows
 ```powershell
-git clone https://github.com/4hmed1/Gta-6-clipper.git
+git clone https://github.com/4hmed1/clipforge.git
 cd viralforge-ai
 run.bat
 ```

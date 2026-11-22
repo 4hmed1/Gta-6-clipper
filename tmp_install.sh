@@ -78,10 +78,10 @@ echo "⬇️  Downloading and installing GTA 6 Clipper & dependencies..."
 if [ -f "pyproject.toml" ] && [ -d "app" ]; then
     "$INSTALL_DIR/venv/bin/pip" install . || {
         echo "⚠️  Local install failed, trying GitHub..."
-        "$INSTALL_DIR/venv/bin/pip" install git+https://github.com/4hmed1/Gta-6-clipper.git
+        "$INSTALL_DIR/venv/bin/pip" install git+https://github.com/4hmed1/clipforge.git
     }
 else
-    "$INSTALL_DIR/venv/bin/pip" install git+https://github.com/4hmed1/Gta-6-clipper.git || {
+    "$INSTALL_DIR/venv/bin/pip" install git+https://github.com/4hmed1/clipforge.git || {
         echo "❌ Could not install ClipForge. Run this script from the cloned repo root."
         exit 1
     }
