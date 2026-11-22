@@ -1,17 +1,15 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "clipforge"
-version = "0.1.0"
+version = "0.1.1"
 description = "Install-in-One-Command Clipping Studio: Turn long videos into viral vertical shorts locally."
 readme = "README.md"
 requires-python = ">=3.11"
-license = {text = "MIT"}
-authors = [
-    {name = "ClipForge Team"}
-]
+license = "MIT"
+authors = [{name = "ClipForge Team"}]
 dependencies = [
     "fastapi>=0.110.0",
     "uvicorn[standard]>=0.28.0",
@@ -24,39 +22,28 @@ dependencies = [
     "numpy>=1.24.0",
     "scipy>=1.10.0",
     "librosa>=0.10.0",
-    "scenedetect[opencv]>=0.6.0",
+    "scenedetect>=0.6.0",
     "opencv-python>=4.8.0",
     "ffmpeg-python>=0.2.0",
     "pyyaml>=6.0.1",
+    "platformdirs>=4.0",
 ]
 
 [project.optional-dependencies]
-stt = [
-    "faster-whisper>=1.0.0",
-]
-dev = [
-    "pytest>=8.0.0",
-    "pytest-asyncio>=0.23.0",
-    "httpx>=0.27.0",
-    "playwright>=1.42.0",
-    "ruff>=0.3.0",
-    "mypy>=1.9.0",
-]
+stt = ["faster-whisper>=1.0.0"]
+dev = ["pytest>=8.0.0", "pytest-asyncio>=0.23.0", "httpx>=0.27.0", "ruff>=0.3.0"]
 
 [project.scripts]
 clipforge = "clipforge.cli:main"
 gta6-clipper = "clipforge.cli:main"
 
 [tool.setuptools]
-packages = ["clipforge", "clipforge.core", "clipforge.ingest", "clipforge.resilience", "clipforge.security", "app", "app.captions"]
 include-package-data = true
 
-[tool.setuptools.package-data]
-clipforge = ["*.yaml", "*.json"]
-app = ["*.yaml", "*.json"]
-"*" = ["static/**/*", "config/**/*", "assets/**/*", "templates/**/*"]
+[tool.setuptools.packages.find]
+include = ["clipforge*", "app*"]
+namespaces = true
 
-[tool.setuptools.data-files]
-"clipforge/static" = ["static/index.html", "static/js/*.js", "static/css/*.css"]
-"clipforge/config" = ["config/*.yaml", "config/scoring/*.yaml"]
-"clipforge/assets/fonts" = ["assets/fonts/*.ttf", "assets/fonts/*.txt"]
+[tool.setuptools.package-data]
+app = ["static/**/*", "config/**/*", "assets/**/*", "templates/**/*", "*.yaml", "*.json"]
+clipforge = ["*.yaml", "*.json"]

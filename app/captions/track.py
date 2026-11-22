@@ -1,4 +1,6 @@
-"""Clean caption track module — pure functions, fully unit-tested.
+"""
+import logging
+Clean caption track module — pure functions, fully unit-tested.
 
 Handles:
 1. Parsing json3 captions with rolling-cue deduplication

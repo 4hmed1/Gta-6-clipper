@@ -2,14 +2,15 @@ import os
 from pathlib import Path
 
 # Base Paths
-BASE_DIR = Path(__file__).resolve().parent.parent
+APP_DIR = Path(__file__).resolve().parent  # app/
+BASE_DIR = APP_DIR  # Base for bundled resources
 OUTPUTS_DIR = BASE_DIR / "outputs"
 DOWNLOADS_DIR = OUTPUTS_DIR / "downloads"
 CLIPS_DIR = OUTPUTS_DIR / "clips"
 UPLOADS_DIR = OUTPUTS_DIR / "uploads"
-STATIC_DIR = BASE_DIR / "static"
-TEMPLATES_DIR = BASE_DIR / "templates"
-ASSETS_DIR = BASE_DIR / "assets"
+STATIC_DIR = APP_DIR / "static"
+TEMPLATES_DIR = APP_DIR / "templates"
+ASSETS_DIR = APP_DIR / "assets"
 FONTS_DIR = ASSETS_DIR / "fonts"
 
 # Fallback: when installed as a wheel (no source tree), locate the
