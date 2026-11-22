@@ -1,0 +1,13 @@
+# Scoring weights for Podcast/Interview content
+
+weights:
+  hook_score: 0.4      # High importance on opening sentence
+  energy_density: 0.2  # Volume and spectral flux peaks
+  speech_rate: 0.1     # Fast-paced talking segments
+  sentiment: 0.1       # Intense positive/negative sentiment
+  heatmap: 0.2         # YouTube 'most replayed' signal
+
+penalties:
+  dead_air: -1.0       # Severe penalty for long silences
+  sponsor_read: -0.8   # High penalty for sponsor segments
+  length_mismatch: -0.5 # Penalty for being far from target duration

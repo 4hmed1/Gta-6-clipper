@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GTA 6 Clipper — Turn Long Videos into Ready Shorts</title>
+  <meta name="description" content="Transform your long-form content into viral vertical shorts with smart clip selection, kinetic captions, and perfect framing.">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <!-- App Bar -->
+  <header class="app-bar">
+    <div class="app-bar-inner">
+      <a href="/" class="app-bar-logo">
+        <div class="app-bar-logo-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+        </div>
+        <span class="app-bar-logo-text">GTA 6 Clipper</span>
+      </a>
+      <nav class="app-bar-tabs">
+        <button class="app-bar-tab active" data-tab="create">Create</button>
+        <button class="app-bar-tab" data-tab="library">Library</button>
+        <button class="app-bar-tab" data-tab="settings">Settings</button>
+      </nav>
+      <div class="app-bar-status">
+        <span class="status-chip ready" id="engine-status">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          Engine ready
+        </span>
+        <span class="status-chip">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          Clip finder: algorithmic, runs locally
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Create Tab -->
+    <section id="create-tab" class="tab-content active">
+      <!-- Headline Block -->
+      <div class="headline-block">
+        <h1>Turn long videos into ready-to-post Shorts</h1>
+        <p>Paste a YouTube link or upload your video. We'll find the best moments, add captions, and frame everything perfectly for TikTok, Reels, and YouTube Shorts.</p>
+      </div>
+
+      <!-- Source Section -->
+      <div class="source-section">
+        <div class="source-input-wrapper">
+          <input type="text" class="source-input" id="video-url" placeholder="Paste YouTube URL here..." autocomplete="off">
+          <button class="paste-button" id="paste-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+            </svg>
+            Paste
+          </button>
+        </div>
+        <button class="primary-button" id="find-clips-btn">
+          <span class="button-text">Find my clips</span>
+          <span class="spinner" aria-hidden="true" style="display:none;"></span>
+        </button>
+
+        <div class="divider">or</div>
+
+        <div class="drop-zone" id="drop-zone">
+          <div class="drop-zone-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+          </div>
+          <p class="drop-zone-text">Drop video file here or click to browse</p>
+          <p class="drop-zone-hint">MP4, MOV, MKV, WebM (max 2GB)</p>
+        </div>
+        <input type="file" id="file-input" class="hidden" accept=".mp4,.mov,.mkv,.webm">
+      </div>
+
+      <!-- Settings Section -->
+      <div class="settings-section card">
+        <h2 class="settings-title">Clip settings</h2>
+
+        <!-- Number of clips -->
+        <div class="setting-group">
+          <label class="label">Number of clips</label>
+          <div class="segmented-control" id="clip-count-control">
+            <button class="segmented-btn" data-value="3">3</button>
+            <button class="segmented-btn active" data-value="5">5</button>
+            <button class="segmented-btn" data-value="8">8</button>
+            <button class="segmented-btn" data-value="10">10</button>
+            <button class="segmented-btn" data-value="auto">Auto</button>
+          </div>
+        </div>
+
+        <!-- Clip length -->
+        <div class="setting-group">
+          <label class="label">Clip length</label>
+          <div class="segmented-control" id="clip-length-control">
+            <button class="segmented-btn" data-min="15" data-max="30">15-30s</button>
+            <button class="segmented-btn active" data-min="30" data-max="45">30-45s</button>
+            <button class="segmented-btn" data-min="45" data-max="60">45-60s</button>
+            <button class="segmented-btn" data-min="60" data-max="90">60-90s</button>
+          </div>
+        </div>
+
+        <!-- Aspect ratio -->
+        <div class="setting-group">
+          <label class="label">Aspect ratio</label>
+          <div class="aspect-ratio-grid" id="aspect-ratio-grid">
+            <div class="aspect-ratio-card selected" data-value="9:16">
+              <div class="aspect-ratio-icon" style="width:24px;height:42px;margin:0 auto 8px;background:var(--bg-surface);border-radius:4px;"></div>
+              <p class="aspect-ratio-label">9:16<br>Shorts</p>
+            </div>
+            <div class="aspect-ratio-card" data-value="1:1">
+              <div class="aspect-ratio-icon" style="width:32px;height:32px;margin:0 auto 8px;background:var(--bg-surface);border-radius:4px;"></div>
+              <p class="aspect-ratio-label">1:1<br>Square</p>
+            </div>
+            <div class="aspect-ratio-card" data-value="16:9">
+              <div class="aspect-ratio-icon" style="width:42px;height:24px;margin:0 auto 8px;background:var(--bg-surface);border-radius:4px;"></div>
+              <p class="aspect-ratio-label">16:9<br>Landscape</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Caption style -->
+        <div class="setting-group">
+          <label class="label">Caption style</label>
+          <div class="caption-style-grid" id="caption-style-grid">
+            <div class="caption-style-tile selected" data-style="pop-bold">
+              <div class="caption-style-preview" style="font-family:'Anton';font-size:8px;color:#FF3D81;">PREVIEW</div>
+              <p class="caption-style-name">Pop Bold</p>
+              <p class="caption-style-font">Anton</p>
+            </div>
+            <div class="caption-style-tile" data-style="neon-night">
+              <div class="caption-style-preview" style="font-family:'Bebas Neue';font-size:9px;color:#60A5FA;">preview</div>
+              <p class="caption-style-name">Neon Night</p>
+              <p class="caption-style-font">Bebas Neue</p>
+            </div>
+            <div class="caption-style-tile" data-style="comic-burst">
+              <div class="caption-style-preview" style="font-family:'Bangers';font-size:8px;color:#FBBF24;">PREVIEW</div>
+              <p class="caption-style-name">Comic Burst</p>
+              <p class="caption-style-font">Bangers</p>
+            </div>
+            <div class="caption-style-tile" data-style="heavy-impact">
+              <div class="caption-style-preview" style="font-family:'Archivo Black';font-size:7px;color:#F87171;">PREVIEW</div>
+              <p class="caption-style-name">Heavy Impact</p>
+              <p class="caption-style-font">Archivo Black</p>
+            </div>
+            <div class="caption-style-tile" data-style="slim-tall">
+              <div class="caption-style-preview" style="font-family:'Poppins';font-weight:800;font-size:7px;color:#34D399;">PREVIEW</div>
+              <p class="caption-style-name">Slim Tall</p>
+              <p class="caption-style-font">Poppins</p>
+            </div>
+            <div class="caption-style-tile" data-style="clean-lowercase">
+              <div class="caption-style-preview" style="font-family:'Inter';font-size:7px;color:#9090A8;">preview</div>
+              <p class="caption-style-name">Clean</p>
+              <p class="caption-style-font">Inter</p>
+            </div>
+            <div class="caption-style-tile" data-style="karaoke-glow">
+              <div class="caption-style-preview" style="font-family:'Inter';font-size:7px;color:#FF3D81;text-shadow:0 0 4px rgba(255,61,129,0.5);">preview</div>
+              <p class="caption-style-name">Karaoke</p>
+              <p class="caption-style-font">Inter</p>
+            </div>
+            <div class="caption-style-tile" data-style="none">
+              <div class="caption-style-preview" style="font-size:7px;color:#606078;">No captions</div>
+              <p class="caption-style-name">None</p>
+              <p class="caption-style-font">—</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Framing -->
+        <div class="setting-group">
+          <label class="label">Framing</label>
+          <select class="framing-select" id="framing-select">
+            <option value="auto" selected>Auto (recommended)</option>
+            <option value="follow-face">Follow face</option>
+            <option value="blur-fit">Blur-fit</option>
+            <option value="center-crop">Center crop</option>
+            <option value="streamer">Streamer layout (gameplay + facecam)</option>
+          </select>
+        </div>
+
+        <!-- Toggles -->
+        <div class="setting-group">
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <p class="toggle-title">Hook text at the start</p>
+              <p class="toggle-helper">Add a short title in the first seconds</p>
+            </div>
+            <div class="toggle-switch" id="hook-text-toggle"></div>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <p class="toggle-title">Tighten pauses and filler words</p>
+              <p class="toggle-helper">Remove long silences and filler words</p>
+            </div>
+            <div class="toggle-switch active" id="tighten-pauses-toggle"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Focus Section -->
+      <div class="focus-section card">
+        <h2 class="settings-title">Focus (optional)</h2>
+        <input type="text" class="focus-input" id="focus-input" placeholder="What should the clips be about? (keywords or phrase)">
+        <div class="time-range-row">
+          <input type="text" class="time-input" id="time-from" placeholder="From (mm:ss)">
+          <input type="text" class="time-input" id="time-to" placeholder="To (mm:ss)">
+        </div>
+        <p class="helper-text">Leave empty to analyze the whole video</p>
+      </div>
+
+      <!-- Preset Links -->
+      <div class="preset-links">
+        <a href="#" class="preset-link" id="save-preset-link">Save as preset</a>
+        <a href="#" class="preset-link" id="reset-preset-link">Reset to defaults</a>
+      </div>
+    </section>
+
+    <!-- Library Tab -->
+    <section id="library-tab" class="tab-content hidden">
+      <div class="video-list-section">
+        <div class="video-list-header">
+          <div>
+            <h2 class="video-list-title">Your videos</h2>
+            <p class="video-count" id="video-count">0 videos, 0 clips</p>
+          </div>
+          <input type="text" class="search-box" id="video-search" placeholder="Search videos...">
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state">
+          <div class="empty-state-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="23 7 16 12 23 17 23 7"></polygon>
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+            </svg>
+          </div>
+          <p class="empty-state-text">No videos yet</p>
+          <p class="empty-state-hint">Paste a YouTube link or upload a video to get started</p>
+        </div>
+
+        <!-- Video Cards Container -->
+        <div id="video-cards-container"></div>
+      </div>
+    </section>
+
+    <!-- Settings Tab -->
+    <section id="settings-tab" class="tab-content hidden">
+      <div class="card">
+        <h2 class="settings-title">Settings</h2>
+        <p class="body-md text-secondary">Coming soon: theme, output folder, quality presets, and more.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Confirm Dialog -->
+  <div class="dialog-overlay" id="confirm-dialog">
+    <div class="dialog-card">
+      <h3 class="dialog-title" id="dialog-title">Confirm action</h3>
+      <p class="dialog-message" id="dialog-message">Are you sure?</p>
+      <div class="dialog-actions">
+        <button class="dialog-button cancel" id="dialog-cancel">Cancel</button>
+        <button class="dialog-button confirm" id="dialog-confirm">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+  <footer class="disclaimer">
+    <p><strong>⚠️ Disclaimer:</strong> GTA 6 Clipper is an unofficial, independent tool. It is not affiliated with or endorsed by Rockstar Games, Take-Two Interactive, or any other company. All game names, logos, and trademarks are the property of their respective owners. Users must have the rights to the videos they process and must follow platform terms of service.</p>
+  </footer>
+</body>
+</html>

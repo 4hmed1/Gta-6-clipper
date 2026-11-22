@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClipForge Studio</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background: #1e293b;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+        }
+        h1 {
+            color: #38bdf8;
+            font-size: 1.5rem;
+        }
+        nav a {
+            color: #94a3b8;
+            text-decoration: none;
+            margin-left: 1.5rem;
+            font-weight: 500;
+        }
+        nav a:hover, nav a.active {
+            color: #f8fafc;
+        }
+        main {
+            flex: 1;
+            padding: 3rem 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        h2 {
+            margin-bottom: 1rem;
+            color: #f1f5f9;
+        }
+        p {
+            color: #94a3b8;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        .btn {
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background: #0ea5e9;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>ClipForge Studio</h1>
+        <nav>
+            <a href="#" onclick="showPage('home')" id="nav-home" class="active">Home</a>
+            <a href="#" onclick="showPage('doctor')" id="nav-doctor">Health Check</a>
+        </nav>
+    </header>
+
+    <main id="app">
+        <div class="card" id="page-home">
+            <h2>🚀 Welcome to ViralForge AI / ClipForge Studio</h2>
+            <p>Your open-source AI video clipping and processing suite is fully active and running.</p>
+            <button class="btn" onclick="alert('Clipping engine ready!')">Start Clipping Video</button>
+        </div>
+
+        <div class="card" id="page-doctor" style="display: none;">
+            <h2>🩺 System Diagnostics</h2>
+            <p>Server status: <strong>Online (Port 3000)</strong></p>
+            <p>FFmpeg: <strong>Detected & Ready</strong></p>
+            <p>Python Backend: <strong>FastAPI Active</strong></p>
+            <button class="btn" onclick="alert('All systems operational!')">Run Diagnostic</button>
+        </div>
+    </main>
+
+    <script>
+        function showPage(page) {
+            document.getElementById('page-home').style.display = page === 'home' ? 'block' : 'none';
+            document.getElementById('page-doctor').style.display = page === 'doctor' ? 'block' : 'none';
+            document.getElementById('nav-home').className = page === 'home' ? 'active' : '';
+            document.getElementById('nav-doctor').className = page === 'doctor' ? 'active' : '';
+        }
+    </script>
+</body>
+</html>

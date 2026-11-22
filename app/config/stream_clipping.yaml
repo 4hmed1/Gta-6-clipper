@@ -1,0 +1,11 @@
+# Stream Clipper Mode Configuration
+
+chat_spike_weight: 0.35
+heatmap_weight: 0.25
+audio_burst_weight: 0.25
+motion_weight: 0.15
+
+# Game/Stream keyword packs
+keyword_packs:
+  gaming: ["clutch", "clip that", "omg", "wtf", "lets go", "wasted", "busted", "heist", "win", "epic"]
+  podcast: ["truth", "secret", "never", "always", "crazy", "mind blowing"]
