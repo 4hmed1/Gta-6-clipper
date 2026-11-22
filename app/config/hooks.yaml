@@ -1,0 +1,51 @@
+# ClipForge Hook Detection Patterns (NLP Heuristics)
+
+high_value_keywords:
+  - "secret"
+  - "mistake"
+  - "truth"
+  - "hidden"
+  - "illegal"
+  - "warning"
+  - "shocking"
+  - "money"
+  - "success"
+  - "failure"
+  - "destroy"
+  - "exponential"
+  - "ai"
+  - "billion"
+  - "trillion"
+  - "hack"
+  - "trick"
+  - "lesson"
+
+hook_phrases:
+  - "nobody talks about"
+  - "this is why"
+  - "how to"
+  - "what happens if"
+  - "did you know"
+  - "the biggest problem"
+  - "stop doing"
+  - "never do this"
+  - "i lost"
+  - "i made"
+  - "guaranteed"
+  - "the one thing"
+  - "number one rule"
+
+negative_patterns:
+  - "sponsor"
+  - "subscribe"
+  - "follow me"
+  - "link in bio"
+  - "welcome back"
+  - "intro"
+  - "outro"
+  - "check out my"
+  - "today we are"
+
+sentiment_lexicon:
+  positive: ["amazing", "incredible", "breakthrough", "fastest", "best", "winner"]
+  negative: ["awful", "terrible", "worst", "danger", "scam", "broken"]

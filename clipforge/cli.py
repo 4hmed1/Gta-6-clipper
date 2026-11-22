@@ -179,7 +179,8 @@ def main():
     parser.add_argument("--port", type=int, default=3000, help="port to serve on (default: 3000)")
     parser.add_argument("--no-browser", action="store_true", help="don't auto-open the browser")
 
-    subparsers = parser.add_subparsers(dest="command", required=False, default="server")
+    subparsers = parser.add_subparsers(dest="command", required=False)
+    parser.set_defaults(command="server")
     subparsers.add_parser("doctor", help="check system environment and dependencies")
     subparsers.add_parser("update", help="update the app core and yt-dlp")
     subparsers.add_parser("calibrate", help="calibrate clip scoring weights from user ratings")
@@ -327,7 +328,8 @@ def main():
     parser.add_argument("--port", type=int, default=3000, help="port to serve on (default: 3000)")
     parser.add_argument("--no-browser", action="store_true", help="don't auto-open the browser")
 
-    subparsers = parser.add_subparsers(dest="command", required=False, default="server")
+    subparsers = parser.add_subparsers(dest="command", required=False)
+    parser.set_defaults(command="server")
     subparsers.add_parser("doctor", help="check system environment and dependencies")
     subparsers.add_parser("update", help="update the app core and yt-dlp")
     subparsers.add_parser("calibrate", help="calibrate clip scoring weights from user ratings")
