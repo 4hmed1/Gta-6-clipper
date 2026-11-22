@@ -3,7 +3,7 @@ import subprocess
 import uuid
 from pathlib import Path
 from typing import Dict, Any, List
-from app.config import CLIPS_DIR
+from app.config import CLIPS_DIR, FONTS_DIR
 from app.captions.track import caption_track_from_json3, caption_track_from_words, Word, STYLES
 
 def escape_ffmpeg_path(path: str) -> str:
@@ -149,6 +149,8 @@ def render_clip(
 
     # 2. Construct ffmpeg filter graph
     escaped_sub = escape_ffmpeg_path(sub_path)
+    escaped_fontsdir = escape_ffmpeg_path(str(FONTS_DIR))
+    subtitles_filter = f"subtitles='{escaped_sub}':fontsdir='{escaped_fontsdir}'"
     
     if layout == "split_blur":
         # 9:16 Vertical Short with Blurred Background & Centered Crisp Foreground
