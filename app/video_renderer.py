@@ -1,5 +1,9 @@
 import subprocess
 from pathlib import Path
+import subprocess
+from pathlib import Path
+from typing import Dict, Any
+from app.render_manager import render_clip
 from typing import Dict, Any
 
 def render_final_clip(
@@ -7,7 +11,8 @@ def render_final_clip(
     crop_coords: Dict[str, Any],
     output_path: str,
     subtitle_path: str,
-    whoosh_effect: str = "static/assets/whoosh.wav"
+    whoosh_effect: str = "static/assets/whoosh.wav",
+    duration: float = 30.0
 ) -> str:
     """
     Renders a viral clip using a complex FFmpeg filtergraph:
@@ -64,5 +69,10 @@ def render_final_clip(
         output_path
     ]
 
-    subprocess.run(cmd, check=True, timeout=max(300, duration * 10))
+    result = render_clip(
+        source_video, output_path, duration,
+    )
+    if not result["success"]:
+        # Render failed - this should propagate up
+        raise RuntimeError(result["error"])
     return output_path

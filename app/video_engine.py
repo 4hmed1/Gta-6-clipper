@@ -212,30 +212,11 @@ def render_clip(
     ]
 
     print(f"[VideoEngine] Rendering clip {output_filename} ({duration:.1f}s)...")
-    try:
-        result = subprocess.run(
-            cmd,
-            stdout=subprocess.PIPE,         # Capture stdout for debugging
-            stderr=subprocess.PIPE,         # Capture stderr (not DEVNULL!)
-            check=True,
-            timeout=max(300, duration * 10),  # 300s max, or 10x clip duration
-            text=True,                      # Get text instead of bytes
-        )
-
-        # Check for ffmpeg warnings/errors in stderr
-        stderr_lines = result.stderr.strip().split('\n')
-        warnings = [line for line in stderr_lines if 'warning' in line.lower()]
-        errors = [line for line in stderr_lines if 'error' in line.lower()]
-
-        if errors:
-            print(f"[VideoEngine] Clip #{clip_id}: FFmpeg ERRORS found:")
-            for line in errors[-10:]:  # Last 10 error lines
-                print(f"  {line}")
-        if warnings:
-            print(f"[VideoEngine] Clip #{clip_id}: FFmpeg WARNINGS (non-fatal):")
-            for line in warnings[-10:]:
-                print(f"  {line}")
-
+    result = render_clip(
+        input_path, output_path, duration,
+        clip_id=clip_id,
+    )
+    if result["success"]:
         # Extract thumbnail
         extract_thumbnail(output_path, thumb_path, timestamp=min(1.5, duration / 2))
 
@@ -254,9 +235,9 @@ def render_clip(
             "headline": headline,
             "download_url": f"/api/clips/download/{output_filename}"
         }
-    except subprocess.CalledProcessError as e:
-        print(f"[VideoEngine] Render error: {e.stderr.decode('utf-8', errors='ignore')}")
+    else:
+        # Render failed - return error message from log
         return {
             "success": False,
-            "error": "FFmpeg encoding error during clip synthesis."
+            "error": result["error"]
         }
