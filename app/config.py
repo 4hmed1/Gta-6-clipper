@@ -6,9 +6,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 OUTPUTS_DIR = BASE_DIR / "outputs"
 DOWNLOADS_DIR = OUTPUTS_DIR / "downloads"
 CLIPS_DIR = OUTPUTS_DIR / "clips"
-UPLOADS_DIR = OUTPUTS_DIR / "uploads"
+UPLOADS_DIR = OUTPUTS_DIR / "clips"
 STATIC_DIR = BASE_DIR / "static"
 TEMPLATES_DIR = BASE_DIR / "templates"
+ASSETS_DIR = BASE_DIR / "assets"
+FONTS_DIR = ASSETS_DIR / "fonts"
 
 # Fallback: when installed as a wheel (no source tree), locate the
 # bundled static assets wherever pip put them.

@@ -125,9 +125,9 @@ def render_clip(
             wrap_style=2,
             max_lines=2,
             max_chars_per_line=16,
-            font_name="DejaVu Sans",
-            font_size=28,
-            uppercase=True,
+            font_name="Montserrat ExtraBold",
+            font_size=96,
+            uppercase=False,
         )
         # FAIL LOUDLY: Validate that ASS actually has Dialogue events
         dialogue_count = ass_content.count('Dialogue:')
