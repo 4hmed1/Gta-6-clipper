@@ -28,4 +28,14 @@ class ReframeError(ClipForgeError):
 
 class CaptionError(ClipForgeError):
     """Exception raised for caption errors."""
-    pass
+    error_code: str = "CLIPFORGE_ERROR"
+    fix_action: str = "Check ClipForge logs for details."
+
+    def __init__(self, message: str, error_code: str | None = None,
+                 fix_action: str | None = None):
+        super().__init__(message)
+        self.error_code = error_code or self.error_code
+        self.fix_action = fix_action or self.fix_action
+
+
+FONT_MISSING = "FONT_MISSING"

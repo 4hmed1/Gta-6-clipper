@@ -118,6 +118,13 @@ def download_youtube_video(url: str, progress_callback=None, audio_only: bool = 
             'continuedl': True,
         }
 
+        # yt-dlp now requires a JavaScript runtime to extract YouTube formats
+        # (older extractor is deprecated). Use node/deno/bun if present.
+        for _rt in ("node", "deno", "bun", "qjs"):
+            if shutil.which(_rt):
+                ydl_opts['js_runtimes'] = {_rt: {}}
+                break
+
         if audio_only:
             # Lowest bitrate audio for fast analysis (approx 64k-128k)
             ydl_opts['format'] = 'ba[abr<=64]/ba[abr<=128]/worstaudio'

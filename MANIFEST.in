@@ -1,4 +1,6 @@
-recursive-include app/static *
-recursive-include app/config *
-recursive-include app/templates *
-recursive-include app/assets *
+include README.md
+include LICENSE
+recursive-include static *
+recursive-include config *
+recursive-include assets/fonts *
+recursive-include templates *

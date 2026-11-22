@@ -1,9 +1,20 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -e
 
 echo "=================================================="
-echo "     ClipForge: One-Command Install (macOS/Linux) "
+echo "     GTA 6 Clipper Installer (macOS/Linux)        "
 echo "=================================================="
+
+# Parse arguments for --no-start flag
+SKIP_START=false
+for arg in "$@"; do
+    case $arg in
+        --no-start)
+            SKIP_START=true
+            shift
+            ;;
+    esac
+done
 
 # 1. Check Python 3.11+
 if ! command -v python3 >/dev/null 2>&1; then
@@ -23,7 +34,7 @@ fi
 echo "Checking FFmpeg..."
 if ! command -v ffmpeg >/dev/null 2>&1; then
     echo "[WARN] FFmpeg not found. Attempting automatic download..."
-    # Detect architecture and OS
+    # Detect OS and architecture
     OS=$(uname -s)
     ARCH=$(uname -m)
     
@@ -32,7 +43,7 @@ if ! command -v ffmpeg >/dev/null 2>&1; then
     
     if [ "$OS" = "Linux" ]; then
         if [ "$ARCH" = "x86_64" ] || [ "$ARCH" = "aarch64" ]; then
-            FFMPEG_URL="https://johnvansickle.com/ffmpeg/releasesffmpeg-release-64-bit-static.tar.xz"
+            FFMPEG_URL="https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-64bit-static.tar.xz"
         else
             echo "⚠️  Automatic FFmpeg download not supported for ARM Linux."
             echo "   Please install FFmpeg manually: sudo apt install ffmpeg"
@@ -44,7 +55,6 @@ if ! command -v ffmpeg >/dev/null 2>&1; then
     
     echo "Downloading FFmpeg (approx 60MB)..."
     curl -fL "$FFMPEG_URL" -o "/tmp/ffmpeg.tar.xz"
-    mkdir -p "$FFMPEG_DIR"
     tar -xJf "/tmp/ffmpeg.tar.xz" -C "$FFMPEG_DIR" --strip-components=1 2>/dev/null || \
         tar -xf "/tmp/ffmpeg.tar.xz" -C "$FFMPEG_DIR" --strip-components=1 2>/dev/null
     rm -f "/tmp/ffmpeg.tar.xz"
@@ -55,51 +65,35 @@ else
 fi
 
 # 3. Setup isolated environment (no global pollution)
-INSTALL_DIR="$HOME/.clipforge"
+INSTALL_DIR="$HOME/.gta6-clipper"
+echo "📦 Installing GTA 6 Clipper to $INSTALL_DIR..."
 mkdir -p "$INSTALL_DIR"
-
-echo "Creating isolated environment at $INSTALL_DIR..."
 python3 -m venv "$INSTALL_DIR/venv"
 
-echo "Upgrading pip in venv..."
-"$INSTALL_DIR/venv/bin/python" -m pip install --upgrade pip > /dev/null 2>&1
-
-# 4. Use uv for fast installation if available, otherwise pip
-echo "Checking for uv..."
-if "$INSTALL_DIR/venv/bin/python" -c "import uv" 2>/dev/null; then
-    echo "Using uv for installation..."
-    "$INSTALL_DIR/venv/bin/python" -m pip install uv
-    "$INSTALL_DIR/venv/bin/python" -m uv pip install --system --upgrade pip
-    "$INSTALL_DIR/venv/bin/python" -m uv pip install --system --force-reinstall .
+# 4. Upgrade pip and install GTA 6 Clipper
+echo "⬇️  Downloading and installing GTA 6 Clipper & dependencies..."
+"$INSTALL_DIR/venv/bin/python" -m pip install --upgrade pip
+# Prefer the local checkout (this script is run from the repo root);
+# fall back to GitHub only if the local tree is missing.
+if [ -f "pyproject.toml" ] && [ -d "app" ]; then
+    "$INSTALL_DIR/venv/bin/pip" install . || {
+        echo "⚠️  Local install failed, trying GitHub..."
+        "$INSTALL_DIR/venv/bin/pip" install git+https://github.com/4hmed1/Gta-6-clipper.git
+    }
 else
-    echo "Using pip for installation..."
-    "$INSTALL_DIR/venv/bin/python" -m pip install --force-reinstall .
-    # Also install yt-dlp if not already in venv
-    "$INSTALL_DIR/venv/bin/python" -m pip install yt-dlp
+    "$INSTALL_DIR/venv/bin/pip" install git+https://github.com/4hmed1/Gta-6-clipper.git || {
+        echo "❌ Could not install ClipForge. Run this script from the cloned repo root."
+        exit 1
+    }
 fi
 
-# 5. Create command wrappers (NO admin rights needed)
-BIN_DIR="$HOME/.local/bin"
-mkdir -p "$BIN_DIR"
+# 5. Create symlink / wrapper for gta6-clipper command
+BIN_DIR="/usr/local/bin"
+if [ ! -w "$BIN_DIR" ]; then
+    BIN_DIR="$HOME/.local/bin"
+    mkdir -p "$BIN_DIR"
+fi
 
-echo "Creating command wrappers..."
-cat << EOF > "$BIN_DIR/clipforge"
-#!/usr/bin/env sh
+cat << EOF > "$BIN_DIR/gta6-clipper"
+#!/usr/bin/env bash
 exec "$INSTALL_DIR/venv/bin/python" -m clipforge.cli "$@"
-EOF
-chmod +x "$BIN_DIR/clipforge"
-
-cat << EOF > "$BIN_DIR/clipforge-editor"
-#!/usr/bin/env sh
-exec "$INSTALL_DIR/venv/bin/python" -m clipforge.cli "$@"
-EOF
-chmod +x "$BIN_DIR/clipforge-editor"
-
-# 6. Run doctor
-echo "Running system health check (clipforge doctor)..."
-"$INSTALL_DIR/venv/bin/python" -m clipforge.cli doctor
-
-echo "=================================================="
-echo "🎉 ClipForge installed successfully!"
-echo "   Run: clipforge  to start the application"
-echo "=================================================="

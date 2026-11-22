@@ -22,6 +22,8 @@ from typing import Dict, List, Optional, Tuple
 
 import re
 
+from clipforge.resilience.exceptions import CaptionError, FONT_MISSING
+
 # ---------------------------------------------------------------------------
 # Types
 # ---------------------------------------------------------------------------
@@ -633,9 +635,9 @@ def generate_ass_events(
     wrap_style: int = 2,  # no auto-wrapping surprises
     max_lines: int = 2,
     max_chars_per_line: int = 16,
-    font_name: str = "DejaVu Sans",
-    font_size: int = 28,
-    uppercase: bool = True,
+    font_name: str = "Montserrat ExtraBold",
+    font_size: int = 96,
+    uppercase: bool = False,
 ) -> str:
     """Generate ASS dialogue events from caption groups.
 
@@ -771,9 +773,9 @@ def caption_track_from_json3(
     wrap_style: int = 2,
     max_lines: int = 2,
     max_chars_per_line: int = 16,
-    font_name: str = "DejaVu Sans",
-    font_size: int = 28,
-    uppercase: bool = True,
+    font_name: str = "Montserrat ExtraBold",
+    font_size: int = 96,
+    uppercase: bool = False,
 ) -> Tuple[str, dict]:
     """Full caption track pipeline: json3 → cleaned words → groups → ASS file content.
 
@@ -927,9 +929,9 @@ def caption_track_from_words(
     wrap_style: int = 2,
     max_lines: int = 2,
     max_chars_per_line: int = 16,
-    font_name: str = "DejaVu Sans",
-    font_size: int = 28,
-    uppercase: bool = True,
+    font_name: str = "Montserrat ExtraBold",
+    font_size: int = 96,
+    uppercase: bool = False,
 ) -> Tuple[str, dict]:
     """Convert already-parsed words (dict format) to ASS content.
 
@@ -1031,7 +1033,7 @@ _STYLES = {
         "uppercase": True
     },
     "neon_green": {
-        "font_name": "Poppins ExtraBold",
+        "font_name": "Montserrat ExtraBold",
         "font_size": 30,
         "primary_color": "&H00FFFFFF&",
         "highlight_color": "&H0033FF55&",  # Intense Neon Cyber Green
@@ -1043,7 +1045,7 @@ _STYLES = {
         "uppercase": True
     },
     "cyber_cyan": {
-        "font_name": "Inter ExtraBold",
+        "font_name": "Inter",
         "font_size": 28,
         "primary_color": "&H00F0F0F0&",
         "highlight_color": "&H00FFF000&",  # Electric Neon Cyan
@@ -1055,8 +1057,8 @@ _STYLES = {
         "uppercase": False
     },
     "minimal": {
-        "font_name": "Inter ExtraBold",
-        "font_size": 22,
+        "font_name": "Montserrat ExtraBold",
+        "font_size": 96,
         "primary_color": "&H00FFFFFF&",
         "highlight_color": "&H00A0A0FF&",
         "outline_color": "&H00202020&",
@@ -1066,83 +1068,11 @@ _STYLES = {
         "shadow": 1,
         "uppercase": False
     },
-    "clean_pop": {
-        "font_name": "Montserrat ExtraBold",
-        "font_size": 96,
-        "primary_color": "&H00FFFFFF&",    # White text
-        "highlight_color": "&H00FFD60A&",  # Active word highlight
-        "outline_color": "&H00000000&",   # Black outline
-        "back_color": "&H00000000&",      # No background
-        "bold": -1,
-        "outline": 8,
-        "shadow": 1,
-        "uppercase": False
-    },
-    "bold_impact": {
-        "font_name": "Anton",
-        "font_size": 112,
-        "primary_color": "&H00FFFFFF&",    # White text
-        "highlight_color": "&H00FF3B30&",  # Active word color
-        "outline_color": "&H00000000&",   # Black outline
-        "back_color": "&H00000000&",      # No background
-        "bold": -1,
-        "outline": 9,
-        "shadow": 1,
-        "uppercase": True,
-        "tracking": 1
-    },
-    "neon_edge": {
-        "font_name": "Poppins ExtraBold",
-        "font_size": 92,
-        "primary_color": "&H00FFFFFF&",    # White fill
-        "highlight_color": "&H00FF2DAA&",  # Active word color
-        "outline_color": "&H0000E5FF&",   # Cyan outline
-        "back_color": "&H00000000&",      # No background
-        "bold": -1,
-        "outline": 6,
-        "shadow": 1,
-        "uppercase": False
-    },
-    "minimal_lower_third": {
-        "font_name": "Inter ExtraBold",
-        "font_size": 84,
-        "primary_color": "&H00FFFFFF&",    # White text on box
-        "highlight_color": "&H003DDC84&",  # Accent underline color
-        "outline_color": "&H001A1A1A&",   # Dark outline
-        "back_color": "&H88000000&",     # 55% black box
-        "bold": -1,
-        "outline": 8,
-        "shadow": 1,
-        "uppercase": False
-    },
-    "karaoke_gold": {
-        "font_name": "Archivo Black",
-        "font_size": 96,
-        "primary_color": "&H00FFFFFF&",    # White text
-        "highlight_color": "&H00FFC300&",  # Gold left-to-right sweep
-        "outline_color": "&H001A1A1A&",   # Dark outline
-        "back_color": "&H00000000&",      # No background
-        "bold": -1,
-        "outline": 8,
-        "shadow": 1,
-        "uppercase": False
-    },
-    "gaming_glow": {
-        "font_name": "Bebas Neue",
-        "font_size": 120,
-        "primary_color": "&H00F5F5F5&",    # Light gray-white
-        "highlight_color": "&H007CFF00&",  # Active word glow
-        "outline_color": "&H00111111&",   # Dark outline
-        "back_color": "&H00000000&",      # No background
-        "bold": -1,
-        "outline": 8,
-        "shadow": 1,
-        "uppercase": False
-    },
 }
 
 # Make STYLES an alias for _STYLES (so both import styles work)
 STYLES = _STYLES
+
 
 # Ensure the _STYLES dict is the one referenced throughout the module
 # by re-assigning any internal references after the dict creation.
@@ -1153,13 +1083,13 @@ STYLES = _STYLES
 # Font resolution: bundled open-license fonts with system fallbacks
 # ---------------------------------------------------------------------------
 
-_DEFAULT_FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
+from app.config import FONTS_DIR as _DEFAULT_FONTS_DIR
 
 
 def _resolve_font(font_name: str, fonts_dir: Path = _DEFAULT_FONTS_DIR) -> Path:
     """Resolve a font name to a Path, searching fonts_dir first, then system paths.
 
-    Returns the Path to the .ttf file. Raises FileNotFoundError if not found.
+    Returns the Path to the .ttf file. Raises CaptionError if not found.
     """
     # Normalize: strip all spaces and hyphens for robust matching
     normalized_name = font_name.lower().replace(" ", "").replace("-", "")
@@ -1173,7 +1103,6 @@ def _resolve_font(font_name: str, fonts_dir: Path = _DEFAULT_FONTS_DIR) -> Path:
 
     # 2. Search system font directories (read-only fallback)
     system_dirs = [
-        Path("/usr/share/fonts/truetype/dejavu"),
         Path("/usr/share/fonts/TTF"),
         Path("/usr/share/fonts/OTF"),
         Path("/usr/local/share/fonts"),
@@ -1188,14 +1117,20 @@ def _resolve_font(font_name: str, fonts_dir: Path = _DEFAULT_FONTS_DIR) -> Path:
                 if normalized_name in f_norm or font_name.lower() in f.name.lower():
                     return f.resolve()
 
-    # 3. If not found anywhere, raise a clear error
-    raise FileNotFoundError(
-        f"Font '{font_name}' not found in bundled fonts directory ({fonts_dir}) "
-        f"or any system font directory. "
-        f"Place the open-license (.ttf/.otf) font file there, or add it to the bundle. "
-        f"Required for caption rendering — no silent fallback to DejaVu."
+    # 3. If not found anywhere, raise CaptionError with fix action
+    raise CaptionError(
+        f"Caption font '{font_name}' not found in bundled fonts directory ({fonts_dir}) "
+        f"or any system font directory. Place the open-license (.ttf/.otf) font file there, "
+        f"or add it to the bundle. No silent fallback to system DejaVu.",
+        error_code=FONT_MISSING,
+        fix_action=(
+            f"Copy a .ttf version of '{font_name}' into {fonts_dir}, "
+            f"or set CAPTION_FONTS_DIR to a directory containing the font, "
+            f"then restart clipforge."
+        ),
     )
 
+# Export symbols
 
 def _verify_fonts_at_startup() -> None:
     """Verify that all style fonts can be resolved at module import time.
@@ -1209,31 +1144,9 @@ def _verify_fonts_at_startup() -> None:
         try:
             font_path = _resolve_font(style["font_name"])
             logger.info(f"Font resolved: {style_name} -> {font_path.name}")
-        except FileNotFoundError as e:
-            logger.error(f"STARTUP FAIL: {e}")
+        except CaptionError as e:
+            logger.error(f"STARTUP FAIL: {e.message}")
             # Re-raise so the app won't start with missing fonts
             raise
 
-
-# Verify all fonts at import time (will raise if any are missing)
-# NOTE: This runs after _STYLES is defined at module bottom
 _VERIFY_FONTS_AT_STARTUP = _verify_fonts_at_startup()
-
-# Export symbols
-__all__ = [
-    "Word",
-    "CaptionGroup",
-    "parse_youtube_json3",
-    "clean_word_text",
-    "collapse_stutters",
-    "make_monotonic",
-    "clamp_to_clip_bounds",
-    "fill_gaps",
-    "group_words",
-    "generate_ass_events",
-    "caption_track_from_json3",
-    "caption_track_from_words",
-    "whisper_words_to_our_words",
-    "format_ass_time",
-    "STYLES",
-]
