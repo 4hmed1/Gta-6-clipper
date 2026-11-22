@@ -18,6 +18,8 @@ Design goals:
 
 from __future__ import annotations
 
+CAPTION_CENTER_Y_RATIO = 0.68  # 68% from top for vertical caption position
+
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -634,6 +636,7 @@ def generate_ass_events(
     clip_start: float = 0.0,
     clip_end: float = 1.0,
     margin_v: int = 420,  # bottom margin for 1080p safe zone
+
     wrap_style: int = 2,  # no auto-wrapping surprises
     max_lines: int = 2,
     max_chars_per_line: int = 16,
@@ -697,7 +700,7 @@ def generate_ass_events(
     style_line = (
         f"Style: {DEFAULT_STYLE_NAME},{s['font_name']},{s['font_size'] * 2.3},"
         f"{primary},&H000000FF&,{outline},{back},{bold},0,0,0,"
-        f"100,100,1,0,1,{outline_w},{shadow * 2},2,50,50,120,1"
+        f"100,100,1,0,1,{outline_w},{shadow * 2},5,50,50,120,1"
     )
     ass_lines.append(style_line)
     ass_lines.append("")
@@ -748,7 +751,7 @@ def generate_ass_events(
         # Layer 0, no name, the computed times
         dialog = (
             f"Dialogue: 0,{format_ass_time(ev_start)},{format_ass_time(ev_end)},"
-            f"{DEFAULT_STYLE_NAME},,0,0,0,,{text_line}"
+            f"{DEFAULT_STYLE_NAME},,0,0,0,,\\pos\(540, 1305\){text_line}"
         )
         ass_lines.append(dialog)
 
