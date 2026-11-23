@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "clipforge"
-version = "0.1.1"
+version = "7.0.0"
 description = "Install-in-One-Command Clipping Studio: Turn long videos into viral vertical shorts locally."
 readme = "README.md"
 requires-python = ">=3.11"
