@@ -171,62 +171,62 @@ def run_server(port: int = 3000, open_browser: bool = True):
         threading.Thread(target=open_b, daemon=True).start()
 
     from app.main import app
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(app, host="127.0.0.1", port=port)
 
+
+
+def run_uninstall():
+    import shutil
+    from pathlib import Path
+    import platformdirs
+    base = Path.home() / ".maxclipper"
+    link = Path.home() / ".local" / "bin" / "maxclipper"
+    if input("Remove Max Clipper (" + str(base) + ") and the maxclipper command? [y/N] ").strip().lower() != "y":
+        print("Cancelled.")
+        return
+    shutil.rmtree(base, ignore_errors=True)
+    try:
+        link.unlink()
+    except FileNotFoundError:
+        pass
+    data = Path(platformdirs.user_data_dir("MaxClipper"))
+    if data.exists() and input("Also delete your videos and clips in " + str(data) + "? [y/N] ").strip().lower() == "y":
+        shutil.rmtree(data, ignore_errors=True)
+    print("Max Clipper was removed.")
 
 
 def main():
-    parser = argparse.ArgumentParser(description=f"{APP_NAME} - local-first stream clipper & editor studio")
-    parser.add_argument("--version", action="version", version=f"{APP_NAME} 7.1.0")
-    subparsers = parser.add_subparsers(dest="command", required=False)
-    
-    parser.set_defaults(command="server")
-    subparsers.add_parser("doctor", help="check system environment and dependencies")
-    subparsers.add_parser("update", help="update the app core and yt-dlp")
-    subparsers.add_parser("server", help="start the web interface")
-    
-    args = parser.parse_args()
-    
+    import argparse
+    from importlib.metadata import version as _pkg_version, PackageNotFoundError
+
+    argv = [a for a in sys.argv[1:] if a.strip()]
+    parser = argparse.ArgumentParser(prog="maxclipper", description="Max Clipper - turn long videos into ready-to-post Shorts, locally.")
+    parser.add_argument("--version", action="store_true", help="show the version and exit")
+    parser.add_argument("--port", type=int, default=3000, help="port to serve on (default: 3000)")
+    parser.add_argument("--no-browser", action="store_true", help="do not open the browser")
+    sub = parser.add_subparsers(dest="command")
+    sub.add_parser("server", help="start Max Clipper (same as running it with no command)")
+    sub.add_parser("doctor", help="check your system and dependencies")
+    sub.add_parser("update", help="update Max Clipper and yt-dlp")
+    sub.add_parser("uninstall", help="remove Max Clipper")
+    args = parser.parse_args(argv)
+
+    if args.version:
+        try:
+            v = _pkg_version("maxclipper")
+        except PackageNotFoundError:
+            v = "unknown"
+        print("Max Clipper " + v)
+        return
     if args.command == "doctor":
         run_doctor()
     elif args.command == "update":
         run_update()
-    elif args.command == "server":
-        port = 3000
-        open_browser = True
-        # TODO: allow --port and --no-browser flags
-        run_server(port, open_browser)
+    elif args.command == "uninstall":
+        run_uninstall()
     else:
-        # Default to server
-        run_server()
+        run_server(port=args.port, open_browser=not args.no_browser)
 
-if __name__ == "__main__":
-    main()
-
-def main():
-    parser = argparse.ArgumentParser(description=f"{APP_NAME} - local-first stream clipper & editor studio")
-    parser.add_argument("--version", action="version", version=f"{APP_NAME} 7.1.0")
-    subparsers = parser.add_subparsers(dest="command", required=False)
-    
-    parser.set_defaults(command="server")
-    subparsers.add_parser("doctor", help="check system environment and dependencies")
-    subparsers.add_parser("update", help="update the app core and yt-dlp")
-    subparsers.add_parser("server", help="start the web interface")
-    
-    args = parser.parse_args()
-    
-    if args.command == "doctor":
-        run_doctor()
-    elif args.command == "update":
-        run_update()
-    elif args.command == "server":
-        port = 3000
-        open_browser = True
-        # TODO: allow --port and --no-browser flags
-        run_server(port, open_browser)
-    else:
-        # Default to server
-        run_server()
 
 if __name__ == "__main__":
     main()
