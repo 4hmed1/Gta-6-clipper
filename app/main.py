@@ -691,37 +691,56 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
         else:
             # No captions available — download audio for Whisper transcription
             set_status("Downloading low-bitrate audio for analysis...", 15, "downloading")
-            audio_path = ""
-            if req.url:
+            # Step 1: If YouTube captions (json3) are available, use them instead of failing
+            if req.captions and req.captions.get("has_captions"):
+                tasks_state[task_id]["transcript_words"] = req.captions["words"]
+                tasks_state[task_id]["status"] = "ready_for_selection"
+                tasks_state[task_id]["stage_counts"] = tasks_state[task_id].get("stage_counts", {})
+                tasks_state[task_id]["stage_counts"]["captions"] = len(req.captions["words"])
+                pipeline_logger.info(f"[{task_id}] Using YouTube captions for transcription")
+                audio_path = ""
+            elif source_video and Path(source_video).exists():
+                # Step 2: Extract audio from local video file (no network needed)
+                import subprocess
+                audio_path = str(Path(source_video).with_suffix(".wav"))
+                cmd = ["ffmpeg", "-y", "-nostdin", "-i", source_video, "-vn", "-ac", "1", "-ar", "16000", "-c:a", "pcm_s16le", "-loglevel", "error", audio_path]
+                subprocess.run(cmd, capture_output=True, timeout=60)
+                if not Path(audio_path).exists():
+                    audio_path = ""
+            elif req.url:
+                # Step 3: Try YouTube URL audio download (last resort)
                 try:
                     audio_path = _run_async(_download_audio_from_url(req.url, str(OUTPUTS_DIR / f"work_{task_id}")))
                 except Exception as e:
                     pipeline_logger.error(f"[{task_id}] Audio download exception: {e}")
-            elif source_video and Path(source_video).exists():
-                # For local files, extract audio with ffmpeg
-                import subprocess
-                audio_path = str(Path(source_video).with_suffix(".wav"))
-                cmd = ["ffmpeg", "-y", "-nostdin", "-i", source_video, "-vn", "-acodec", "pcm_s16le", "-ar", "16000", "-ac", "1", "-loglevel", "error", audio_path]
-                subprocess.run(cmd, check=False, capture_output=True, timeout=60)
-                if not Path(audio_path).exists():
                     audio_path = ""
-
-            if audio_path and Path(audio_path).exists():
-                set_status("Audio downloaded successfully", 22, "downloading")
             else:
-                pipeline_logger.warning(f"[{task_id}] Audio download failed – proceeding with captions only")
+                audio_path = ""
 
-            # ── Step 3: Transcribe with word timing ──
-            set_status("Extracting word-level timestamps...", 25, "transcribing")
-            trans_input = audio_path if (audio_path and Path(audio_path).exists()) else (source_video if source_video else req.filepath)
-            if not trans_input or not os.path.exists(trans_input):
+            if not audio_path:
+                # Determine error type and user message
+                err_msg = ""
+                if not source_video and not req.url:
+                    err_msg = "No internet connection."
+                elif source_video and not Path(source_video).exists():
+                    err_msg = "FFmpeg could not read the video."
+                elif req.url:
+                    err_msg = "YouTube blocked the download. Run `maxclipper update` and try again."
+                else:
+                    err_msg = "Audio download failed. Run `maxclipper update` and try again."
+
+                # Save full error to log file
+                import platformdirs
+                log_dir = platformdirs.user_log_dir("MaxClipper")
+                os.makedirs(log_dir, exist_ok=True)
+                log_path = Path(log_dir) / f"job-{task_id}.log"
+                with open(log_path, "a") as f:
+                    f.write(f"\n--- Audio download error ---\n{err_msg}\n--- End ---\n")
                 tasks_state[task_id]["status"] = "failed"
-                tasks_state[task_id]["error"] = "Audio download failed and no local file available for transcription."
-                pipeline_logger.error(f"[{task_id}] NO_AUDIO_FOR_TRANSCRIBE")
-                return
-            trans_res = transcribe_audio(
-                trans_input,
-                progress_callback=lambda m, p: set_status(m, p, "transcribing"),
+                tasks_state[task_id]["error"] = err_msg
+                pipeline_logger.error(f"[{task_id}] {err_msg}")
+                trans_input = audio_path if (audio_path and Path(audio_path).exists()) else (source_video if source_video else req.filepath)
+                trans_res = transcribe_audio(
             )
             if not trans_res.get("success"):
                 tasks_state[task_id]["status"] = "failed"

@@ -213,7 +213,7 @@ def render_clip(
 
     print(f"[VideoEngine] Rendering clip {output_filename} ({duration:.1f}s)...")
     result = render_clip(
-        input_path, output_path, duration,
+        source_video, output_path, duration,
         clip_id=clip_id,
     )
     if result["success"]:

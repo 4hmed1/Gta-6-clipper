@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import uuid
 import json
 import subprocess

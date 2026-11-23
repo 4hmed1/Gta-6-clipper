@@ -520,7 +520,7 @@ def render_clip(
 
         result = render_with_retry(
             ffmpeg_cmd,
-            duration_seconds=duration_seconds if 'duration_seconds' in dir() else duration,
+            duration_seconds=duration,
             clip_id=clip_id,
             stall_seconds=stall_s,
             render_timeout=timeout_s,

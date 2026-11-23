@@ -22,7 +22,7 @@ CAPTION_CENTER_Y_RATIO = 0.68  # 68% from top for vertical caption position
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import re
 
