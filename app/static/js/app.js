@@ -1,5 +1,5 @@
 /**
- * GTA 6 Clipper App
+ * Max Clipper App
  * UI interactivity and backend communication for the Create screen
  * and the "Your videos" list.
  */
@@ -85,7 +85,7 @@
   // ══════ SETTINGS PERSISTENCE ═════
   function loadSettings() {
     try {
-      const raw = localStorage.getItem('gta6_clipper_settings');
+      const raw = localStorage.getItem('maxclipper_settings');
       return raw ? { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } : { ...DEFAULT_SETTINGS };
     } catch {
       return { ...DEFAULT_SETTINGS };
@@ -93,7 +93,7 @@
   }
 
   function saveSettings() {
-    localStorage.setItem('gta6_clipper_settings', JSON.stringify(state.settings));
+    localStorage.setItem('maxclipper_settings', JSON.stringify(state.settings));
   }
 
   // ══════ TIME PARSING ═════
@@ -879,14 +879,14 @@
   function notifyCompletion(task, card) {
     showToast('Your clips are ready.', 'success');
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('GTA 6 Clipper', { body: `${task.message || 'Clips ready'}` });
+      new Notification('Max Clipper', { body: `${task.message || 'Clips ready'}` });
     }
-    document.title = 'GTA 6 Clipper — Clips ready';
+    document.title = 'Max Clipper — Clips ready';
   }
 
   function startJobWithQuality(quality, urlOverride, focusOverride) {
     showToast('Re-running with lower quality settings…');
-    localStorage.setItem('gta6_clipper_quality_override', quality);
+    localStorage.setItem('maxclipper_quality_override', quality);
     if (urlOverride) els.videoUrl.value = urlOverride;
     if (focusOverride !== undefined) els.focusInput.value = focusOverride;
     startJob();
@@ -1163,9 +1163,9 @@
       if (working) {
         const card = working.closest('.video-card');
         const pct = card?.querySelector('[data-role="percent"]')?.textContent || '…';
-        document.title = `Clipping ${pct} — GTA 6 Clipper`;
+        document.title = `Clipping ${pct} — Max Clipper`;
       } else if (!document.title.includes('ready')) {
-        document.title = 'GTA 6 Clipper — Turn Long Videos into Ready Shorts';
+        document.title = 'Max Clipper — Turn Long Videos into Ready Shorts';
       }
     }, 3000);
   }

@@ -1,4 +1,4 @@
-"""Resolve bundled config assets regardless of how ClipForge is installed.
+"""Resolve bundled config assets regardless of how MaxClipper is installed.
 
 The three scoring modules (nlp, selection, stream_clipper) used to load
 ``config/...`` relative to the *current working directory*. That breaks
@@ -9,8 +9,8 @@ Every caller resolves paths through :func:`package_config`.
 import os as _os
 from pathlib import Path
 
-# This file lives at <pkg>/clipforge/_config.py, so the bundled assets are
-# at <pkg>/clipforge/../config and <pkg>/clipforge/../static.
+# This file lives at <pkg>/maxclipper/_config.py, so the bundled assets are
+# at <pkg>/maxclipper/../config and <pkg>/maxclipper/../static.
 _PKG_DIR = Path(__file__).resolve().parent
 
 
@@ -20,18 +20,18 @@ def package_config(*parts: str) -> Path:
     Search order:
       1. <pkg>/../config/<parts>            (source tree / editable install)
       2. <pkg>/config/<parts>               (wheel install layout)
-      3. <pkg>/../clipforge/config/<parts>  (legacy layout)
+      3. <pkg>/../maxclipper/config/<parts>  (legacy layout)
     """
     rel = Path(*parts)
     # Search order covers every layout pip/setuptools may produce:
     #   1. <site-packages>/config/<parts>            (source tree / editable)
-    #   2. <site-packages>/clipforge/config/<parts>  (data-files in pkg)
-    #   3. <prefix>/clipforge/config/<parts>          (data-files at venv root)
-    #   4. <site-packages>/clipforge/../config/<parts>
+    #   2. <site-packages>/maxclipper/config/<parts>  (data-files in pkg)
+    #   3. <prefix>/maxclipper/config/<parts>          (data-files at venv root)
+    #   4. <site-packages>/maxclipper/../config/<parts>
     for base in (
         _PKG_DIR.parent / "config",
         _PKG_DIR / "config",
-        _PKG_DIR.parent / "clipforge" / "config",
+        _PKG_DIR.parent / "maxclipper" / "config",
     ):
         candidate = base / rel
         if candidate.exists():

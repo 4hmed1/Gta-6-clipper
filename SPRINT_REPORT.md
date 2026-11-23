@@ -6,8 +6,8 @@
 
 ## What Was Done
 1. **Startup & Dependencies (Block 1)**:
-   - Configured `pyproject.toml` with console script entry `clipforge`.
-   - Implemented `clipforge doctor` command for system diagnostics.
+   - Configured `pyproject.toml` with console script entry `maxclipper`.
+   - Implemented `maxclipper doctor` command for system diagnostics.
 2. **Security (Block 2)**:
    - Added path traversal prevention and URL validation.
    - Wrote security test suite (`tests/test_security.py`).

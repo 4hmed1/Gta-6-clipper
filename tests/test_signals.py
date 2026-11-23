@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from clipforge.core.signals import analyze_audio_signals, get_dead_air_map
+from maxclipper.core.signals import analyze_audio_signals, get_dead_air_map
 
 def test_analyze_audio_signals():
     # Test with synthetic audio data

@@ -1,15 +1,15 @@
-# ClipForge TODO List (TODO.md)
+# MaxClipper TODO List (TODO.md)
 
 ## Phase 1: Foundation (Completed)
-- [x] Initialize `clipforge/` package structure.
-- [x] `clipforge doctor` command and health check infrastructure.
+- [x] Initialize `maxclipper/` package structure.
+- [x] `maxclipper doctor` command and health check infrastructure.
 - [x] CI/CD matrix setup (Windows, macOS, Ubuntu).
-- [x] Move existing `app/` functionality into `clipforge/` structure, retaining core logic.
+- [x] Move existing `app/` functionality into `maxclipper/` structure, retaining core logic.
 
 ## Phase 2: Distribution (Completed)
 - [x] `install.ps1` (PowerShell) and `install.sh` (Bash) installers.
 - [x] Automated FFmpeg binary download & checksum verification.
-- [x] `clipforge` CLI command entrypoint setup.
+- [x] `maxclipper` CLI command entrypoint setup.
 - [x] First-run self-test.
 
 ## Phase 3: Ingest & Resilience (Resilience Module)
@@ -20,7 +20,7 @@
 - [ ] DSP signal extraction (RMS/energy, spectral flux, pitch, VAD, scene cut detection).
 - [ ] NLP Text heuristic/hook score pipeline (YAML rules).
 - [ ] Clip Selection logic (NMS + diversity pass).
-- [ ] `clipforge calibrate` CLI tool.
+- [ ] `maxclipper calibrate` CLI tool.
 
 ## Phase 5: Captions (ASS generation)
 - [ ] Kinetic ASS generation pipeline (word timing, per-word highlight, pop animations).

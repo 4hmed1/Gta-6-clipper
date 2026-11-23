@@ -1,7 +1,7 @@
-# ClipForge Security Module
+# MaxClipper Security Module
 # Handles security validations, input sanitization, and protection against attacks
 
-from clipforge.security.validator import (
+from maxclipper.security.validator import (
     validate_url,
     sanitize_filename,
     validate_file_size,

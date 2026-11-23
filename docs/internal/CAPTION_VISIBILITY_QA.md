@@ -64,12 +64,12 @@ After rendering and QA pass:
    - `/audit/captions/<clip_id>/frames_ass/frame_X.png`
 4. In the UI, show the audit data for each clip
 
-## 5. `clipforge captions-debug <clip_id>` Command
+## 5. `maxclipper captions-debug <clip_id>` Command
 
 New CLI command that prints complete pipeline diagnostics:
 
 ```
-Usage: clipforge captions-debug <clip_id>
+Usage: maxclipper captions-debug <clip_id>
 ```
 
 Output sections:

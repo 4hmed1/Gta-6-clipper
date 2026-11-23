@@ -4,7 +4,7 @@ import urllib.parse
 
 def test_path_traversal_prevention():
     # Verify that paths with ../ are resolved safely inside the base directory
-    base_dir = Path("/tmp/clipforge_data").resolve()
+    base_dir = Path("/tmp/maxclipper_data").resolve()
     base_dir.mkdir(parents=True, exist_ok=True)
 
     malicious_input = "../../../etc/passwd"

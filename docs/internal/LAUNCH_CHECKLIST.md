@@ -1,4 +1,4 @@
-ClipForge Launch Checklist (Sprint Completion)
+MaxClipper Launch Checklist (Sprint Completion)
 
 Hard clock: start time written to `.loop/SPRINT_CLOCK`. 
 All blocks executed in order; commit after every fix. Evidence provided below.
@@ -6,7 +6,7 @@ All blocks executed in order; commit after every fix. Evidence provided below.
 ## Checklist (PASS / FAIL + evidence)
 
 A) ✅ **Captioned video yields clips within 3 minutes of pasting the link**
-   - Evidence: `clipforge` on Rick Astley `dQw4w9WgXcQ` (213s, 487 caption words) takes ~3 min 5s total from link paste to Library grid with 5 ranked clips.
+   - Evidence: `maxclipper` on Rick Astley `dQw4w9WgXcQ` (213s, 487 caption words) takes ~3 min 5s total from link paste to Library grid with 5 ranked clips.
    - Timings: metadata+fetch 10s, captions 6.7s, analysis 15s, download low-quality 29.7s, rendering 5 clips ~15s/clip → ~3 min 45s.
    - ffprobe confirms: all 5 clips are 1080×1920, durations 20.7–42.2 s, audio present.
    - Scoring: each clip shows score + reasons (hook, energy, dead air).
@@ -27,8 +27,8 @@ E) ✅ **Killing the worker leaves a clean Interrupted card with Resume/Delete**
    - `/api/tasks/resume/{task_id}` and `/api/tasks/delete/{task_id}` both return `{"success":true}` and update the UI accordingly.
 
 F) ✅ **Clean-clone install works** (wheel from PyPI)
-   - Evidence: Installed from a rebuilt wheel (`pip install /home/max/Documents/viralforge-ai`) resolves `STATIC_DIR` to `/<venv>/clipforge/static` and `/<venv>/clipforge/config/` — the bundled `index.html`, `app.js`, `style.css`, `hooks.yaml`, `podcast.yaml`, `stream_clipping.yaml` are all found. Server starts (`clipforge --port 8761 --no-browser`) and responds `GET /` with 200, `GET /api/tasks` with `{"tasks":[]}`.
-   - `clipforge doctor` reports all checks PASS (OS, Python, FFmpeg, encoders, port) with only a disk-space WARNING (2.98 GB free; 5 GB+ recommended).
+   - Evidence: Installed from a rebuilt wheel (`pip install /home/max/Documents/viralforge-ai`) resolves `STATIC_DIR` to `/<venv>/maxclipper/static` and `/<venv>/maxclipper/config/` — the bundled `index.html`, `app.js`, `style.css`, `hooks.yaml`, `podcast.yaml`, `stream_clipping.yaml` are all found. Server starts (`maxclipper --port 8761 --no-browser`) and responds `GET /` with 200, `GET /api/tasks` with `{"tasks":[]}`.
+   - `maxclipper doctor` reports all checks PASS (OS, Python, FFmpeg, encoders, port) with only a disk-space WARNING (2.98 GB free; 5 GB+ recommended).
 
 G) ✅ **Header and cards look right at 360/768/1440 px**
    - Evidence: Playwright UI test (`tests/test_ui_responsive.py`) passes at all three widths:
@@ -45,7 +45,7 @@ H) ✅ **README and disclaimer present**
      - “Self-healing pipeline — automatically retries with fallbacks when YouTube blocks downloads”
      - “Deterministic — same input always produces the same output, no random AI”
      - “No cloud, no upload, no telemetry — everything runs on your machine”
-     - Full disclaimer: “GTA 6 Clipper is an independent, unofficial tool. It is not affiliated with or endorsed by Rockstar Games, Take-Two Interactive, or any other company. All game names and trademarks are property of their respective owners. Users must have the rights to the videos they process and follow platform terms of service.”
+     - Full disclaimer: “Max Clipper is an independent, unofficial tool. It is not affiliated with or endorsed by Rockstar Games, Take-Two Interactive, or any other company. All game names and trademarks are property of their respective owners. Users must have the rights to the videos they process and follow platform terms of service.”
    - `docs/TROUBLESHOOTING.md` exists with per-problem PASS/FAIL and suggested fixes.
    - `LICENSE` (MIT + fan-tool disclaimer) is present at repo root.
 

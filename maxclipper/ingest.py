@@ -6,12 +6,12 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from clipforge.security import validate_url, sanitize_filename, validate_file_size
-from clipforge.resilience import ResilienceEngine
+from maxclipper.security import validate_url, sanitize_filename, validate_file_size
+from maxclipper.resilience import ResilienceEngine
 
-from clipforge.ingest.downloader import YTDLPDownloader
-from clipforge.ingest.heatmap import HeatmapAnalyzer
-from clipforge.ingest.captions import CaptionExtractor
+from maxclipper.ingest.downloader import YTDLPDownloader
+from maxclipper.ingest.heatmap import HeatmapAnalyzer
+from maxclipper.ingest.captions import CaptionExtractor
 
 
 class IngestError(Exception):

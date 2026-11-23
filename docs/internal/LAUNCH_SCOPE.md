@@ -1,8 +1,8 @@
-# ClipForge Launch Scope & Release 0.1 Plan (LAUNCH_SCOPE.md)
+# MaxClipper Launch Scope & Release 0.1 Plan (LAUNCH_SCOPE.md)
 
 ## Release 0.1 "Launch Edition" Scope
 - **One-Command Installers**: `install.sh` and `install.ps1` with automated FFmpeg verification.
-- **CLI Commands**: `clipforge`, `clipforge doctor`, `clipforge update`, `clipforge calibrate`.
+- **CLI Commands**: `maxclipper`, `maxclipper doctor`, `maxclipper update`, `maxclipper calibrate`.
 - **Ingest & Caching**: YouTube URL & local file support, yt-dlp wrapper with fallback ladders.
 - **Stream Clipper Mode**: Chat replay parsing, heatmap metadata integration, audio signal detection (loudness/silence), game moment detector framework, and facecam region handling.
 - **Selection & Scoring**: Deterministic moment scoring using RMS, spectral flux, pitch, and NLP hook scoring.

@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from clipforge.core.stream_clipper import StreamClipperEngine
+from maxclipper.core.stream_clipper import StreamClipperEngine
 
 def test_stream_clipper_fusion():
     engine = StreamClipperEngine()

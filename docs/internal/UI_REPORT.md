@@ -1,4 +1,4 @@
-# ClipForge UI Report
+# MaxClipper UI Report
 
 ## Verification Session
 

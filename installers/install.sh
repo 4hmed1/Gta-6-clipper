@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_ZIP="https://github.com/4hmed1/clipforge/archive/refs/heads/main.zip"
-BASE="$HOME/.clipforge"
+REPO_ZIP="https://github.com/4hmed1/MaxClipper/archive/refs/heads/main.zip"
+BASE="$HOME/.maxclipper"
 VENV="$BASE/venv"
 
 main() {
   echo "=================================="
-  echo "   ClipForge installer"
+  echo "   Max Clipper installer"
   echo "=================================="
 
   PY=""
@@ -44,9 +44,9 @@ main() {
     exit 1
   fi
 
-  echo "Installing ClipForge (2-5 minutes, please wait)..."
+  echo "Installing MaxClipper (2-5 minutes, please wait)..."
   "$VENV/bin/python" -m pip install --quiet --upgrade pip
-  "$VENV/bin/python" -m pip install --quiet --upgrade "clipforge[stt] @ $REPO_ZIP"
+  "$VENV/bin/python" -m pip install --quiet --upgrade "maxclipper[stt] @ $REPO_ZIP"
 
   SP=$("$VENV/bin/python" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
   for d in static config templates assets; do
@@ -55,13 +55,13 @@ main() {
     fi
   done
 
-  if [ ! -x "$VENV/bin/clipforge" ]; then
-    echo "ERROR: install finished but the clipforge program was not created."
+  if [ ! -x "$VENV/bin/maxclipper" ]; then
+    echo "ERROR: install finished but the maxclipper program was not created."
     exit 1
   fi
 
   mkdir -p "$HOME/.local/bin"
-  ln -sf "$VENV/bin/clipforge" "$HOME/.local/bin/clipforge"
+  ln -sf "$VENV/bin/maxclipper" "$HOME/.local/bin/maxclipper"
 
   case ":$PATH:" in
     *":$HOME/.local/bin:"*) ;;
@@ -75,12 +75,12 @@ main() {
   esac
 
   echo ""
-  "$HOME/.local/bin/clipforge" doctor || true
+  "$HOME/.local/bin/maxclipper" doctor || true
 
   echo ""
   echo "=================================="
   echo " Installed!"
-  echo " Open a NEW terminal and type:  clipforge"
+  echo " Open a NEW terminal and type:  maxclipper"
   echo "=================================="
 }
 

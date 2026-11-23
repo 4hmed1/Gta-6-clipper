@@ -26,7 +26,7 @@ from typing import Dict, List, Optional, Tuple
 
 import re
 
-from clipforge.resilience.exceptions import CaptionError, FONT_MISSING
+from maxclipper.resilience.exceptions import CaptionError, FONT_MISSING
 
 # ---------------------------------------------------------------------------
 # Types
@@ -1131,7 +1131,7 @@ def _resolve_font(font_name: str, fonts_dir: Path = _DEFAULT_FONTS_DIR) -> Path:
         fix_action=(
             f"Copy a .ttf version of '{font_name}' into {fonts_dir}, "
             f"or set CAPTION_FONTS_DIR to a directory containing the font, "
-            f"then restart clipforge."
+            f"then restart maxclipper."
         ),
     )
 

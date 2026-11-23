@@ -1,11 +1,11 @@
-# ARCHITECTURE.md — GTA 6 Clipper (ClipForge core)
+# ARCHITECTURE.md — Max Clipper (MaxClipper core)
 
 ## Entry Points
 
 | Entry | Description |
 |-------|-------------|
 | `app/main.py` | FastAPI application: serves UI, API routes, background pipeline |
-| `clipforge/cli.py` | CLI entry point (`clipforge` / `gta6-clipper`) — starts server, runs doctor |
+| `maxclipper/cli.py` | CLI entry point (`maxclipper` / `maxclipper`) — starts server, runs doctor |
 | `installers/install.sh` | macOS/Linux one-command installer |
 | `installers/install.ps1` | Windows one-command installer |
 
@@ -14,10 +14,10 @@
 ```bash
 # From project root (inside venv or with dependencies installed):
 python -m app.main        # Development (auto-reload)
-clipforge                  # Installed package (port 3000, opens browser)
-clipforge --port 8080      # Custom port
-clipforge --no-browser     # Don't auto-open browser
-clipforge doctor           # System diagnostics
+maxclipper                  # Installed package (port 3000, opens browser)
+maxclipper --port 8080      # Custom port
+maxclipper --no-browser     # Don't auto-open browser
+maxclipper doctor           # System diagnostics
 ```
 
 ## Data Flow
@@ -60,11 +60,11 @@ User pastes URL → FastAPI /api/process
 | `app/audio_processor.py` | DSP feature extraction (loudness, spectral, silence) |
 | `app/smart_cropper.py` | Face-follow reframing logic |
 | `app/youtube_captions.py` | YouTube caption track fetcher |
-| `clipforge/cli.py` | CLI commands (start, doctor, update, uninstall) |
-| `clipforge/ingest/` | Next-gen ingestion modules |
-| `clipforge/resilience/` | Error classifier, fallback ladders, checkpointing |
-| `clipforge/security/` | Path traversal prevention, URL validation |
-| `clipforge/core/` | Brand config, shared utilities |
+| `maxclipper/cli.py` | CLI commands (start, doctor, update, uninstall) |
+| `maxclipper/ingest/` | Next-gen ingestion modules |
+| `maxclipper/resilience/` | Error classifier, fallback ladders, checkpointing |
+| `maxclipper/security/` | Path traversal prevention, URL validation |
+| `maxclipper/core/` | Brand config, shared utilities |
 | `tests/` | Unit tests, chaos tests, e2e tests |
 | `static/` | Frontend (HTML/CSS/JS, served by FastAPI) |
 | `config/` | YAML scoring presets, hook rules |

@@ -19,7 +19,7 @@ FONTS_DIR = ASSETS_DIR / "fonts"
 # site-packages is <venv>/lib/pythonX.Y/site-packages — NOT
 # <venv>/bin/site-packages (which does not exist). Also: pip installs
 # ``data-files`` under ``sys.prefix`` (the venv root), so the assets may
-# live at <venv>/clipforge/static rather than inside site-packages.
+# live at <venv>/maxclipper/static rather than inside site-packages.
 if not STATIC_DIR.exists():
     import os as _os
     import sys as _sys
@@ -35,8 +35,8 @@ if not STATIC_DIR.exists():
         for base in (_sp, _venv_root):
             for cand in (
                 base / "static",
-                base / "clipforge" / "static",
-                base / "clipforge_static",
+                base / "maxclipper" / "static",
+                base / "maxclipper_static",
             ):
                 if cand.exists():
                     return cand
@@ -76,8 +76,8 @@ if not FONTS_DIR.exists():
             for rel in (
                 "app/assets/fonts",
                 "assets/fonts",
-                "clipforge/assets/fonts",
-                "clipforge_fonts",
+                "maxclipper/assets/fonts",
+                "maxclipper_fonts",
             ):
                 cand = base / rel
                 if cand.exists() and any(cand.glob("*.ttf")):

@@ -3,7 +3,7 @@
 ## A. PROJECT STATE
 1. **Architecture**:
    - **Stack**: FastAPI (Backend), React/Vite (Frontend), SQLite (Metadata), FFmpeg (Processing), OpenCV (Vision/Selection), Librosa (Audio DSP).
-   - **Structure**: `app/` (Legacy logic), `clipforge/` (New modular core), `static/` (UI), `tests/` (Unit/Chaos).
+   - **Structure**: `app/` (Legacy logic), `maxclipper/` (New modular core), `static/` (UI), `tests/` (Unit/Chaos).
    - **Entry Point**: `app/main.py`.
    - **Diagram**: 
      [User] -> [FastAPI/UI] -> [Ingest (yt-dlp)] -> [Signals/NLP (DSP/CV)] -> [Clip Selector] -> [Renderer (FFmpeg)] -> [Download]

@@ -7,8 +7,8 @@ import time
 from pathlib import Path
 from typing import Dict, Any, Optional
 
-from clipforge.resilience.exceptions import (
-    ClipForgeError,
+from maxclipper.resilience.exceptions import (
+    MaxClipperError,
     DownloadError,
     ProcessingError,
     RenderError,
@@ -194,7 +194,7 @@ class FallbackManager:
 
 
 class ResilienceEngine:
-    """Main resilience engine for ClipForge pipeline."""
+    """Main resilience engine for MaxClipper pipeline."""
 
     def __init__(self, project_dir: Path):
         self.project_dir = project_dir
@@ -215,7 +215,7 @@ class ResilienceEngine:
             Processed data
 
         Raises:
-            ClipForgeError: If processing fails after all fallbacks
+            MaxClipperError: If processing fails after all fallbacks
         """
         max_retries = 3
         fallback_attempts = 0
@@ -253,7 +253,7 @@ class ResilienceEngine:
                     # All attempts failed
                     error_msg = f"Failed after {max_retries} attempts. Last error: {str(e)}"
                     error_msg += f"\nFix suggestion: {fix_suggestion}"
-                    raise ClipForgeError(error_msg)
+                    raise MaxClipperError(error_msg)
 
     def _classify_error(self, error: Exception, stage_name: str) -> str:
         """Classify error based on stage and error content.

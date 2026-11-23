@@ -1,35 +1,35 @@
-# Exception classes for ClipForge resilience
+# Exception classes for MaxClipper resilience
 
 
-class ClipForgeError(Exception):
-    """Base exception for ClipForge errors."""
+class MaxClipperError(Exception):
+    """Base exception for MaxClipper errors."""
     pass
 
 
-class DownloadError(ClipForgeError):
+class DownloadError(MaxClipperError):
     """Exception raised for download errors."""
     pass
 
 
-class ProcessingError(ClipForgeError):
+class ProcessingError(MaxClipperError):
     """Exception raised for processing errors."""
     pass
 
 
-class RenderError(ClipForgeError):
+class RenderError(MaxClipperError):
     """Exception raised for rendering errors."""
     pass
 
 
-class ReframeError(ClipForgeError):
+class ReframeError(MaxClipperError):
     """Exception raised for reframing errors."""
     pass
 
 
-class CaptionError(ClipForgeError):
+class CaptionError(MaxClipperError):
     """Exception raised for caption errors."""
-    error_code: str = "CLIPFORGE_ERROR"
-    fix_action: str = "Check ClipForge logs for details."
+    error_code: str = "MAXCLIPPER_ERROR"
+    fix_action: str = "Check MaxClipper logs for details."
 
     def __init__(self, message: str, error_code: str | None = None,
                  fix_action: str | None = None):

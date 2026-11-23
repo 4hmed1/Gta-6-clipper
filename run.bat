@@ -1,6 +1,6 @@
 @echo off
 echo ==========================================================
-echo    GTA 6 Clipper - Free Local Vertical Short Maker
+echo    Max Clipper - Free Local Vertical Short Maker
 echo ==========================================================
 
 REM Check if ffmpeg is installed
@@ -20,12 +20,12 @@ if not exist "venv" (
 echo 🔄 Activating virtual environment...
 call venv\Scripts\activate
 
-echo 📥 Installing GTA 6 Clipper ^& dependencies...
+echo 📥 Installing Max Clipper ^& dependencies...
 pip install -r requirements.txt
 pip install -e .
 
 REM Install optional STT engine
 pip install -e ".[stt]" 2>nul || echo ⚠️  Optional offline STT (faster-whisper) not installed. Run: pip install -e ".[stt]"
 
-echo ✨ Starting GTA 6 Clipper Studio on http://localhost:3000...
+echo ✨ Starting Max Clipper Studio on http://localhost:3000...
 python -m uvicorn app.main:app --host 0.0.0.0 --port 3000 --reload

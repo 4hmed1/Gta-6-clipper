@@ -1,4 +1,4 @@
-# ClipForge Hook Detection Patterns (NLP Heuristics)
+# MaxClipper Hook Detection Patterns (NLP Heuristics)
 
 high_value_keywords:
   - "secret"

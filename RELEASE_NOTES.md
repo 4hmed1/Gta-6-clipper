@@ -1,8 +1,8 @@
-# GTA 6 Clipper — Release v0.1.0 (Internet-Ready)
+# Max Clipper — Release v0.1.0 (Internet-Ready)
 
 ## 🎯 What This Is
 
-**GTA 6 Clipper** is a free, local-first desktop app that turns YouTube videos or local files into ready-to-post 1080×1920 vertical Shorts. It runs 100% on your machine — no cloud, no AI, no account, no watermark.
+**Max Clipper** is a free, local-first desktop app that turns YouTube videos or local files into ready-to-post 1080×1920 vertical Shorts. It runs 100% on your machine — no cloud, no AI, no account, no watermark.
 
 ## ✅ Verified Working (End-to-End)
 
@@ -15,8 +15,8 @@
 | Video download (fallback ladder) | ✅ | Tries android → web → ios → tv_embedded player clients |
 | Render 5 clips | ✅ | 1080×1920, H.264+AAC, kinetic captions |
 | Total runtime (3-min video) | ~5-6 min | 5 clips generated |
-| `clipforge doctor` | ✅ | Detects FFmpeg, yt-dlp, hardware encoders |
-| CLI aliases | ✅ | `clipforge` and `gta6-clipper` both work |
+| `maxclipper doctor` | ✅ | Detects FFmpeg, yt-dlp, hardware encoders |
+| CLI aliases | ✅ | `maxclipper` and `maxclipper` both work |
 | Web studio UI | ✅ | Create / Library / Settings tabs, real-time progress |
 | Branding | ✅ | App name, disclaimer, all UI text updated |
 | Install scripts | ✅ | `run.sh`, `run.bat`, `install.sh`, `install.ps1` |
@@ -25,14 +25,14 @@
 
 ### Linux / macOS
 ```bash
-git clone https://github.com/4hmed1/clipforge.git
+git clone https://github.com/4hmed1/MaxClipper.git
 cd viralforge-ai
 ./run.sh
 ```
 
 ### Windows
 ```powershell
-git clone https://github.com/4hmed1/clipforge.git
+git clone https://github.com/4hmed1/MaxClipper.git
 cd viralforge-ai
 run.bat
 ```
@@ -48,13 +48,13 @@ The app opens at **http://localhost:3000**.
 - FFmpeg render with kinetic captions, blur reframe, loudnorm
 
 ### UI (`static/`)
-- Full rebrand to "GTA 6 Clipper"
+- Full rebrand to "Max Clipper"
 - Disclaimer footer (unofficial tool)
 - localStorage persistence for settings
 - Real-time progress cards with clip scores
 
-### CLI (`clipforge/cli.py`)
-- `clipforge` and `gta6-clipper` commands
+### CLI (`maxclipper/cli.py`)
+- `maxclipper` and `maxclipper` commands
 - `doctor` detects yt-dlp in venv
 - Proper symlink handling for venv Python
 
@@ -87,7 +87,7 @@ Each clip verified with `ffprobe`:
 
 ## 🛡️ Legal
 
-> ⚠️ **Disclaimer**: GTA 6 Clipper is an independent, unofficial tool. It is not affiliated with or endorsed by Rockstar Games, Take-Two Interactive, or any other company. All game names and trademarks are property of their respective owners. Users must have the rights to the videos they process and follow platform terms of service.
+> ⚠️ **Disclaimer**: Max Clipper is an independent, unofficial tool. It is not affiliated with or endorsed by Rockstar Games, Take-Two Interactive, or any other company. All game names and trademarks are property of their respective owners. Users must have the rights to the videos they process and follow platform terms of service.
 
 ## 📄 License
 
@@ -97,7 +97,7 @@ MIT License — see `LICENSE` file.
 
 - [ ] GitHub Releases with pre-built binaries (PyInstaller)
 - [ ] Winget / Homebrew manifests
-- [ ] Auto-update mechanism (`clipforge update`)
+- [ ] Auto-update mechanism (`maxclipper update`)
 - [ ] Batch queue for multiple videos
 - [ ] Pro extension point (license keys, optional paid features)
 

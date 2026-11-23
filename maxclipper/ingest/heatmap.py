@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Dict, Any, List
 
-from clipforge.resilience import ProcessingError
+from maxclipper.resilience import ProcessingError
 
 
 class HeatmapAnalyzer:

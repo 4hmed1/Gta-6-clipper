@@ -1,4 +1,4 @@
-# ROADMAP — GTA 6 Clipper
+# ROADMAP — Max Clipper
 
 Everything below is NOT in v0.1.0-beta. It is listed here so users know what is
 planned and what is intentionally cut from this release.
@@ -9,7 +9,7 @@ planned and what is intentionally cut from this release.
 - ✅ Optional offline STT (faster-whisper) for videos without captions
 - ✅ Clip selection: deterministic heuristics (hooks, speech density, energy, heatmap)
 - ✅ 1080×1920 vertical output with kinetic captions inside platform safe zones
-- ✅ One-command install (PowerShell / bash), `clipforge doctor`, auto FFmpeg download
+- ✅ One-command install (PowerShell / bash), `maxclipper doctor`, auto FFmpeg download
 - ✅ Library with progressive results, job deduplication, stuck watchdog
 - ✅ Plain-language errors with fix buttons
 

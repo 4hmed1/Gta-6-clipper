@@ -204,8 +204,8 @@ Total: ~94s for first clip (2× faster than current)
 ### High Priority
 
 5. **Speed up render** — `app/video_engine.py`
-6. **Add checkpointing/recovery** — `clipforge/resilience/engine.py`
-7. **Fetch YouTube captions** — `clipforge/ingest/` modules
+6. **Add checkpointing/recovery** — `maxclipper/resilience/engine.py`
+7. **Fetch YouTube captions** — `maxclipper/ingest/` modules
 8. **Add e2e smoke test** — `tests/e2e_smoke.py`
 
 ### Medium Priority

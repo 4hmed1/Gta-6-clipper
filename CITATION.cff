@@ -1,13 +1,13 @@
 CFFFile: citation.cff
 Version: 1.2.0
 Type: software
-Title: ClipForge: Install-in-One-Command Clipping Studio
+Title: MaxClipper: Install-in-One-Command Clipping Studio
 Author:
-  Given: ClipForge Team
-Family: ClipForge
+  Given: MaxClipper Team
+Family: MaxClipper
 Version: 0.1.0
 Date-released: 2026-11-21
-URL: https://github.com/4hmed1/clipforge
-Identifier: https://github.com/4hmed1/clipforge
-Abstract: ClipForge is an open-source, local-first application that turns YouTube links into ready-to-post vertical Shorts, Reels, and TikTok videos. It installs with one command on Windows, macOS, and Linux, runs fully on the user's own computer, and never makes them touch FFmpeg, Python paths, or config files. Everything is free, unlimited, no watermark, no account, 100% private.
-Repository: https://github.com/4hmed1/clipforge
+URL: https://github.com/4hmed1/MaxClipper
+Identifier: https://github.com/4hmed1/MaxClipper
+Abstract: MaxClipper is an open-source, local-first application that turns YouTube links into ready-to-post vertical Shorts, Reels, and TikTok videos. It installs with one command on Windows, macOS, and Linux, runs fully on the user's own computer, and never makes them touch FFmpeg, Python paths, or config files. Everything is free, unlimited, no watermark, no account, 100% private.
+Repository: https://github.com/4hmed1/MaxClipper

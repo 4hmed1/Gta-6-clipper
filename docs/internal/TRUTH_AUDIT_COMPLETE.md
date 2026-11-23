@@ -10,7 +10,7 @@
 | Component | Claim | Reality |
 |-----------|-------|---------|
 | **Transcription** | "faster-whisper available" | **FAKE**: 5 hardcoded mock sentences (`app/transcriber.py` L147) |
-| **Audio Analysis**: | "DSP signals integrated" | **FAKE**: `app/transcriber.py` never calls `clipforge/core/signals.py` |
+| **Audio Analysis**: | "DSP signals integrated" | **FAKE**: `app/transcriber.py` never calls `maxclipper/core/signals.py` |
 | **Clip Selection**: | "Real hook energy analysis" | **FAKE**: `app/viral_detector.py` uses only `analyze_viral_moments_heuristic` (L20-131) |
 | **YouTube Captions** | "json3 caption support" | **FAKE**: `app/youtube_captions.py` exists but is never called anywhere |
 | **Claim Table**: | "10,000 AI agents" | **FAKE**: Removed from UI per requirements |
@@ -19,7 +19,7 @@
 
 ## PROVEN TRADE: THE REAL CODE EXISTS
 
-**Location**: `clipforge/core/`
+**Location**: `maxclipper/core/`
 
 | File | Lines | Description |
 |------|-------|-------------|
@@ -51,8 +51,8 @@ def transcribe_audio(video_path: str):
 **What must be done**:
 1. Install `libavcodec-dev` (system package)
 2. Install `faster-whisper` with correct dependencies
-3. Replace `app/transcriber.py` with code from `clipforge/core/transcriber.py`
-4. Replace `app/viral_detector.py` with code from `clipforge/core/viral_detector.py`
+3. Replace `app/transcriber.py` with code from `maxclipper/core/transcriber.py`
+4. Replace `app/viral_detector.py` with code from `maxclipper/core/viral_detector.py`
 5. Wire up `app/youtube_captions.py` as primary transcription route
 6. Remove "is_mock" flag from pipeline
 

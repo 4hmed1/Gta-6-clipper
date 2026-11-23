@@ -1,10 +1,10 @@
-# MASTER PROMPT v2 — ClipForge: Install-in-One-Command Clipping Studio
+# MASTER PROMPT v2 — MaxClipper: Install-in-One-Command Clipping Studio
 
 ---
 
 ## 0. ROLE AND MISSION
 
-You are a principal engineer (video processing, algorithms, cross-platform desktop tooling, product design). Build **ClipForge**: an open-source, local-first app that turns a YouTube link into ready-to-post vertical Shorts, then lets the user polish each clip in a CapCut-style editor. It installs with **one command** on Windows, macOS and Linux, runs fully on the user's own computer, and never makes them touch FFmpeg, Python paths, or config files.
+You are a principal engineer (video processing, algorithms, cross-platform desktop tooling, product design). Build **MaxClipper**: an open-source, local-first app that turns a YouTube link into ready-to-post vertical Shorts, then lets the user polish each clip in a CapCut-style editor. It installs with **one command** on Windows, macOS and Linux, runs fully on the user's own computer, and never makes them touch FFmpeg, Python paths, or config files.
 
 Work autonomously, phase by phase. Run everything you build. Test it, fix it, then move on. Ask me questions only if you are completely blocked; otherwise decide, record it in `DECISIONS.md`, and continue. **Never claim something works unless you ran it and saw it work.** If you cannot test something (for example macOS from a Linux box), say so and cover it with CI (Section 11).
 
@@ -87,23 +87,23 @@ One FFmpeg call per clip: seek before input, scale, blur, overlay, crop path, su
 
 ## 5. TECH STACK AND LAYOUT
 
-Backend: FastAPI, Pydantic v2, SQLite, `multiprocessing` worker pool for heavy work (never block the event loop). Frontend: React + TypeScript + Vite + Tailwind, built and **bundled into the Python package** so users do not need Node. Editor timeline built with canvas/virtualized DOM for 60 fps. Tests: pytest, Playwright, ruff, mypy. Repo: monorepo with `clipforge/` (backend), `web/` (frontend), `installers/`, `config/`, `tests/`, `docs/`.
+Backend: FastAPI, Pydantic v2, SQLite, `multiprocessing` worker pool for heavy work (never block the event loop). Frontend: React + TypeScript + Vite + Tailwind, built and **bundled into the Python package** so users do not need Node. Editor timeline built with canvas/virtualized DOM for 60 fps. Tests: pytest, Playwright, ruff, mypy. Repo: monorepo with `maxclipper/` (backend), `web/` (frontend), `installers/`, `config/`, `tests/`, `docs/`.
 
 ## 6. INSTALL AND DISTRIBUTION (must be flawless)
 
 Goal: a non-technical user copies one command, pastes it, and the app opens in their browser.
 
-- **Windows (PowerShell)**: `irm https://raw.githubusercontent.com/<user>/clipforge/main/install.ps1 | iex`
-- **macOS / Linux**: `curl -fsSL https://raw.githubusercontent.com/<user>/clipforge/main/install.sh | sh`
-- The installer: detects OS/arch, installs `uv` (or uses the system Python 3.11+), creates an isolated environment (no global pollution), installs ClipForge, **downloads a verified static FFmpeg/ffprobe automatically** if none is found (checksums verified), installs yt-dlp, adds the `clipforge` command to PATH, creates a desktop/start-menu shortcut, runs `clipforge doctor`, then prints "Run: clipforge". No admin rights required.
-- **Commands**: `clipforge` (start server and open browser on localhost), `clipforge update` (app + yt-dlp), `clipforge doctor` (checks Python, FFmpeg, encoders, disk, ports, permissions, with auto-fix suggestions), `clipforge uninstall`, `clipforge --port`, `clipforge --no-browser`.
-- Scripts must be short, readable, idempotent, safe to re-run, with clear error messages. Publish SHA-256 checksums with each release and document the manual alternative (`pipx install clipforge`).
+- **Windows (PowerShell)**: `irm https://raw.githubusercontent.com/<user>/maxclipper/main/install.ps1 | iex`
+- **macOS / Linux**: `curl -fsSL https://raw.githubusercontent.com/<user>/maxclipper/main/install.sh | sh`
+- The installer: detects OS/arch, installs `uv` (or uses the system Python 3.11+), creates an isolated environment (no global pollution), installs MaxClipper, **downloads a verified static FFmpeg/ffprobe automatically** if none is found (checksums verified), installs yt-dlp, adds the `maxclipper` command to PATH, creates a desktop/start-menu shortcut, runs `maxclipper doctor`, then prints "Run: maxclipper". No admin rights required.
+- **Commands**: `maxclipper` (start server and open browser on localhost), `maxclipper update` (app + yt-dlp), `maxclipper doctor` (checks Python, FFmpeg, encoders, disk, ports, permissions, with auto-fix suggestions), `maxclipper uninstall`, `maxclipper --port`, `maxclipper --no-browser`.
+- Scripts must be short, readable, idempotent, safe to re-run, with clear error messages. Publish SHA-256 checksums with each release and document the manual alternative (`pipx install maxclipper`).
 - **GitHub Actions** release workflow builds on `windows-latest`, `macos-latest` (Intel and Apple Silicon) and `ubuntu-latest`: runs tests, builds the wheel, and also produces standalone bundles (PyInstaller or similar) attached to GitHub Releases. Phase 2: winget and Homebrew manifests.
 - First-run experience: zero config, opens the browser, shows a 3-step welcome, runs a self-test on a bundled tiny sample clip so the user knows everything works.
-- Docs: `README.md` (install in 3 lines, GIF demo, FAQ), `docs/TROUBLESHOOTING.md`, `CONTRIBUTING.md`, issue templates (bug template asks for `clipforge doctor` output), MIT or Apache-2.0 license (decide, record in `DECISIONS.md`).
+- Docs: `README.md` (install in 3 lines, GIF demo, FAQ), `docs/TROUBLESHOOTING.md`, `CONTRIBUTING.md`, issue templates (bug template asks for `maxclipper doctor` output), MIT or Apache-2.0 license (decide, record in `DECISIONS.md`).
 - Legal: README and first-run screen state clearly that users must have the rights to videos they process and follow YouTube's terms.
 
-## 7. THE SELF-HEALING ENGINE (core differentiator, build it as its own module `clipforge/resilience/`)
+## 7. THE SELF-HEALING ENGINE (core differentiator, build it as its own module `maxclipper/resilience/`)
 
 1. **Pipeline as a checkpointed state machine**: every stage writes its result to disk with a content hash; every stage is idempotent; after a crash or restart the job resumes from the last good stage.
 2. **Fallback ladders** (try in order, log each attempt, show the user a friendly note):
@@ -133,12 +133,12 @@ Type hints, small functions, docstrings explaining each algorithm and its formul
 
 ## 11. CROSS-PLATFORM PROOF
 
-You may only have one OS locally. Therefore: a CI matrix on Windows, macOS and Ubuntu that (1) runs unit and e2e tests, (2) executes the real install scripts in clean runners, (3) renders a sample clip end-to-end and checks the output with ffprobe (resolution 1080×1920, duration within ±0.5 s, audio present, loudness in range), and (4) runs `clipforge doctor`. Handle Windows specifics explicitly: paths with spaces and non-ASCII characters, ASS font path escaping in FFmpeg filters, long paths, antivirus-locked files, PowerShell execution policy. Handle macOS specifics: Apple Silicon, Gatekeeper messages. Handle Linux specifics: missing codecs, headless servers.
+You may only have one OS locally. Therefore: a CI matrix on Windows, macOS and Ubuntu that (1) runs unit and e2e tests, (2) executes the real install scripts in clean runners, (3) renders a sample clip end-to-end and checks the output with ffprobe (resolution 1080×1920, duration within ±0.5 s, audio present, loudness in range), and (4) runs `maxclipper doctor`. Handle Windows specifics explicitly: paths with spaces and non-ASCII characters, ASS font path escaping in FFmpeg filters, long paths, antivirus-locked files, PowerShell execution policy. Handle macOS specifics: Apple Silicon, Gatekeeper messages. Handle Linux specifics: missing codecs, headless servers.
 
 ## 12. DELIVERY PLAN (do in order; after each phase run tests, show me results, commit)
 
-1. Scaffold, config, CI matrix, `clipforge doctor`, health check.
-2. Install scripts, automatic FFmpeg download, `clipforge` command, first-run self-test.
+1. Scaffold, config, CI matrix, `maxclipper doctor`, health check.
+2. Install scripts, automatic FFmpeg download, `maxclipper` command, first-run self-test.
 3. Ingest, caching, download fallback ladder.
 4. Signal, text and selection modules with tests, plus calibration tool.
 5. Captions (ASS), safe zones, style library.
@@ -152,7 +152,7 @@ You may only have one OS locally. Therefore: a CI matrix on Windows, macOS and U
 
 ## 13. DEFINITION OF DONE
 
-- On a clean Windows, macOS and Linux runner, one pasted command installs ClipForge and `clipforge` opens the app with no manual steps (proven by CI logs).
+- On a clean Windows, macOS and Linux runner, one pasted command installs MaxClipper and `maxclipper` opens the app with no manual steps (proven by CI logs).
 - Paste a YouTube link, answer or skip the wizard, and get 5–10 ranked 9:16 clips with word-accurate captions inside platform safe zones, each with visible reasons for its score.
 - Every clip opens in the editor and all features in 3.5 work; export matches the preview.
 - A 45 s clip renders in under 30 s on a 4-core CPU; the low-spec profile still completes without freezing the UI (report real numbers in `BENCHMARKS.md`).

@@ -42,3 +42,12 @@ Thumbs.db
 outputs/
 *.wav
 *.mp4
+
+build/
+*.egg-info/
+__pycache__/
+*.pyc
+.pytest_cache/
+venv/
+outputs/
+logs/

@@ -13,8 +13,8 @@ from pathlib import Path
 try:
     from app.brand import APP_NAME, APP_ALIAS, APP_DESCRIPTION, APP_DISCLAIMER
 except Exception:
-    APP_NAME = "GTA 6 Clipper"
-    APP_ALIAS = "clipforge"
+    APP_NAME = "Max Clipper"
+    APP_ALIAS = "maxclipper"
     APP_DESCRIPTION = "Free, local-first stream clipper and vertical short maker."
     APP_DISCLAIMER = "Not affiliated with Rockstar Games or Take-Two."
 
@@ -145,10 +145,10 @@ def run_doctor():
 
 
 def run_update():
-    """Update ClipForge and yt-dlp."""
+    """Update MaxClipper and yt-dlp."""
     print("\U0001F504 Updating {} dependencies and yt-dlp...".format(APP_NAME))
     try:
-        subprocess.run([sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp", "clipforge"], check=True)
+        subprocess.run([sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp", "maxclipper"], check=True)
         print("\u2705 Update completed!")
     except Exception as e:
         print("\u274C Update failed: {}".format(e))

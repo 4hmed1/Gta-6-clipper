@@ -32,8 +32,8 @@
 2026-11-21 17:38:58,269 [INFO] Download succeeded (client=auto, fmt=bv*[height<=720][ext=mp4]+ba[ext=m4a]/b[height<=720][ext=mp4], 44.3 MB)
 2026-11-21 17:38:58,270 [INFO] [866b00e9] [downloading] p=80% | Video downloaded (44.32 MB)
 2026-11-21 17:38:58,270 [INFO] [866b00e9] [downloading] p=80% | Video downloaded (44.32 MB)
-2026-11-21 17:38:58,272 [INFO] [866b00e9] STAGE_COMPLETE: download_sections in 117.04s | video=/home/max/Documents/viralforge-ai/clipforge/app/outputs/downloads/video_866b00e9.mp4
-2026-11-21 17:38:58,272 [INFO] [866b00e9] STAGE_COMPLETE: download_sections in 117.04s | video=/home/max/Documents/viralforge-ai/clipforge/app/outputs/downloads/video_866b00e9.mp4
+2026-11-21 17:38:58,272 [INFO] [866b00e9] STAGE_COMPLETE: download_sections in 117.04s | video=/home/max/Documents/viralforge-ai/maxclipper/app/outputs/downloads/video_866b00e9.mp4
+2026-11-21 17:38:58,272 [INFO] [866b00e9] STAGE_COMPLETE: download_sections in 117.04s | video=/home/max/Documents/viralforge-ai/maxclipper/app/outputs/downloads/video_866b00e9.mp4
 2026-11-21 17:38:58,272 [INFO] [866b00e9] [rendering] p=85% | Rendering 5 vertical shorts...
 2026-11-21 17:38:58,272 [INFO] [866b00e9] [rendering] p=85% | Rendering 5 vertical shorts...
 2026-11-21 17:38:58,272 [INFO] [866b00e9] [rendering] p=85% | Rendering clip 1/5: 'This is the secret strategy that nobody is...'...
@@ -92,8 +92,8 @@
 2026-11-21 18:07:10,384 [INFO] Download succeeded (client=android, fmt=bv*[height<=720][ext=mp4]+ba[ext=m4a]/b[height<=720][ext=mp4], 89.6 MB)
 2026-11-21 18:07:10,385 [INFO] [65da9455] [downloading] p=80% | Video downloaded (89.61 MB)
 2026-11-21 18:07:10,385 [INFO] [65da9455] [downloading] p=80% | Video downloaded (89.61 MB)
-2026-11-21 18:07:10,389 [INFO] [65da9455] STAGE_COMPLETE: download_sections in 629.20s | video=/home/max/Documents/viralforge-ai/clipforge/app/outputs/downloads/video_65da9455.mp4
-2026-11-21 18:07:10,389 [INFO] [65da9455] STAGE_COMPLETE: download_sections in 629.20s | video=/home/max/Documents/viralforge-ai/clipforge/app/outputs/downloads/video_65da9455.mp4
+2026-11-21 18:07:10,389 [INFO] [65da9455] STAGE_COMPLETE: download_sections in 629.20s | video=/home/max/Documents/viralforge-ai/maxclipper/app/outputs/downloads/video_65da9455.mp4
+2026-11-21 18:07:10,389 [INFO] [65da9455] STAGE_COMPLETE: download_sections in 629.20s | video=/home/max/Documents/viralforge-ai/maxclipper/app/outputs/downloads/video_65da9455.mp4
 2026-11-21 18:07:10,390 [INFO] [65da9455] [rendering] p=85% | Rendering 3 vertical shorts...
 2026-11-21 18:07:10,390 [INFO] [65da9455] [rendering] p=85% | Rendering 3 vertical shorts...
 2026-11-21 18:07:10,391 [INFO] [65da9455] [rendering] p=85% | Rendering clip 1/3: 'This is the secret strategy that nobody is...'...
@@ -120,13 +120,13 @@
 2026-11-21 19:02:16,478 [WARNING] dl-auto-0: timed out (90s)
 2026-11-21 19:02:16,490 [ERROR] [23d17ea4] PIPELINE_CRASH: FileNotFoundError: yt-dlp not found on PATH or in the active Python environment. Install it with: pip install yt-dlp
 Traceback (most recent call last):
-  File "/home/max/clipforge/app/main.py", line 780, in run_processing_pipeline
+  File "/home/max/maxclipper/app/main.py", line 780, in run_processing_pipeline
     dl_res = _run_async(_download_sections(
         req.url,
     ...<2 lines>...
         target_height=target_h,
     ))
-  File "/home/max/clipforge/app/main.py", line 560, in _run_async
+  File "/home/max/maxclipper/app/main.py", line 560, in _run_async
     return asyncio.run(coro)
            ~~~~~~~~~~~^^^^^^
   File "/usr/lib/python3.14/asyncio/runners.py", line 204, in run
@@ -138,9 +138,9 @@ Traceback (most recent call last):
   File "/usr/lib/python3.14/asyncio/base_events.py", line 719, in run_until_complete
     return future.result()
            ~~~~~~~~~~~~~^^
-  File "/home/max/clipforge/app/main.py", line 482, in _download_sections
+  File "/home/max/maxclipper/app/main.py", line 482, in _download_sections
     yt = _ytdlp_bin()
-  File "/home/max/clipforge/app/main.py", line 265, in _ytdlp_bin
+  File "/home/max/maxclipper/app/main.py", line 265, in _ytdlp_bin
     raise FileNotFoundError(
     ...<2 lines>...
     )
@@ -163,7 +163,7 @@ FileNotFoundError: yt-dlp not found on PATH or in the active Python environment.
 2026-11-21 19:11:06,141 [INFO] [5b9e68e5] [downloading] p=70% | Downloading video (low quality, cut locally)...
 2026-11-21 19:12:10,044 [INFO] Download succeeded (client=auto, fmt=bv*[height<=720][ext=mp4]+ba[ext=m4a]/b[height<=720][ext=mp4], 73.8 MB)
 2026-11-21 19:12:10,045 [INFO] [5b9e68e5] [downloading] p=80% | Video downloaded (73.79 MB)
-2026-11-21 19:12:10,045 [INFO] [5b9e68e5] STAGE_COMPLETE: download_sections in 186.85s | video=/home/max/clipforge/app/outputs/downloads/video_5b9e68e5.mp4
+2026-11-21 19:12:10,045 [INFO] [5b9e68e5] STAGE_COMPLETE: download_sections in 186.85s | video=/home/max/maxclipper/app/outputs/downloads/video_5b9e68e5.mp4
 2026-11-21 19:12:10,046 [INFO] [5b9e68e5] [rendering] p=85% | Rendering 3 vertical shorts...
 2026-11-21 19:12:10,046 [INFO] [5b9e68e5] [rendering] p=85% | Rendering clip 1/3: 'This is the secret strategy that nobody is...'...
 2026-11-21 19:14:18,729 [INFO] [5b9e68e5] [rendering] p=89% | Rendering clip 2/3: 'If you want to grow your audience and...'...

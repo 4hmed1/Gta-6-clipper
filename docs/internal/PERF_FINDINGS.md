@@ -156,7 +156,7 @@ def analyze_viral_moments_heuristic(segments, min_duration=20.0, max_duration=60
 
 ### 6. AUDIO ANALYSIS: Vectorized, Not a Bottleneck (RULED OUT)
 
-**File:** `clipforge/core/signals.py`
+**File:** `maxclipper/core/signals.py`
 
 **Evidence:**
 ```python

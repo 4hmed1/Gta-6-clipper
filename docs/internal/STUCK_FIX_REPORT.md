@@ -1,7 +1,7 @@
 # STUCK FIX REPORT
 
 ## Problem
-ClipForge jobs could get stuck at "Starting..." / 0% progress forever with no errors or progress updates. This was the #1 user-facing blocker — a job would appear to start but never make progress, and the only fix was to restart the server or delete the orphaned task.
+MaxClipper jobs could get stuck at "Starting..." / 0% progress forever with no errors or progress updates. This was the #1 user-facing blocker — a job would appear to start but never make progress, and the only fix was to restart the server or delete the orphaned task.
 
 ## Root Causes (confirmed with evidence)
 
@@ -73,7 +73,7 @@ Each failure also sets `suggested_fix` for the UI to display.
 ## Files Modified
 - `app/main.py`: `_run_subprocess_async` helper, `_check_and_clear_orphan_tasks`, `_classify_ytdlp_error`, `fail_with`, heartbeat in `set_status`, `_active_workers` tracking, worker PID registration in process endpoint, tasks endpoint `heartbeat_age` + `is_stuck`, janitor loop, all three async downloaders use new subprocess runner
 - `static/js/app.js`: polling shape fix (`taskList.find`), error toast handling, button state wiring
-- `tests/test_ui.py`: `test_serve_index` assertion updated from "ClipForge" to "GTA 6 Clipper"
+- `tests/test_ui.py`: `test_serve_index` assertion updated from "MaxClipper" to "Max Clipper"
 
 ## Next Steps (from STUCK_ROOT_CAUSE.md)
 - Run full end-to-end on a 5-minute captioned video and record stage timeline

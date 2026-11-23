@@ -2,7 +2,7 @@
 set -e
 
 echo "=========================================================="
-echo "   🎬 GTA 6 Clipper - Free Local Vertical Short Maker   "
+echo "   🎬 Max Clipper - Free Local Vertical Short Maker   "
 echo "=========================================================="
 
 # Check if ffmpeg is installed
@@ -22,7 +22,7 @@ fi
 echo "🔄 Activating virtual environment..."
 source venv/bin/activate
 
-echo "📥 Installing GTA 6 Clipper & dependencies..."
+echo "📥 Installing Max Clipper & dependencies..."
 pip install -e ".[stt]"
 
 # Use the myenv environment if it exists, otherwise use the local venv
@@ -33,5 +33,5 @@ else
     echo "Using local venv..."
 fi
 
-echo "✨ Starting GTA 6 Clipper Studio on http://localhost:8760..."
+echo "✨ Starting Max Clipper Studio on http://localhost:8760..."
 python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8760 --reload

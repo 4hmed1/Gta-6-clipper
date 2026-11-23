@@ -8,10 +8,10 @@ from pathlib import Path
 import pytest
 
 # conftest.py already inserts the project root on sys.path, so `app` and
-# `clipforge` import normally as installed packages.
+# `maxclipper` import normally as installed packages.
 from app import config as app_config
 from app.captions import track
-from clipforge.resilience.exceptions import CaptionError, FONT_MISSING
+from maxclipper.resilience.exceptions import CaptionError, FONT_MISSING
 
 
 def test_fonts_dir_is_project_root_assets():

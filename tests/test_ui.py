@@ -8,7 +8,7 @@ def test_serve_index():
     """Test that GET / returns the HTML UI successfully."""
     response = client.get("/")
     assert response.status_code == 200
-    assert "GTA 6 Clipper" in response.text
+    assert "Max Clipper" in response.text
     assert "<html" in response.text
 
 def test_api_clips_endpoint():

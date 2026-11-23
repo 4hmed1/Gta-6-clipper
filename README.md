@@ -1,4 +1,4 @@
-# ClipForge: Install-in-One-Command Clipping Studio
+# MaxClipper: Install-in-One-Command Clipping Studio
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/release/python-3110/)
@@ -7,11 +7,11 @@
 
 ## 🚀 Turn YouTube into Vertical Shorts — Locally, Free, No API Keys
 
-**ClipForge** is an open-source, local-first application that transforms a YouTube link into ready-to-post vertical Shorts, Reels, and TikTok videos. Install with **one command** on Windows, macOS, or Linux, and never touch FFmpeg, Python paths, or config files.
+**MaxClipper** is an open-source, local-first application that transforms a YouTube link into ready-to-post vertical Shorts, Reels, and TikTok videos. Install with **one command** on Windows, macOS, or Linux, and never touch FFmpeg, Python paths, or config files.
 
-### 🌟 Why ClipForge Wins
+### 🌟 Why MaxClipper Wins
 
-| Feature | ClipForge (Free) | Paid Tools |
+| Feature | MaxClipper (Free) | Paid Tools |
 |---------|------------------|------------|
 | **Cost** | ✅ Free, unlimited, no watermark | ❌ Subscription required |
 | **Privacy** | ✅ 100% offline, nothing uploaded | ❌ Cloud processing, data sent |
@@ -29,7 +29,7 @@
 - **Self-Healing Engine**: Detects failures and fixes or works around them automatically
 - **Questions First, Smart Defaults**: Short wizard shapes output; every question skippable
 - **Real Editor**: Full timeline editor (CapCut-style) — split, trim, effects, transitions, audio, undo/redo
-- **One-Command Install**: `clipforge` command opens browser; no manual config ever
+- **One-Command Install**: `maxclipper` command opens browser; no manual config ever
 
 ### 📋 Step-By-Step Workflow
 
@@ -45,12 +45,12 @@
 
 **macOS / Linux:**
 ```bash
-git clone https://github.com/4hmed1/clipforge.git && cd clipforge && bash installers/install.sh
+git clone https://github.com/4hmed1/MaxClipper.git && cd maxclipper && bash installers/install.sh
 ```
 
 **Windows (PowerShell):**
 ```powershell
-irm https://raw.githubusercontent.com/4hmed1/clipforge/main/installers/install.ps1 | iex
+irm https://raw.githubusercontent.com/4hmed1/MaxClipper/main/installers/install.ps1 | iex
 ```
 
 The installer:
@@ -59,18 +59,18 @@ The installer:
 - Creates an isolated virtual environment
 - Downloads a verified static FFmpeg if none is found (checksums verified)
 - Installs yt-dlp
-- Adds the `clipforge` command to PATH
+- Adds the `maxclipper` command to PATH
 - Runs a health check
 - Starts the server on `http://localhost:8760` and opens your browser
 
 **After install, run:**
 ```bash
-clipforge  # opens http://localhost:8760
+maxclipper  # opens http://localhost:8760
 ```
 
-### ⚖️ Feature Comparison: ClipForge vs. Paid Tools
+### ⚖️ Feature Comparison: MaxClipper vs. Paid Tools
 
-| Feature | ClipForge (Free) | Descript | Otter.ai | Riverside.fm |
+| Feature | MaxClipper (Free) | Descript | Otter.ai | Riverside.fm |
 |---------|------------------|----------|----------|--------------|
 | **Cost** | ✅ Free, one-time | ❌ $12/mo+ | ❌ $10/mo+ | ❌ $15/mo+ |
 | **Local/Offline** | ✅ 100% offline | ❌ Cloud-only | ❌ Cloud-only | ❌ Cloud-only |
@@ -84,26 +84,26 @@ clipforge  # opens http://localhost:8760
 
 ### ❓ FAQ — Direct Q&A Pairs
 
-**Q: What is ClipForge?**  
-A: ClipForge is a free, open-source, local application that turns YouTube links into vertical video Shorts, Reels, and TikTok videos with auto-generated captions. It runs 100% offline on your computer with no paid APIs or cloud services.
+**Q: What is MaxClipper?**  
+A: MaxClipper is a free, open-source, local application that turns YouTube links into vertical video Shorts, Reels, and TikTok videos with auto-generated captions. It runs 100% offline on your computer with no paid APIs or cloud services.
 
 **Q: Do I need FFmpeg or Python installed?**  
 A: No. The one-command installer detects your OS, installs Python 3.11+ if needed, creates an isolated virtual environment, and downloads a verified static FFmpeg/ffprobe automatically if none is found on your system.
 
-**Q: Is ClipForge really free with no hidden costs?**  
-A: Yes. ClipForge is completely free forever. There are no subscription tiers, no watermark, no API key requirements, and no cloud costs. Everything runs on your own computer.
+**Q: Is MaxClipper really free with no hidden costs?**  
+A: Yes. MaxClipper is completely free forever. There are no subscription tiers, no watermark, no API key requirements, and no cloud costs. Everything runs on your own computer.
 
-**Q: Can I use ClipForge without an Internet connection?**  
+**Q: Can I use MaxClipper without an Internet connection?**  
 A: Yes, after the initial install and YouTube metadata fetch. Once a video's metadata and captions are downloaded, all processing happens locally. The `faster-whisper` offline STT engine is optional and OFF by default.
 
-**Q: What platforms does ClipForge support?**  
+**Q: What platforms does MaxClipper support?**  
 A: Windows (PowerShell install), macOS, and Linux. The one-command install scripts are tailored for each platform.
 
-**Q: Does ClipForge work with private or age-restricted YouTube videos?**  
-A: No. ClipForge requires public YouTube videos with accessible metadata and captions. Private, age-restricted, or geo-blocked videos cannot be processed.
+**Q: Does MaxClipper work with private or age-restricted YouTube videos?**  
+A: No. MaxClipper requires public YouTube videos with accessible metadata and captions. Private, age-restricted, or geo-blocked videos cannot be processed.
 
 **Q: How are clips captioned without AI or paid APIs?**  
-A: ClipForge uses deterministic DSP/statistics/text heuristics (punctuation-based sentence boundaries, TextRank/TF-IDF keyword salience, rule-based sentiment lexicon, YAML hook patterns) to extract and generate captions from YouTube's built-in caption tracks with word timing. No LLM, no paid API, no cloud AI is used.
+A: MaxClipper uses deterministic DSP/statistics/text heuristics (punctuation-based sentence boundaries, TextRank/TF-IDF keyword salience, rule-based sentiment lexicon, YAML hook patterns) to extract and generate captions from YouTube's built-in caption tracks with word timing. No LLM, no paid API, no cloud AI is used.
 
 **Q: Can I edit the captions after they're generated?**  
 A: Yes. The built-in editor allows inline text editing, word timing adjustment, restyling, dragging captions on the canvas, and applying styles to all captions at once.
@@ -114,8 +114,8 @@ A: MP4 with h264 video and AAC audio, 1080×1920 vertical orientation, with burn
 **Q: Can I batch-process multiple videos?**  
 A: The current v0.1.0 release processes one video at a time. A batch queue feature is planned for a future pro extension.
 
-**Q: How do I update ClipForge?**  
-A: Run `clipforge update` from the command line. This updates the app and yt-dlp to the latest versions.
+**Q: How do I update MaxClipper?**  
+A: Run `maxclipper update` from the command line. This updates the app and yt-dlp to the latest versions.
 
 ### 👥 Contributors & Built With
 
@@ -151,4 +151,4 @@ This project was built with the assistance of AI coding agents and is maintained
 
 ---
 
-*ClipForge: Free, local, open-source. Turn YouTube into Shorts — no account, no watermark, no paid APIs, 100% offline.*
+*MaxClipper: Free, local, open-source. Turn YouTube into Shorts — no account, no watermark, no paid APIs, 100% offline.*

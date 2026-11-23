@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Run `clipforge doctor` first — it checks Python, FFmpeg, encoders, disk, ports and permissions and prints a clear PASS/FAIL per item with a suggested fix.
+Run `maxclipper doctor` first — it checks Python, FFmpeg, encoders, disk, ports and permissions and prints a clear PASS/FAIL per item with a suggested fix.
 
 ## "YouTube thinks you're a bot" / sign-in required
 
@@ -26,24 +26,24 @@ Every download runs in its own process group with a watchdog. If a stage makes n
 
 Some videos have no caption track. If offline STT is not enabled the app falls back to audio-signal analysis and tells you captions are off. To enable:
 
-1. `pip install clipforge[stt]` (installs faster-whisper)
+1. `pip install maxclipper[stt]` (installs faster-whisper)
 2. In Settings, turn on "Offline speech-to-text".
 3. Re-run the job.
 
 ## "Render failed" / black or silent clips
 
-- Confirm FFmpeg is installed: `clipforge doctor`.
+- Confirm FFmpeg is installed: `maxclipper doctor`.
 - On Windows, make sure the output folder is not on a network drive or a folder locked by antivirus.
 - Try the "Fast preview" quality setting.
 
 ## Disk full
 
-The app needs ~500 MB for itself plus ~100 MB per analyzed video. Run `clipforge doctor` to see free space. Delete old clips from the Library tab.
+The app needs ~500 MB for itself plus ~100 MB per analyzed video. Run `maxclipper doctor` to see free space. Delete old clips from the Library tab.
 
 ## The app won't open / port in use
 
 ```bash
-clipforge --port 8080 --no-browser
+maxclipper --port 8080 --no-browser
 ```
 
 If the port is busy, pick another with `--port`.

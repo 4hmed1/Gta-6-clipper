@@ -1,4 +1,4 @@
-# ClipForge End-to-End Test: YouTube URL → Vertical Shorts
+# MaxClipper End-to-End Test: YouTube URL → Vertical Shorts
 
 ## ✅ Verification Results
 
@@ -52,7 +52,7 @@ Verified: No "10,000 agents" or "99.9% accuracy" marketing language in `static/i
 
 ## Conclusion
 
-ClipForge successfully converts a YouTube URL into 5 rank-ranked 1080×1920 vertical shorts with word-accurate burned-in captions. The pipeline:
+MaxClipper successfully converts a YouTube URL into 5 rank-ranked 1080×1920 vertical shorts with word-accurate burned-in captions. The pipeline:
 - Fetches metadata + captions only (tiny download)
 - Transcribes using YouTube captions (fastest, free, word-timed)
 - Clips based on NLP + audio signals (hooks, speech density, dead-air)

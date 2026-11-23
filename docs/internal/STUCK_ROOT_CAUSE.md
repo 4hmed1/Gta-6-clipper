@@ -1,7 +1,7 @@
-# STUCK_ROOT_CAUSE.md — ClipForge Job Stuck at "Starting..." Diagnosis
+# STUCK_ROOT_CAUSE.md — MaxClipper Job Stuck at "Starting..." Diagnosis
 
 ## Author & Date
-- **Author**: Principal Engineer, ClipForge
+- **Author**: Principal Engineer, MaxClipper
 - **Date**: Thu Nov 19 2026
 
 ## Summary

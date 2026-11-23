@@ -5,7 +5,7 @@
 $ErrorActionPreference = "Stop"
 
 Write-Host "==================================================" -ForegroundColor Cyan
-Write-Host "     ClipForge: One-Command Install (Windows)     " -ForegroundColor Cyan
+Write-Host "     MaxClipper: One-Command Install (Windows)     " -ForegroundColor Cyan
 Write-Host "==================================================" -ForegroundColor Cyan
 
 # 1. Detect if running from repo root or downloaded script
@@ -52,11 +52,11 @@ if (!(command -v ffmpeg)) {
 }
 
 # 4. Setup isolated environment (no global pollution)
-$installDir = "$env:USERPROFILE\clipforge"
+$installDir = "$env:USERPROFILE\maxclipper"
 if (!(Test-Path $installDir)) {
     New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 }
-Write-Host "Installing ClipForge to $installDir..." -ForegroundColor Cyan
+Write-Host "Installing MaxClipper to $installDir..." -ForegroundColor Cyan
 
 # 5. Use uv for fast, isolated installation if available
 $useUv = $false
@@ -77,7 +77,7 @@ if ($useUv) {
     & python3 -m venv "$installDir\venv"
     Write-Host "Upgrading pip in venv..." -ForegroundColor Cyan
     & "$installDir\venv\Scripts\python" -m pip install --upgrade pip
-    Write-Host "Installing ClipForge and dependencies..." -ForegroundColor Cyan
+    Write-Host "Installing MaxClipper and dependencies..." -ForegroundColor Cyan
     & "$installDir\venv\Scripts\python" -m pip install --upgrade pip
     & "$installDir\venv\Scripts\python" -m pip install -e ".[stt]"
     # Also install yt-dlp if not already
@@ -88,15 +88,15 @@ if ($useUv) {
 $binDir = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs"
 Write-Host "Creating command wrappers in $binDir..." -ForegroundColor Cyan
 
-# clipforge command
-$clipforgeWrapper = "$installDir\venv\Scripts\python.exe"
-Write-Host "  clipforge -> $clipforgeWrapper -m clipforge.cli" -ForegroundColor White
+# maxclipper command
+$maxclipperWrapper = "$installDir\venv\Scripts\python.exe"
+Write-Host "  maxclipper -> $maxclipperWrapper -m maxclipper.cli" -ForegroundColor White
 
 # 7. Run doctor
-Write-Host "Running system health check (clipforge doctor)..." -ForegroundColor Cyan
-& "$installDir\venv\Scripts\python" -m clipforge.cli doctor
+Write-Host "Running system health check (maxclipper doctor)..." -ForegroundColor Cyan
+& "$installDir\venv\Scripts\python" -m maxclipper.cli doctor
 
 Write-Host "==================================================" -ForegroundColor Cyan
-Write-Host "ClipForge installed successfully!" -ForegroundColor Green
-Write-Host "Run: `clipforge`  to start the application" -ForegroundColor Cyan
+Write-Host "MaxClipper installed successfully!" -ForegroundColor Green
+Write-Host "Run: `maxclipper`  to start the application" -ForegroundColor Cyan
 Write-Host "==================================================" -ForegroundColor Cyan

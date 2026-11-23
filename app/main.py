@@ -26,7 +26,7 @@ from app.video_engine import render_clip
 from app.clip_editor import adjust_and_reexport_clip
 
 app = FastAPI(
-    title="GTA 6 Clipper",
+    title="Max Clipper",
     description="Free, local-first desktop app that turns YouTube/Twitch links into ready-to-post vertical Shorts with a CapCut-style editor.",
     version="1.0.0"
 )
@@ -241,7 +241,7 @@ class EditRequest(BaseModel):
 # ── Structured logging ──
 LOGS_DIR = BASE_DIR / "logs"
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
-pipeline_logger = logging.getLogger("clipforge.pipeline")
+pipeline_logger = logging.getLogger("maxclipper.pipeline")
 pipeline_logger.setLevel(logging.INFO)
 _fh = logging.FileHandler(LOGS_DIR / "pipeline.log")
 _fh.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))

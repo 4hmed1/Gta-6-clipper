@@ -1,4 +1,4 @@
-# TRUTH REPORT — ClipForge Pipeline Investigation
+# TRUTH REPORT — MaxClipper Pipeline Investigation
 
 **Date**: 2026-11-18  
 **Author**: Automated Audit  

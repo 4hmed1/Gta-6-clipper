@@ -32,12 +32,12 @@ else:
     DEFAULT_VIDEO_PRESET = "veryfast"
 
 # Paths
-_LOG_DIR = Path(platformdirs.user_log_dir("ClipForge"))
+_LOG_DIR = Path(platformdirs.user_log_dir("MaxClipper"))
 _LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── Global render lock (file-based for cross-process safety) ──────────────
 
-_lock_file = Path(platformdirs.user_data_dir("ClipForge")) / "render.lock"
+_lock_file = Path(platformdirs.user_data_dir("MaxClipper")) / "render.lock"
 
 
 def _acquire_render_lock(timeout: float = 300.0) -> bool:
@@ -92,7 +92,7 @@ def _release_render_lock() -> None:
 def _compute_render_timeout(duration_seconds: float, override_seconds: Optional[float] = None) -> float:
     """Compute the render timeout.
 
-    - If override_seconds is set (via env var CLIPFORGE_RENDER_TIMEOUT), use it.
+    - If override_seconds is set (via env var MAXCLIPPER_RENDER_TIMEOUT), use it.
     - Hard cap: max(1800, duration_seconds * 90).
     - Default: 300s (5 minutes) for very short clips.
     """
@@ -111,7 +111,7 @@ def _compute_render_timeout(duration_seconds: float, override_seconds: Optional[
 def _compute_stall_seconds(override_seconds: Optional[float] = None) -> float:
     """Compute the stall-based timeout.
 
-    - If override_seconds is set (via env var CLIPFORGE_STALL_SECONDS), use it.
+    - If override_seconds is set (via env var MAXCLIPPER_STALL_SECONDS), use it.
     - Default: 180 seconds (3 minutes) with no progress.
     """
     if override_seconds is not None and override_seconds > 0:
@@ -488,8 +488,8 @@ def render_clip(
         duration: Clip duration in seconds.
         clip_id: Identifier for logging and error messages.
         preset: FFmpeg preset override. Uses CPU-based default if None.
-        stall_override: Override stall timeout (seconds). Sets CLIPFORGE_STALL_SECONDS env effect.
-        timeout_override: Override render timeout (seconds). Sets CLIPFORGE_RENDER_TIMEOUT env effect.
+        stall_override: Override stall timeout (seconds). Sets MAXCLIPPER_STALL_SECONDS env effect.
+        timeout_override: Override render timeout (seconds). Sets MAXCLIPPER_RENDER_TIMEOUT env effect.
 
     Returns:
         dict with keys: success, output_path, error, log_path

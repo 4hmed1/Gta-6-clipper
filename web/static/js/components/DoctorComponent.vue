@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <div class="header">
-      <h1>🔍 ClipForge Doctor</h1>
+      <h1>🔍 MaxClipper Doctor</h1>
       <p>System Diagnostics & Environment Check</p>
     </div>
 

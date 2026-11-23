@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Profile runner for ClipForge pipeline stages.
+Profile runner for MaxClipper pipeline stages.
 Runs the full flow on test videos and prints timing results.
 Baseline measurements for 4th-gen Intel i5, 8GB RAM, no GPU.
 """

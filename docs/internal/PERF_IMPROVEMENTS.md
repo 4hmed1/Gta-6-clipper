@@ -33,7 +33,7 @@
 - Added last-resort fallback that generates clips from sentence boundaries
 - **Result**: Selection now works with both segment-based and word-only transcripts
 
-### 4. Profiler Integration (`clipforge/profiler.py`, `app/main.py`)
+### 4. Profiler Integration (`maxclipper/profiler.py`, `app/main.py`)
 - Created profiler module with stage tracking, stuck detection, and JSONL logging
 - Integrated profiling into main pipeline stages
 - Added progress updates with byte tracking

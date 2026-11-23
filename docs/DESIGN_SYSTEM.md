@@ -1,4 +1,4 @@
-# ClipForge Design System
+# MaxClipper Design System
 
 ## Colors
 

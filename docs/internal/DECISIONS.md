@@ -1,4 +1,4 @@
-# ClipForge Architecture Decisions & Decision Log (DECISIONS.md)
+# MaxClipper Architecture Decisions & Decision Log (DECISIONS.md)
 
 ## ADR-001: Open Source License
 - **Decision**: MIT License.
@@ -9,11 +9,11 @@
 - **Rationale**: Clip selection uses deterministic DSP (energy variance, spectral flux, pitch contour, dead-air map), classic NLP (TextRank/TF-IDF, sentence boundaries, hook pattern scoring), and classical computer vision (OpenCV face cascade + optical flow motion saliency). YouTube json3 captions provide word-level timing by default; offline Whisper is optional and opt-in only.
 
 ## ADR-003: Package Structure & Monorepo Layout
-- **Decision**: Monorepo with `clipforge/` (Python package + backend + resilience + algorithms), `web/` (React/TS frontend source, bundled into `clipforge/static`), `installers/` (`install.ps1`, `install.sh`), `config/` (YAML scoring presets & hook rules), `tests/` (Pytest unit/chaos/golden/e2e), `docs/`.
+- **Decision**: Monorepo with `maxclipper/` (Python package + backend + resilience + algorithms), `web/` (React/TS frontend source, bundled into `maxclipper/static`), `installers/` (`install.ps1`, `install.sh`), `config/` (YAML scoring presets & hook rules), `tests/` (Pytest unit/chaos/golden/e2e), `docs/`.
 - **Rationale**: Meets Section 5 requirements while retaining clean module isolation and single-command wheel installation (`pip install .` or `uv pip install .`).
 
 ## ADR-004: Editor & Exporter Synchronization
-- **Decision**: Single `ProjectJSON` format representing timeline state. Editor preview renders `ProjectJSON` via HTML5 Video + Canvas/DOM overlay; `clipforge.editor.compiler` converts the exact same `ProjectJSON` into a single, deterministic FFmpeg filtergraph.
+- **Decision**: Single `ProjectJSON` format representing timeline state. Editor preview renders `ProjectJSON` via HTML5 Video + Canvas/DOM overlay; `maxclipper.editor.compiler` converts the exact same `ProjectJSON` into a single, deterministic FFmpeg filtergraph.
 - **Rationale**: Eliminates drift between preview and final export; validated via automated golden tests.
 
 ## ADR-005: Self-Healing & Resilience First Design
@@ -37,5 +37,5 @@
 - **Rationale**: One clean shape keeps the frontend and backend in sync; server-side parsing gives honest error messages for malformed input.
 
 ## ADR-10: Settings Persistence via localStorage
-- **Decision**: User preferences (clip count, length, aspect, caption style, framing, toggles, focus text) are saved to `localStorage` under `clipforge_settings` and restored on page load. Quality overrides are also persisted.
+- **Decision**: User preferences (clip count, length, aspect, caption style, framing, toggles, focus text) are saved to `localStorage` under `maxclipper_settings` and restored on page load. Quality overrides are also persisted.
 - **Rationale**: The wizard's "every question can be skipped" requirement means defaults must remember the user's last choice without a backend round-trip.

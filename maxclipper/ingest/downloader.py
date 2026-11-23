@@ -1,5 +1,5 @@
 """
-ClipForge YouTube Downloader Module
+MaxClipper YouTube Downloader Module
 Handles YouTube metadata, caption track discovery, low-bitrate audio
 downloads, and section-only video downloads with speed-adaptive
 resolution.  Uses the yt-dlp Python API directly (no CLI shelling).
@@ -19,7 +19,7 @@ from typing import Dict, Any, Optional, List
 
 import yt_dlp
 
-from clipforge.resilience import DownloadError
+from maxclipper.resilience import DownloadError
 
 
 # Player clients to try in order when YouTube blocks / changes clients.

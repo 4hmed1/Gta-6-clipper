@@ -1,4 +1,4 @@
-# Contributing to GTA 6 Clipper
+# Contributing to Max Clipper
 
 First, thank you for considering contributing! This document explains how to
 set up the project, run the tests, and submit changes.
@@ -9,7 +9,7 @@ copyright infringement will not be tolerated.
 
 ## Development setup
 ```bash
-git clone https://github.com/4hmed1/clipforge.git
+git clone https://github.com/4hmed1/MaxClipper.git
 cd viralforge-ai
 python3 -m venv venv
 source venv/bin/activate

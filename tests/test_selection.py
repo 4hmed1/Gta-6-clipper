@@ -1,5 +1,5 @@
 import pytest
-from clipforge.core.selection import ClipSelector
+from maxclipper.core.selection import ClipSelector
 
 def test_clip_selector_initialization():
     selector = ClipSelector("podcast")

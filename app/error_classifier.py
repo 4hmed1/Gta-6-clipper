@@ -1,4 +1,4 @@
-"""Error classification and recovery logic for ClipForge."""
+"""Error classification and recovery logic for MaxClipper."""
 
 from typing import Dict, Any, Optional
 

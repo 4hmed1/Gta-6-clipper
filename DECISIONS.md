@@ -1,4 +1,4 @@
-# DECISIONS.md - ClipForge Project Decisions
+# DECISIONS.md - MaxClipper Project Decisions
 
 ## Key Decisions Made During Development
 
@@ -10,7 +10,7 @@
 ### 2. Path Handling Fix
 - **Decision**: Wrap `platformdirs.user_data_dir()` result with `Path()` in cli.py
 - **Rationale**: Fixed `TypeError: unsupported operand type(s) for /: 'str' and 'str'` in captions-debug command
-- **Status**: Completed - Line 340 in clipforge/cli.py updated
+- **Status**: Completed - Line 340 in maxclipper/cli.py updated
 
 ### 3. Port Unification
 - **Decision**: Use port 3000 as default across all components
@@ -24,7 +24,7 @@
 - **Status**: Completed - app/main.py updated
 
 ### 5. CLI Flags
-- **Decision**: Add `--port` and `--no-browser` flags to clipforge command
+- **Decision**: Add `--port` and `--no-browser` flags to maxclipper command
 - **Rationale**: User flexibility for custom ports and headless operation
 - **Status**: Completed - cli.py updated
 
@@ -46,7 +46,7 @@
 ### 9. Package Installation
 - **Decision**: Install into isolated venv using system Python 3.11+, no global pollution
 - **Rationale**: Clean separation, easy uninstall, no system Python breakage
-- **Status**: Completed - verified with /home/max/.gta6-clipper/venv
+- **Status**: Completed - verified with /home/max/.maxclipper/venv
 
 ### 10. Offline-First Design
 - **Decision**: No LLM, no paid API, no cloud AI in core clip selection
