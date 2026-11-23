@@ -1,8 +1,7 @@
 import numpy as np
 import yaml
 import re
-from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 
 from .._config import package_config as _package_config
 from .signals import analyze_audio_signals

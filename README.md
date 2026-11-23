@@ -30,17 +30,30 @@
 
 ### 🚀 One-Command Install
 
+#### Linux & macOS
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/4hmed1/MaxClipper/main/installers/install.sh | bash
 ```
+
+#### Windows (PowerShell)
+
+```powershell
+iwr https://raw.githubusercontent.com/4hmed1/MaxClipper/main/installers/install.ps1 | iex
+```
+
+> **Note**: The Windows installer `.ps1` script is equivalent to `install.sh` but adapted for PowerShell. It sets up a venv at `%APPDATA%\MaxClipper`, adds `maxclipper` to PATH, and installs all dependencies including FFmpeg if not found.
 
 Open a new terminal and type `maxclipper`, and open the link it shows.
 
 ### 📋 Requirements
 
 - **Python**: 3.11 or newer
-- **FFmpeg**: must be on PATH (install with: `sudo apt install ffmpeg` on Ubuntu/Debian, `brew install ffmpeg` on macOS)
-- **OS**: Linux, macOS (Windows via WSL)
+- **FFmpeg**: must be on PATH
+  - Ubuntu/Debian: `sudo apt install ffmpeg`
+  - macOS: `brew install ffmpeg`
+  - Windows: download static build from https://ffmpeg.org/download.html#windows and add `bin/` to PATH
+- **OS**: Linux, macOS, Windows (via WSL2 or native)
 - **Disk**: 2 GB+ free space
 
 ### 🛠 Troubleshooting

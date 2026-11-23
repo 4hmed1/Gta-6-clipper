@@ -1,6 +1,6 @@
 """Error classification and recovery logic for MaxClipper."""
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 class ErrorClassifier:
     """Classifies errors into user-friendly messages and actionable fixes."""

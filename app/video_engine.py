@@ -4,7 +4,7 @@ import uuid
 from pathlib import Path
 from typing import Dict, Any, List
 from app.config import CLIPS_DIR, FONTS_DIR
-from app.captions.track import caption_track_from_json3, caption_track_from_words, Word, STYLES
+from app.captions.track import caption_track_from_words
 
 def escape_ffmpeg_path(path: str) -> str:
     """Escape path for ffmpeg filtergraph syntax."""
@@ -148,18 +148,17 @@ def render_clip(
 
     # 2. Construct ffmpeg filter graph
     escaped_sub = escape_ffmpeg_path(sub_path)
-    escaped_fontsdir = escape_ffmpeg_path(str(FONTS_DIR))
-    subtitles_filter = f"subtitles='{escaped_sub}':fontsdir='{escaped_fontsdir}'"
+    escape_ffmpeg_path(str(FONTS_DIR))
     
     if layout == "split_blur":
         # 9:16 Vertical Short with Blurred Background & Centered Crisp Foreground
         # OPTIMIZATION: Blur at 270x480 (low res) then upscale - much faster than blurring 1080x1920
         filter_complex = (
-            f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
-            f"scale=270:480,boxblur=24:6,eq=brightness=-0.18,"
-            f"scale=1080:1920[bg];"
-            f"[0:v]scale=1080:-2[fg];"
-            f"[bg][fg]overlay=(W-w)/2:(H-h)/2[base]"
+            "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
+            "scale=270:480,boxblur=24:6,eq=brightness=-0.18,"
+            "scale=1080:1920[bg];"
+            "[0:v]scale=1080:-2[fg];"
+            "[bg][fg]overlay=(W-w)/2:(H-h)/2[base]"
         )
         if has_subtitles:
             filter_complex += f";[base]subtitles='{escaped_sub}'[final]"
@@ -213,19 +212,16 @@ def render_clip(
 
     print(f"[VideoEngine] Rendering clip {output_filename} ({duration:.1f}s)...")
     # Build the FFmpeg command with filter graph (same as the filter_complex below)
-    from app.captions.track import escape_ffmpeg_path
-    from pathlib import Path
     escaped_sub = escape_ffmpeg_path(str(sub_path))
-    escaped_fontsdir = escape_ffmpeg_path(str(FONTS_DIR))
-    subtitles_filter = f"subtitles='{escaped_sub}':fontsdir='{escaped_fontsdir}'"
+    escape_ffmpeg_path(str(FONTS_DIR))
     
     if layout == "split_blur":
         filter_complex = (
-            f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
-            f"scale=270:480,boxblur=24:6,eq=brightness=-0.18,"
-            f"scale=1080:1920[bg];"
-            f"[0:v]scale=1080:-2[fg];"
-            f"[bg][fg]overlay=(W-w)/2:(H-h)/2[base]"
+            "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
+            "scale=270:480,boxblur=24:6,eq=brightness=-0.18,"
+            "scale=1080:1920[bg];"
+            "[0:v]scale=1080:-2[fg];"
+            "[bg][fg]overlay=(W-w)/2:(H-h)/2[base]"
         )
         if has_subtitles:
             filter_complex += f";[base]subtitles='{escaped_sub}'[final]"

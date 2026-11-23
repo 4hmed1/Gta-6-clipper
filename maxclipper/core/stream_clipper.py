@@ -4,7 +4,7 @@ import numpy as np
 from pathlib import Path
 
 from .._config import package_config as _package_config
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 
 class StreamClipperEngine:
     def __init__(self, config_path: str = ""):

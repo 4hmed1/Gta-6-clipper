@@ -11,7 +11,6 @@
 import asyncio
 import fcntl
 import os
-import signal
 import subprocess
 import time
 from pathlib import Path
@@ -245,7 +244,6 @@ def render_ffmpeg_with_stall_check(
     - error: str (readable user message)
     - log_path: str path to the log file
     """
-    import tempfile
 
     # Compute timeouts
     stall_s = _compute_stall_seconds(stall_seconds)
@@ -342,7 +340,7 @@ def render_ffmpeg_with_stall_check(
             "error": "Rendering failed on this computer. Try again, or use a shorter clip. Details are in the log file.",
             "log_path": str(log_path),
         }
-    except Exception as e:
+    except Exception:
         log_file.close()
         return {
             "success": False,
@@ -398,7 +396,6 @@ def render_with_retry(
     Returns:
         dict with success, output_path, error, log_path keys.
     """
-    import tempfile
 
     # First attempt with normal preset
     result = render_ffmpeg_with_stall_check(

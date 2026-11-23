@@ -74,10 +74,10 @@ def render_clip(
     if layout == "split_blur":
         # 9:16 Vertical Short with Blurred Background & Centered Crisp Foreground
         filter_complex = (
-            f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
-            f"boxblur=24:6,eq=brightness=-0.18[bg];"
-            f"[0:v]scale=1080:-2[fg];"
-            f"[bg][fg]overlay=(W-w)/2:(H-h)/2[base]"
+            "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
+            "boxblur=24:6,eq=brightness=-0.18[bg];"
+            "[0:v]scale=1080:-2[fg];"
+            "[bg][fg]overlay=(W-w)/2:(H-h)/2[base]"
         )
         if has_subtitles:
             filter_complex += f";[base]subtitles='{escaped_sub}'[final]"

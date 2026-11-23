@@ -4,7 +4,7 @@ import uuid
 import json
 import subprocess
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from app.config import DOWNLOADS_DIR, UPLOADS_DIR
 
 def clean_filename(title: str) -> str:

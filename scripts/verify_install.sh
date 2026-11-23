@@ -16,7 +16,7 @@ python3 -m venv "$V" && "$V/bin/pip" install -q "$ROOT" && ok "installs" || { ba
 "$V/bin/maxclipper" --version >/dev/null 2>&1 && ok "--version works" || bad "--version"
 
 (cd "$HOME" && "$V/bin/maxclipper" --no-browser --port 3066 > "$TMPDIR/server.log" 2>&1 &)
-sleep 14
+for i in $(seq 1 45); do curl -s -o /dev/null http://127.0.0.1:3066/ && break; sleep 2; done
 
 for u in "" static/css/style.css static/js/app.js api/health; do
   c=$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:3066/$u")
@@ -35,6 +35,7 @@ for f in "$SP"/app/assets/fonts/*.ttf; do
 done
 [ "$bad_fonts" = "0" ] && ok "installed fonts are real fonts" || bad "an installed font is not a real font"
 
+[ "$fail" != "0" ] && { echo "--- server log:"; tail -25 "$TMPDIR/server.log"; }
 pkill -f "maxclipper --no-browser --port 3066"
 if grep -q "Traceback" "$TMPDIR/server.log"; then bad "traceback in server log"; tail -8 "$TMPDIR/server.log"; else ok "server log clean"; fi
 

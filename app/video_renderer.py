@@ -1,4 +1,3 @@
-import subprocess
 from pathlib import Path
 from app.render_manager import render_clip
 from typing import Dict, Any
@@ -51,10 +50,8 @@ def render_final_clip(
         cmd += ["-i", whoosh_effect]
         # Mix audio: whoosh on hard cuts (simplified for this pipeline)
         cmd += ["-filter_complex", f"{filter_complex};[1:a]amix=inputs=2[finala]"]
-        map_args = ["-map", "[finalv]", "-map", "[finala]"]
     else:
         cmd += ["-filter_complex", filter_complex]
-        map_args = ["-map", "[finalv]", "-map", "0:a"]
 
     cmd += [
         "-c:v", "libx264",

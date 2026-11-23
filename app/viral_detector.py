@@ -137,7 +137,7 @@ def analyze_viral_moments_heuristic(
 
         # Fallback: try with relaxed min_duration
         if min_duration > 15:
-            print(f"[ViralDetector] Retrying with min_duration=15...")
+            print("[ViralDetector] Retrying with min_duration=15...")
             return analyze_viral_moments_heuristic(segments, min_duration=15.0, max_duration=max_duration, max_clips=max_clips)
 
         # Last resort: generate clips from sentence boundaries

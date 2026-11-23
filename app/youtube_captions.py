@@ -7,8 +7,7 @@ This is the fastest way to get transcriptions (no AI model needed).
 import os
 import json
 import subprocess
-from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any
 from app.config import DOWNLOADS_DIR
 
 def fetch_youtube_captions(url: str, progress_callback=None) -> Dict[str, Any]:

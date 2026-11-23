@@ -11,15 +11,13 @@ Priority order:
 3. Download ONLY chosen sections via the download_ranges callback
 """
 
-import asyncio
-import json
 import time
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 
 import yt_dlp
 
-from maxclipper.resilience import DownloadError
+from maxclipper.resilience.exceptions import MaxClipperError as DownloadError
 
 
 # Player clients to try in order when YouTube blocks / changes clients.

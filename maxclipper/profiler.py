@@ -2,9 +2,7 @@
 # Part 1 of the mission: Instrument every pipeline stage
 
 import json
-import os
 import time
-import threading
 import resource
 from pathlib import Path
 from typing import Dict, Any, Optional, Callable

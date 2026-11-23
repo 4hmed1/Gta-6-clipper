@@ -1,7 +1,7 @@
 import os
 import subprocess
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any
 from app.config import DEFAULT_WHISPER_MODEL
 
 def extract_audio(video_path: str) -> str:

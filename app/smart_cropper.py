@@ -41,7 +41,6 @@ class SmartCropper:
 
     def get_crop_coords(self, frame):
         h, w = frame.shape[:2]
-        target_h = h
         target_w = int(h * self.target_ratio[0] / self.target_ratio[1])
 
         face_centers = self._get_face_centers(frame)

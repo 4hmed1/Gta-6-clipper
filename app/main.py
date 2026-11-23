@@ -9,17 +9,16 @@ import logging
 import time
 from typing import Dict, Any, Optional, List
 from pathlib import Path
-from fastapi import FastAPI, UploadFile, File, Form, BackgroundTasks, HTTPException
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import FastAPI, UploadFile, File, BackgroundTasks, HTTPException
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.config import (
-    BASE_DIR, OUTPUTS_DIR, CLIPS_DIR, DOWNLOADS_DIR, UPLOADS_DIR,
-    STATIC_DIR, DEFAULT_SUBTITLE_STYLE, DEFAULT_ASPECT_RATIO
+    BASE_DIR, OUTPUTS_DIR, CLIPS_DIR, DOWNLOADS_DIR, STATIC_DIR
 )
-from app.downloader import download_youtube_video, save_uploaded_file
+from app.downloader import save_uploaded_file
 from app.transcriber import transcribe_audio
 from app.viral_detector import detect_viral_clips
 from app.video_engine import render_clip
@@ -225,6 +224,7 @@ class ProcessRequest(BaseModel):
     focus_text: Optional[str] = ""
     range_start: Optional[float] = None
     range_end: Optional[float] = None
+    captions: Optional[dict] = None
 
 
 class EditRequest(BaseModel):
@@ -738,7 +738,13 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
                     f.write(f"\n--- Audio download error ---\n{err_msg}\n--- End ---\n")
                 tasks_state[task_id]["status"] = "failed"
                 tasks_state[task_id]["error"] = err_msg
+                # No audio available for transcription
+                trans_res = {"success": False, "words": [], "is_mock": False}
+                tasks_state[task_id]["transcript_words"] = []
                 pipeline_logger.error(f"[{task_id}] {err_msg}")
+                return  # EXIT EARLY: no audio, no transcription possible
+            else:
+                # Audio is available — extract transcript words
                 trans_input = audio_path if (audio_path and Path(audio_path).exists()) else (source_video if source_video else req.filepath)
                 trans_res = transcribe_audio(
             )
@@ -926,11 +932,56 @@ def process_video_endpoint(req: ProcessRequest, background_tasks: BackgroundTask
 
 
 @app.post("/api/upload")
-async def upload_file_endpoint(file: UploadFile = File(...)):
+async def upload_file_endpoint(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
     """Upload a local video file directly into system."""
     contents = await file.read()
     result = save_uploaded_file(contents, file.filename)
-    return result
+    
+    # Create a processing job from the uploaded file
+    task_id = str(uuid.uuid4())[:8]
+    tasks_state[task_id] = {
+        "task_id": task_id,
+        "status": "queued",
+        "progress": 0,
+        "message": "Queued for processing",
+        "url": None,
+        "filepath": result["filepath"],
+        "title": result["title"],
+        "heartbeat": time.time(),
+        "stage_counts": {},
+        "stage_times": {},
+    }
+    
+    # Start processing in background
+    def process_uploaded_file():
+        try:
+            run_processing_pipeline(task_id, ProcessRequest(
+                filepath=result["filepath"],
+                clip_count=3,  # Default
+                length_min=15.0,
+                length_max=30.0,
+                aspect="9:16",
+                caption_style="pop-bold",
+                framing="auto",
+            ))
+        except Exception as e:
+            tasks_state[task_id]["status"] = "failed"
+            tasks_state[task_id]["error"] = str(e)
+            tasks_state[task_id]["heartbeat"] = time.time()
+    
+    background_tasks.add_task(process_uploaded_file)
+    
+    return {
+        "success": True,
+        "task_id": task_id,
+        "title": result["title"],
+        "duration": result["duration"],
+        "filepath": result["filepath"],
+        "thumbnail": "",
+        "author": "Local Upload",
+        "width": result["width"],
+        "height": result["height"]
+    }
 
 
 @app.get("/api/status/{task_id}")

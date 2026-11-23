@@ -5,7 +5,7 @@ import uuid
 import json
 import subprocess
 from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, List
 from app.config import DOWNLOADS_DIR, UPLOADS_DIR
 
 def clean_filename(title: str) -> str:
@@ -93,7 +93,6 @@ def download_youtube_video(url: str, progress_callback=None, audio_only: bool = 
     - Section downloads (--download-sections) for final clips
     """
     video_id = str(uuid.uuid4())[:8]
-    suffix = "wav" if audio_only else "mp4"
     output_template = str(DOWNLOADS_DIR / f"%(title)s_{video_id}.%(ext)s")
     
     print(f"[Downloader] Ingesting {url} (audio_only={audio_only}, sections={len(sections) if sections else 0})")

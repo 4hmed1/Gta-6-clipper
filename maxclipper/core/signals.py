@@ -1,6 +1,6 @@
 import librosa
 import numpy as np
-from typing import Dict, List, Any
+from typing import Dict
 
 def analyze_audio_signals(audio_path: str, hop_length_ms: int = 50) -> Dict[str, np.ndarray]:
     """

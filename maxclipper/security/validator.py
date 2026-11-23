@@ -1,7 +1,6 @@
 # Security Validator Module
 # Validates URLs, file paths, and inputs to prevent security vulnerabilities
 
-import re
 from pathlib import Path
 from urllib.parse import urlparse
 

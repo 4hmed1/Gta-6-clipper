@@ -1,12 +1,9 @@
 import sys
-import os
 import argparse
 import subprocess
 import shutil
 import socket
-import json
 import platform
-import urllib.request
 from pathlib import Path
 
 # Brand constants live in one place so the whole app can be renamed by editing app/brand.py
@@ -196,7 +193,6 @@ def run_uninstall():
 
 
 def main():
-    import argparse
     from importlib.metadata import version as _pkg_version, PackageNotFoundError
 
     argv = [a for a in sys.argv[1:] if a.strip()]

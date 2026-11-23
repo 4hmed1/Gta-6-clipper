@@ -1,11 +1,8 @@
 # Heatmap Analyzer Module
 # Analyzes "most replayed" heatmap data for clip scoring
 
-import json
-from pathlib import Path
 from typing import Dict, Any, List
 
-from maxclipper.resilience import ProcessingError
 
 
 class HeatmapAnalyzer:

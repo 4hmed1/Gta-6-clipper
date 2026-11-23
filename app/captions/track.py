@@ -20,7 +20,7 @@ from __future__ import annotations
 
 CAPTION_CENTER_Y_RATIO = 0.68  # 68% from top for vertical caption position
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -103,7 +103,7 @@ def _parse_json3_segs(segment: dict) -> List[Word]:
     d_duration_ms = segment.get("dDurationMs", 0)
     seg_start = t_start_ms / 1000.0
     seg_end = seg_start + (d_duration_ms / 1000.0)
-    seg_dur = seg_end - seg_start
+    seg_end - seg_start
 
     # If there are multiple segments with different start times, use the
     # earliest start and longest duration span
@@ -670,8 +670,6 @@ def generate_ass_events(
     Returns:
         Complete ASS content string ready to be written to file.
     """
-    from pathlib import Path
-    import os
 
     style = STYLES.get(style_name, STYLES["vibrant_gold"])
 
