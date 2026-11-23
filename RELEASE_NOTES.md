@@ -26,14 +26,14 @@
 ### Linux / macOS
 ```bash
 git clone https://github.com/4hmed1/MaxClipper.git
-cd viralforge-ai
+cd /home/max/Documents/viralforge-ai
 ./run.sh
 ```
 
 ### Windows
 ```powershell
 git clone https://github.com/4hmed1/MaxClipper.git
-cd viralforge-ai
+cd /home/max/Documents/viralforge-ai
 run.bat
 ```
 

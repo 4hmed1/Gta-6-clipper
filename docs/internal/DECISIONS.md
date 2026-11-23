@@ -1,41 +1,54 @@
-# MaxClipper Architecture Decisions & Decision Log (DECISIONS.md)
+# DECISIONS.md - MaxClipper Project Decisions
 
-## ADR-001: Open Source License
-- **Decision**: MIT License.
-- **Rationale**: Simple, permissive open-source license that encourages community contributions while allowing open-core commercial extensions in `pro/`.
+## Key Decisions Made During Development
 
-## ADR-002: Deterministic Selection Architecture
-- **Decision**: Zero mandatory LLM or paid API dependencies for clip selection.
-- **Rationale**: Clip selection uses deterministic DSP (energy variance, spectral flux, pitch contour, dead-air map), classic NLP (TextRank/TF-IDF, sentence boundaries, hook pattern scoring), and classical computer vision (OpenCV face cascade + optical flow motion saliency). YouTube json3 captions provide word-level timing by default; offline Whisper is optional and opt-in only.
+### 1. Package Structure
+- **Decision**: Move `static/`, `config/`, `templates/` directories into `app/` package
+- **Rationale**: Ensures proper package data inclusion via pyproject.toml `[tool.setuptools.package-data]`
+- **Status**: Completed - pyproject.toml updated, MANIFEST.in updated
 
-## ADR-003: Package Structure & Monorepo Layout
-- **Decision**: Monorepo with `maxclipper/` (Python package + backend + resilience + algorithms), `web/` (React/TS frontend source, bundled into `maxclipper/static`), `installers/` (`install.ps1`, `install.sh`), `config/` (YAML scoring presets & hook rules), `tests/` (Pytest unit/chaos/golden/e2e), `docs/`.
-- **Rationale**: Meets Section 5 requirements while retaining clean module isolation and single-command wheel installation (`pip install .` or `uv pip install .`).
+### 2. Path Handling Fix
+- **Decision**: Wrap `platformdirs.user_data_dir()` result with `Path()` in cli.py
+- **Rationale**: Fixed `TypeError: unsupported operand type(s) for /: 'str' and 'str'` in captions-debug command
+- **Status**: Completed - Line 340 in maxclipper/cli.py updated
 
-## ADR-004: Editor & Exporter Synchronization
-- **Decision**: Single `ProjectJSON` format representing timeline state. Editor preview renders `ProjectJSON` via HTML5 Video + Canvas/DOM overlay; `maxclipper.editor.compiler` converts the exact same `ProjectJSON` into a single, deterministic FFmpeg filtergraph.
-- **Rationale**: Eliminates drift between preview and final export; validated via automated golden tests.
+### 3. Port Unification
+- **Decision**: Use port 3000 as default across all components
+- **Components**: cli.py, install.sh, install.ps1, README.md, app/main.py
+- **Rationale**: Consistent user experience, avoids confusion
+- **Status**: In progress - verify all references use port 3000
 
-## ADR-005: Self-Healing & Resilience First Design
-- **Decision**: All heavy processing is state-machine checkpointed in SQLite/JSON cache. Every error is classified with an automated fallback ladder before raising to user.
-- **Rationale**: Meets headline product promise of auto-healing on weak or unreliable machines.
+### 4. Server Bind Address
+- **Decision**: Changed from `0.0.0.0` to `127.0.0.1` for local development
+- **Rationale**: More predictable localhost behavior, aligns with curl tests
+- **Status**: Completed - app/main.py updated
 
-## ADR-06: Design System Source of Truth
-- **Decision**: `docs/DESIGN_SYSTEM.md` is the single source of truth for all visual tokens (colors, type scale, spacing, radius, shadows, motion). CSS is generated from these tokens.
-- **Rationale**: Enables consistent dark/light theme switching and easy brand updates without touching component code.
+### 5. CLI Flags
+- **Decision**: Add `--port` and `--no-browser` flags to maxclipper command
+- **Rationale**: User flexibility for custom ports and headless operation
+- **Status**: Completed - cli.py updated
 
-## ADR-07: App-Style UI Over Marketing Landing Page
-- **Decision**: Replace the marketing landing page with a sticky app bar + tabbed app shell (Create / Library / Settings). Max content width 760px, responsive down to 360px, 44px touch targets, WCAG AA contrast.
-- **Rationale**: The product is a desktop app, not a website. App-style navigation (tabs, status chips) is the correct mental model for a clipping studio.
+### 6. Install Script
+- **Decision**: Complete rewrite of installers/install.sh with proper shebang, uv-aware install, venv creation
+- **Rationale**: One-command install must work flawlessly on all platforms
+- **Status**: Completed - install.sh rewritten
 
-## ADR-08: Open-License Fonts Only
-- **Decision**: Inter (UI), Archivo Black (display), Anton, Bebas Neue, Bangers, Poppins (caption styles). All from Google Fonts with open licenses (OFL / Apache).
-- **Rationale**: Section 2 hard constraint — no proprietary font licensing issues for users.
+### 7. Package Data Configuration
+- **Decision**: Configure pyproject.toml `[tool.setuptools.package-data]` for app/static/, app/config/, app/templates/
+- **Rationale**: Prevent `RuntimeError: Directory '.../site-packages/static' does not exist`
+- **Status**: Completed - pyproject.toml and MANIFEST.in updated
 
-## ADR-09: Backend Settings Payload Shape
-- **Decision**: The Create screen POSTs a single JSON payload: `{source, clip_count, length_min, length_max, aspect, caption_style, framing, hook_text, tighten_pauses, focus_text, range_start, range_end}`. Time inputs are parsed server-side from `mm:ss` or `h:mm:ss` strings.
-- **Rationale**: One clean shape keeps the frontend and backend in sync; server-side parsing gives honest error messages for malformed input.
+### 8. API Endpoint
+- **Decision**: Ensure `/api/status/{task_id}` GET endpoint returns full task state
+- **Rationale**: captions-debug command needs task data including transcript_words, status, meta
+- **Status**: Completed - app/main.py get_task_status() function verified working
 
-## ADR-10: Settings Persistence via localStorage
-- **Decision**: User preferences (clip count, length, aspect, caption style, framing, toggles, focus text) are saved to `localStorage` under `maxclipper_settings` and restored on page load. Quality overrides are also persisted.
-- **Rationale**: The wizard's "every question can be skipped" requirement means defaults must remember the user's last choice without a backend round-trip.
+### 9. Package Installation
+- **Decision**: Install into isolated venv using system Python 3.11+, no global pollution
+- **Rationale**: Clean separation, easy uninstall, no system Python breakage
+- **Status**: Completed - verified with /home/max/.maxclipper/venv
+
+### 10. Offline-First Design
+- **Decision**: No LLM, no paid API, no cloud AI in core clip selection
+- **Rationale**: Free, unlimited, no watermark, private - everything runs locally
+- **Status**: Core design principle confirmed throughout development

@@ -10,7 +10,7 @@ copyright infringement will not be tolerated.
 ## Development setup
 ```bash
 git clone https://github.com/4hmed1/MaxClipper.git
-cd viralforge-ai
+cd /home/max/Documents/viralforge-ai
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
