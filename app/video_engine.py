@@ -212,9 +212,72 @@ def render_clip(
     ]
 
     print(f"[VideoEngine] Rendering clip {output_filename} ({duration:.1f}s)...")
+    # Build the FFmpeg command with filter graph (same as the filter_complex below)
+    from app.captions.track import escape_ffmpeg_path
+    from pathlib import Path
+    escaped_sub = escape_ffmpeg_path(str(sub_path))
+    escaped_fontsdir = escape_ffmpeg_path(str(FONTS_DIR))
+    subtitles_filter = f"subtitles='{escaped_sub}':fontsdir='{escaped_fontsdir}'"
+    
+    if layout == "split_blur":
+        filter_complex = (
+            f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
+            f"scale=270:480,boxblur=24:6,eq=brightness=-0.18,"
+            f"scale=1080:1920[bg];"
+            f"[0:v]scale=1080:-2[fg];"
+            f"[bg][fg]overlay=(W-w)/2:(H-h)/2[base]"
+        )
+        if has_subtitles:
+            filter_complex += f";[base]subtitles='{escaped_sub}'[final]"
+            map_out = "[final]"
+        else:
+            filter_complex += ""
+            map_out = "[base]"
+    elif layout == "center_crop":
+        base_filter = "scale=-2:1920,crop=1080:1920"
+        if has_subtitles:
+            filter_complex = f"{base_filter},subtitles='{escaped_sub}'"
+        else:
+            filter_complex = base_filter
+        map_out = None
+    else:
+        if has_subtitles:
+            filter_complex = f"subtitles='{escaped_sub}'"
+            map_out = None
+        else:
+            filter_complex = ""
+            map_out = None
+
+    ffmpeg_cmd = [
+        "ffmpeg",
+        "-y",
+        "-nostdin",
+        "-ss", str(start_time),
+        "-i", source_video,
+        "-t", str(duration)
+    ]
+
+    if filter_complex:
+        if layout == "split_blur":
+            ffmpeg_cmd += ["-filter_complex", filter_complex, "-map", map_out, "-map", "0:a?"]
+        else:
+            ffmpeg_cmd += ["-vf", filter_complex]
+
+    ffmpeg_cmd += [
+        "-c:v", "libx264",
+        "-preset", "veryfast",
+        "-crf", "28",
+        "-pix_fmt", "yuv420p",
+        "-c:a", "aac",
+        "-b:a", "128k",
+        "-movflags", "+faststart",
+        output_path
+    ]
+
     result = render_clip(
         source_video, output_path, duration,
         clip_id=clip_id,
+        ffmpeg_cmd=ffmpeg_cmd,
     )
     if result["success"]:
         # Extract thumbnail

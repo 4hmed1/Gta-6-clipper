@@ -751,7 +751,7 @@ def generate_ass_events(
         # Layer 0, no name, the computed times
         dialog = (
             f"Dialogue: 0,{format_ass_time(ev_start)},{format_ass_time(ev_end)},"
-            f"{DEFAULT_STYLE_NAME},,0,0,0,,\\pos(540, 1305){text_line}"
+            f"{DEFAULT_STYLE_NAME},,0,0,0,,{{\\pos(540, 1305)}}{text_line}"
         )
         ass_lines.append(dialog)
 
@@ -1137,21 +1137,49 @@ def _resolve_font(font_name: str, fonts_dir: Path = _DEFAULT_FONTS_DIR) -> Path:
 
 # Export symbols
 
+def _is_valid_font(path: Path) -> bool:
+    """Check that a font file has a valid OpenType signature and is larger than 30 KB."""
+    try:
+        data = path.read_bytes()
+        if len(data) <= 30 * 1024:  # must be > 30 KB
+            return False
+        # Valid OpenType/SFNT signatures
+        valid = {b"\x00\x01\x00\x00", b"OTTO", b"ttcf", b"true"}
+        if data[:4] not in valid:
+            return False
+        return True
+    except Exception:
+        return False
+
+
 def _verify_fonts_at_startup() -> None:
     """Verify that all style fonts can be resolved at module import time.
 
-    This fails fast if any bundled font is missing, preventing silent
+    This fails fast if any bundled font is missing or invalid, preventing silent
     DejaVu fallback which produces a cheap-looking output.
     """
     import logging
+    from pathlib import Path
     logger = logging.getLogger(__name__)
+    fonts_dir = Path(_DEFAULT_FONTS_DIR).resolve()
     for style_name, style in _STYLES.items():
         try:
             font_path = _resolve_font(style["font_name"])
-            logger.info(f"Font resolved: {style_name} -> {font_path.name}")
+            if not _is_valid_font(font_path):
+                raise CaptionError(
+                    f"Font for style '{style_name}' is not a valid OpenType font "
+                    f"({font_path.name}): must have valid signature and be >30 KB.",
+                    error_code=FONT_MISSING,
+                    fix_action=(
+                        f"Replace {font_path.name} with a valid .ttf/.otf font file "
+                        f"> 30 KB with a valid OpenType signature, "
+                        f"or place it in {fonts_dir}."
+                    ),
+                )
+            logger.info(f"Font resolved and valid: {style_name} -> {font_path.name}")
         except CaptionError as e:
             logger.error(f"STARTUP FAIL: {e.message}")
-            # Re-raise so the app won't start with missing fonts
+            # Re-raise so the app won't start with missing/invalid fonts
             raise
 
 _VERIFY_FONTS_AT_STARTUP = _verify_fonts_at_startup()

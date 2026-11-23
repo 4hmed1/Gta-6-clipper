@@ -1,25 +1,33 @@
 import os
 from pathlib import Path
 
-# Base Paths
+import platformdirs
+
+# ---------------------------------------------------------------------------
+# User data directory — ALL writable data lives here, never in site-packages
+# ---------------------------------------------------------------------------
+USER_DATA_DIR = Path(platformdirs.user_data_dir("MaxClipper"))
+USER_DOWNLOADS_DIR = USER_DATA_DIR / "downloads"
+USER_UPLOADS_DIR = USER_DATA_DIR / "uploads"
+USER_OUTPUTS_DIR = USER_DATA_DIR / "outputs"
+USER_CLIP_DIR = USER_OUTPUTS_DIR / "clips"
+USER_STATE_DIR = USER_DATA_DIR / "state"  # job/library state, models, .ass files
+USER_DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+# ---------------------------------------------------------------------------
+# Bundled assets directory — read-only, stays in app/
+# ---------------------------------------------------------------------------
 APP_DIR = Path(__file__).resolve().parent  # app/
 BASE_DIR = APP_DIR  # Base for bundled resources
-OUTPUTS_DIR = BASE_DIR / "outputs"
-DOWNLOADS_DIR = OUTPUTS_DIR / "downloads"
-CLIPS_DIR = OUTPUTS_DIR / "clips"
-UPLOADS_DIR = OUTPUTS_DIR / "uploads"
 STATIC_DIR = APP_DIR / "static"
 TEMPLATES_DIR = APP_DIR / "templates"
 ASSETS_DIR = APP_DIR / "assets"
 FONTS_DIR = ASSETS_DIR / "fonts"
 
+# ---------------------------------------------------------------------------
 # Fallback: when installed as a wheel (no source tree), locate the
 # bundled static assets wherever pip put them.
-# NOTE: in a venv, sys.executable is <venv>/bin/python, so the real
-# site-packages is <venv>/lib/pythonX.Y/site-packages — NOT
-# <venv>/bin/site-packages (which does not exist). Also: pip installs
-# ``data-files`` under ``sys.prefix`` (the venv root), so the assets may
-# live at <venv>/maxclipper/static rather than inside site-packages.
+# ---------------------------------------------------------------------------
 if not STATIC_DIR.exists():
     import os as _os
     import sys as _sys
@@ -92,8 +100,17 @@ if not FONTS_DIR.exists():
     if _found_f:
         FONTS_DIR = _found_f
 
+# ---------------------------------------------------------------------------
+# Aliases for backwards compatibility (code that still references the old
+# module-level dirs should still work via the platformdirs versions).
+# ---------------------------------------------------------------------------
+OUTPUTS_DIR = USER_OUTPUTS_DIR
+DOWNLOADS_DIR = USER_DOWNLOADS_DIR
+CLIPS_DIR = USER_CLIP_DIR
+UPLOADS_DIR = USER_UPLOADS_DIR
+
 # Ensure all working directories exist
-for directory in [OUTPUTS_DIR, DOWNLOADS_DIR, CLIPS_DIR, UPLOADS_DIR]:
+for directory in [USER_OUTPUTS_DIR, USER_DOWNLOADS_DIR, USER_UPLOADS_DIR]:
     directory.mkdir(parents=True, exist_ok=True)
 
 # Configuration Defaults
@@ -112,3 +129,14 @@ DEFAULT_SUBTITLE_STYLE = "vibrant_gold"  # "vibrant_gold", "neon_green", "cyber_
 MIN_CLIP_DURATION = int(os.getenv("MIN_CLIP_DURATION", "20"))  # seconds
 MAX_CLIP_DURATION = int(os.getenv("MAX_CLIP_DURATION", "60"))  # seconds
 MAX_CLIPS_TO_GENERATE = int(os.getenv("MAX_CLIPS_TO_GENERATE", "5"))
+
+# Environment overrides for data dir (overridable via MAXCLIPPER_DATA_DIR)
+if os.getenv("MAXCLIPPER_DATA_DIR"):
+    USER_DATA_DIR = Path(os.getenv("MAXCLIPPER_DATA_DIR"))
+    USER_DOWNLOADS_DIR = USER_DATA_DIR / "downloads"
+    USER_UPLOADS_DIR = USER_DATA_DIR / "uploads"
+    USER_OUTPUTS_DIR = USER_DATA_DIR / "outputs"
+    USER_CLIP_DIR = USER_OUTPUTS_DIR / "clips"
+    USER_STATE_DIR = USER_DATA_DIR / "state"
+    MAXCLIPPER_DATA_DIR = Path(os.getenv("MAXCLIPPER_DATA_DIR"))
+    USER_DATA_DIR.mkdir(parents=True, exist_ok=True)

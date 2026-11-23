@@ -468,6 +468,7 @@ def render_clip(
     preset: str = None,
     stall_override: str = None,
     timeout_override: str = None,
+    ffmpeg_cmd: list = None,
 ) -> dict:
     """Public function to render a single clip with full safety features.
 
@@ -482,6 +483,11 @@ def render_clip(
     - Persistent log files
     - Readable user errors only
 
+    Key change: ffmpeg_cmd, if provided, is used directly instead of building
+    a new command. This ensures the filter_graph from video_engine.py or
+    video_renderer.py is the one actually executed, preventing concurrent FFmpeg
+    renders from starving CPUs and guaranteeing the correct filter layout.
+
     Args:
         input_path: Path to the input video file.
         output_path: Path where the MP4 should be written.
@@ -490,6 +496,8 @@ def render_clip(
         preset: FFmpeg preset override. Uses CPU-based default if None.
         stall_override: Override stall timeout (seconds). Sets MAXCLIPPER_STALL_SECONDS env effect.
         timeout_override: Override render timeout (seconds). Sets MAXCLIPPER_RENDER_TIMEOUT env effect.
+        ffmpeg_cmd: Pre-built FFmpeg command list. If None, a basic command is
+            built as fallback (but callers should always provide one).
 
     Returns:
         dict with keys: success, output_path, error, log_path
@@ -504,9 +512,14 @@ def render_clip(
         }
 
     try:
-        # Build the FFmpeg command
-        threads = "0"  # always auto threads
-        ffmpeg_cmd = build_ffmpeg_cmd(input_path, output_path, duration, preset, threads)
+        # Use the pre-built command from the caller (video_engine.py or video_renderer.py),
+        # or fall back to building a basic command if none provided.
+        # The caller's command includes the full filter_complex, so we must use it.
+        if ffmpeg_cmd is None:
+            # Fallback: build a basic command only if caller didn't provide one.
+            # In normal operation, video_engine.py or video_renderer.py always provides one.
+            threads = "0"  # always auto threads
+            ffmpeg_cmd = build_ffmpeg_cmd(input_path, output_path, duration, preset, threads)
 
         # Render with retry - convert string overrides to float
         try:
