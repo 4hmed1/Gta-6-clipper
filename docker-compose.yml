@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  viralforge:
+  maxclipper:
     build: .
-    container_name: viralforge-ai
+    container_name: maxclipper-ai
     ports:
       - "8000:8000"
     volumes:

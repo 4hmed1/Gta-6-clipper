@@ -174,3 +174,59 @@ def run_server(port: int = 3000, open_browser: bool = True):
     uvicorn.run(app, host="0.0.0.0", port=port)
 
 
+
+def main():
+    parser = argparse.ArgumentParser(description=f"{APP_NAME} - local-first stream clipper & editor studio")
+    parser.add_argument("--version", action="version", version=f"{APP_NAME} 7.1.0")
+    subparsers = parser.add_subparsers(dest="command", required=False)
+    
+    parser.set_defaults(command="server")
+    subparsers.add_parser("doctor", help="check system environment and dependencies")
+    subparsers.add_parser("update", help="update the app core and yt-dlp")
+    subparsers.add_parser("server", help="start the web interface")
+    
+    args = parser.parse_args()
+    
+    if args.command == "doctor":
+        run_doctor()
+    elif args.command == "update":
+        run_update()
+    elif args.command == "server":
+        port = 3000
+        open_browser = True
+        # TODO: allow --port and --no-browser flags
+        run_server(port, open_browser)
+    else:
+        # Default to server
+        run_server()
+
+if __name__ == "__main__":
+    main()
+
+def main():
+    parser = argparse.ArgumentParser(description=f"{APP_NAME} - local-first stream clipper & editor studio")
+    parser.add_argument("--version", action="version", version=f"{APP_NAME} 7.1.0")
+    subparsers = parser.add_subparsers(dest="command", required=False)
+    
+    parser.set_defaults(command="server")
+    subparsers.add_parser("doctor", help="check system environment and dependencies")
+    subparsers.add_parser("update", help="update the app core and yt-dlp")
+    subparsers.add_parser("server", help="start the web interface")
+    
+    args = parser.parse_args()
+    
+    if args.command == "doctor":
+        run_doctor()
+    elif args.command == "update":
+        run_update()
+    elif args.command == "server":
+        port = 3000
+        open_browser = True
+        # TODO: allow --port and --no-browser flags
+        run_server(port, open_browser)
+    else:
+        # Default to server
+        run_server()
+
+if __name__ == "__main__":
+    main()

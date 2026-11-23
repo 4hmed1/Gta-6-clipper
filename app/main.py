@@ -28,7 +28,7 @@ from app.clip_editor import adjust_and_reexport_clip
 app = FastAPI(
     title="Max Clipper",
     description="Free, local-first desktop app that turns YouTube/Twitch links into ready-to-post vertical Shorts with a CapCut-style editor.",
-    version="1.0.0"
+    version="7.1.0"
 )
 
 # Enable CORS
@@ -869,6 +869,17 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
 
 
 # ── FastAPI HTTP Routes ──
+
+@app.get("/api/health")
+async def health_check():
+    """Health check endpoint for load balancers and monitoring."""
+    import importlib.metadata
+    try:
+        version = importlib.metadata.version("maxclipper")
+    except Exception:
+        version = "unknown"
+    return {"status": "ok", "name": "Max Clipper", "version": version}
+
 
 @app.get("/")
 def serve_index():

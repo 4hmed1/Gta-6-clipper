@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "maxclipper"
-version = "7.0.0"
+version = "7.1.0"
 description = "Install-in-One-Command Clipping Studio: Turn long videos into viral vertical shorts locally."
 readme = "README.md"
 requires-python = ">=3.11"

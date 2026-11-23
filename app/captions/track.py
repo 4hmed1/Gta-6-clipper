@@ -751,7 +751,7 @@ def generate_ass_events(
         # Layer 0, no name, the computed times
         dialog = (
             f"Dialogue: 0,{format_ass_time(ev_start)},{format_ass_time(ev_end)},"
-            f"{DEFAULT_STYLE_NAME},,0,0,0,,\\pos\(540, 1305\){text_line}"
+            f"{DEFAULT_STYLE_NAME},,0,0,0,,\\pos(540, 1305){text_line}"
         )
         ass_lines.append(dialog)
 
