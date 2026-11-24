@@ -269,6 +269,8 @@ def render_ffmpeg_with_stall_check(
     # Open log file for writing stderr + progress
     log_file = open(log_path, "w", buffering=1)  # line-buffered
 
+    import select
+
     try:
         proc = subprocess.Popen(
             progress_cmd,
@@ -279,12 +281,18 @@ def render_ffmpeg_with_stall_check(
             text=True,
         )
 
+        out_fd = proc.stdout.fileno()
+
         # Stall monitoring
         last_progress = time.time()
         total_start = time.time()
 
         while True:
             elapsed = time.time() - total_start
+
+            # Detect normal completion as soon as the process exits.
+            if proc.poll() is not None:
+                break
 
             # Check hard timeout
             if elapsed >= render_t:
@@ -323,8 +331,33 @@ def render_ffmpeg_with_stall_check(
                     "log_path": str(log_path),
                 }
 
+            # Read progress output non-blockingly.
+            # FFmpeg emits progress lines like "out_time_ms=... progress=continue"
+            # to stdout when -progress pipe:1 is used.
+            try:
+                ready, _, _ = select.select([out_fd], [], [], 0.05)
+                if ready:
+                    chunk = os.read(out_fd, 4096)
+                    if chunk:
+                        decoded = chunk.decode(errors="replace")
+                        if "out=" in decoded or "time=" in decoded or "progress=" in decoded:
+                            last_progress = time.time()
+                        log_file.write(decoded)
+                        log_file.flush()
+            except (OSError, IOError, ValueError):
+                pass
+
             # Small sleep before checking again
-            time.sleep(0.5)
+            time.sleep(0.2)
+
+        # Drain any remaining progress output after process exit
+        try:
+            remaining = os.read(out_fd, 65536)
+            if remaining:
+                log_file.write(remaining.decode(errors="replace"))
+                log_file.flush()
+        except (OSError, IOError):
+            pass
 
     except KeyboardInterrupt:
         try:
@@ -349,7 +382,7 @@ def render_ffmpeg_with_stall_check(
             "log_path": str(log_path),
         }
 
-    # Process ended normally - wait for it to finish
+    # Process ended normally - wait for it to finish and check return code
     try:
         proc.wait(timeout=60)
     except subprocess.TimeoutExpired:

@@ -115,7 +115,7 @@ def poll_job(task_id, timeout=1200, interval=5):
     start = time.time()
     while time.time() - start < timeout:
         try:
-            data = http_get(f"/api/tasks/{task_id}")
+            data = http_get(f"/api/status/{task_id}")
             status = data.get("status", "")
             message = data.get("message", "")
             progress = data.get("progress", "")

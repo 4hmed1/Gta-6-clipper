@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Dict, Any, List
 from app.config import CLIPS_DIR, FONTS_DIR
 from app.captions.track import caption_track_from_words
+from app.render_manager import render_clip as render_manager_clip
+from app.render_manager import render_clip as render_clip_manager
 
 def escape_ffmpeg_path(path: str) -> str:
     """Escape path for ffmpeg filtergraph syntax."""
@@ -270,8 +272,10 @@ def render_clip(
         output_path
     ]
 
-    result = render_clip(
-        source_video, output_path, duration,
+    result = render_manager_clip(
+        input_path=source_video,
+        output_path=output_path,
+        duration=duration,
         clip_id=clip_id,
         ffmpeg_cmd=ffmpeg_cmd,
     )

@@ -111,8 +111,8 @@ def _worker_alive(pid: object) -> bool:
     if not pid:
         return False
     try:
-        os.kill(str(pid), 0)
-    except ProcessLookupError:
+        os.kill(int(pid), 0)
+    except (ProcessLookupError, ValueError, TypeError):
         return False
     except (PermissionError, OSError):
         # PermissionError on Linux can mean the PID exists under another user;
@@ -746,8 +746,7 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
             else:
                 # Audio is available — extract transcript words
                 trans_input = audio_path if (audio_path and Path(audio_path).exists()) else (source_video if source_video else req.filepath)
-                trans_res = transcribe_audio(
-            )
+                trans_res = transcribe_audio(video_path=trans_input)
             if not trans_res.get("success"):
                 tasks_state[task_id]["status"] = "failed"
                 tasks_state[task_id]["error"] = "Transcription failed."
@@ -852,6 +851,26 @@ def run_processing_pipeline(task_id: str, req: ProcessRequest):
                 rendered_clips.append(render_res)
             else:
                 pipeline_logger.error(f"[{task_id}] Render failed for clip {idx}: {render_res.get('error')}")
+
+        # Force release the render lock after all clips are done
+        # This ensures the next upload can start rendering immediately
+        try:
+            from app.render_manager import _release_render_lock as _release_lock
+            _release_lock()
+        except Exception:
+            pass
+
+        # Never mark a job READY/completed with zero rendered clips — that
+        # leaves the user seeing "READY" with nothing to show. If every clip
+        # failed to render, surface it as failed so the user can retry.
+        if not rendered_clips:
+            tasks_state[task_id]["status"] = "failed"
+            tasks_state[task_id]["progress"] = 0
+            tasks_state[task_id]["error"] = "All clips failed to render. Check FFmpeg/logs and try again."
+            tasks_state[task_id]["message"] = "Rendering failed — no clips were produced."
+            tasks_state[task_id]["clips"] = []
+            _save_tasks()
+            return
 
         tasks_state[task_id]["status"] = "completed"
         tasks_state[task_id]["progress"] = 100
